@@ -19,7 +19,7 @@
 
         <!-- Panel izquierdo: Marca -->
         <div class="auth-brand">
-            <img src="/zapallo/Assets/img/logo1.jpg" alt="Logo ElZapato" class="brand-logo">
+            <img src="/Elzapato/assets/img/Elpato.jpeg" alt="Logo ElZapato" class="brand-logo">
             <h1>ElZapato</h1>
             <p>Sistema de punto de venta para calzado</p>
             <span class="brand-badge">POS &middot; v0.1</span>
@@ -69,7 +69,8 @@
 
     </div>
 
-    <script src="assets/js/login.js"></script>
+   
+<script src="assets/js/login.js"></script>
        
 </body>
 </html>
