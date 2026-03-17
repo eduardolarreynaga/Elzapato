@@ -235,8 +235,8 @@ body::before {
 .error-message {
     background: #fdf0ef;
     border: 1px solid #f5c6c2;
-    border-left: 4px solid #c0392b;
-    color: #c0392b;
+    border-left: 4px solid #7a5c45;
+    color: #7a5c45;
     border-radius: 8px;
     padding: 10px 14px;
     font-size: .84rem;
