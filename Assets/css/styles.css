@@ -1000,6 +1000,30 @@ body {
 
 /* ===== PRODUCTOS - VERSIÓN LIMPIA ===== */
 
+.products-header {
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.products-header .header-left {
+    flex: 1 1 520px;
+    flex-wrap: wrap;
+}
+
+.products-header .header-right {
+    flex: 1 1 260px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.products-header .header-search {
+    flex: 1 1 220px;
+}
+
+.products-header .header-search input {
+    width: 100%;
+}
+
 /* Stats mini */
 .stats-mini {
     display: flex;
@@ -1009,6 +1033,31 @@ body {
     padding: 15px 20px;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.products-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.stats-left,
+.stats-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.stats-right {
+    justify-content: flex-end;
 }
 
 .stat-mini-item {
@@ -1039,6 +1088,10 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 15px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .actions-left {
@@ -1420,11 +1473,45 @@ body {
         flex-wrap: wrap;
         gap: 10px;
     }
+
+    .products-header .header-left,
+    .products-header .header-right {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .products-header .header-right {
+        justify-content: flex-start;
+    }
+
+    .products-stats {
+        width: 100%;
+    }
+
+    .stats-left,
+    .stats-right {
+        width: 100%;
+    }
+
+    .stats-right {
+        justify-content: flex-start;
+    }
+
+    .products-stats .stat-mini-item {
+        justify-content: space-between;
+        flex: 1 1 calc(50% - 10px);
+        min-width: 140px;
+    }
     
     .actions-left {
         flex-direction: column;
         align-items: stretch;
         width: 100%;
+    }
+
+    .actions-right {
+        width: 100%;
+        justify-content: flex-end;
     }
     
     .filters {
@@ -1443,5 +1530,11 @@ body {
     .pagination-simple {
         flex-direction: column;
         text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-stats .stat-mini-item {
+        flex: 1 1 100%;
     }
 }

@@ -12,14 +12,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Tu archivo CSS principal -->
     <link rel="stylesheet" href="/ElZapato/Assets/css/login.css">
-    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/zapa.jpeg">
+    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
 </head>
 <body>
     <div class="auth-wrapper">
 
         <!-- Panel izquierdo: Marca -->
         <div class="auth-brand">
-            <img src="/ElZapato/Assets/img/logo1.jpg" alt="Logo ElZapato" class="brand-logo">
+            <img src="/ElZapato/Assets/img/logo.png" alt="Logo ElZapato" class="brand-logo">
             <h1>ElZapato</h1>
             <p>Sistema de punto de venta para calzado</p>
             <span class="brand-badge">POS &middot; v0.1</span>

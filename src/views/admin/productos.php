@@ -13,7 +13,7 @@
     
     <!-- Estilos CSS -->
     <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
-    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/zapa.jpeg">
+    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
 </head>
 <body class="dashboard-body">
     <div class="dashboard">
@@ -21,7 +21,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <img src="/ElZapato/Assets/img/zapa.jpeg" alt="Logo" style="height: auto; width: 60px;">
+                    <img src="/ElZapato/Assets/img/logo.png" alt="Logo" style="height: auto; width: 60px;">
                     <h2>ElZapato</h2>
                 </div>
             </div>
@@ -106,6 +106,15 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <h1>Productos</h1>
+
+                <div class="stat-mini-item">
+                    <span class="stat-mini-label">Total</span>
+                    <span class="stat-mini-value">156</span>
+                </div>
+                <div class="stat-mini-item">
+                    <span class="stat-mini-label">Valor</span>
+                    <span class="stat-mini-value">$45.8k</span>
+                </div>
                 </div>
                 <div class="header-right">
                     <div class="header-search">
@@ -121,10 +130,7 @@
 
             <!-- Stats rápidas -->
             <div class="stats-mini">
-                <div class="stat-mini-item">
-                    <span class="stat-mini-label">Total</span>
-                    <span class="stat-mini-value">156</span>
-                </div>
+
                 <div class="stat-mini-item">
                     <span class="stat-mini-label">Activos</span>
                     <span class="stat-mini-value">142</span>
@@ -133,13 +139,7 @@
                     <span class="stat-mini-label">Stock Bajo</span>
                     <span class="stat-mini-value warning">8</span>
                 </div>
-                <div class="stat-mini-item">
-                    <span class="stat-mini-label">Valor</span>
-                    <span class="stat-mini-value">$45.8k</span>
-                </div>
-            </div>
-
-            <!-- Barra de acciones -->
+ <!-- Barra de acciones -->
             <div class="actions-bar">
                 <div class="actions-left">
                     <button class="btn-primary" id="btnNuevoProducto">
@@ -171,6 +171,11 @@
                     </button>
                 </div>
             </div>
+                
+
+            </div>
+
+           
 
             <!-- Tabla de productos -->
             <div class="table-container">

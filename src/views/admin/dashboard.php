@@ -16,7 +16,7 @@
     
     <!-- Estilos CSS -->
     <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
-        <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/zapa.jpeg">
+        <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
 </head>
 <body class="dashboard-body">
     <div class="dashboard">
@@ -26,7 +26,7 @@
                 
                 <div class="logo">
                     <!-- <i class="fas fa-shoe-prints fa-2x"></i> -->
-                    <img src="/ElZapato/Assets/img/zapa.jpeg" style="height: auto; width: 60px;" alt="">    
+                    <img src="/ElZapato/Assets/img/logo.png" style="height: auto; width: 60px;" alt="">    
                     <h2>ElZapato</h2>
                 </div>
             </div>
