@@ -11,15 +11,19 @@
     <!-- Fuente Roboto -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Tu archivo CSS principal -->
-    <link rel="stylesheet" href="assets/css/login.css">
-    <link rel="icon" type="image/x-icon" href="/zapallo/Assets/img/zapa.jpeg">
+
+    <link rel="stylesheet" href="/ElZapato/Assets/css/login.css">
+    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
+
 </head>
 <body>
     <div class="auth-wrapper">
 
         <!-- Panel izquierdo: Marca -->
         <div class="auth-brand">
-            <img src="/Elzapato/assets/img/Elpato.jpeg" alt="Logo ElZapato" class="brand-logo">
+
+            <img src="/ElZapato/Assets/img/logo.png" alt="Logo ElZapato" class="brand-logo">
+
             <h1>ElZapato</h1>
             <p>Sistema de punto de venta para calzado</p>
             <span class="brand-badge">POS &middot; v0.1</span>
@@ -69,8 +73,59 @@
 
     </div>
 
-   
-<script src="assets/js/login.js"></script>
-       
+
+    <script>
+        const form    = document.getElementById('login-form');
+        const btn     = document.getElementById('btn-submit');
+        const errBox  = document.getElementById('error-msg');
+        const errText = document.getElementById('error-text');
+
+        function showError(msg) {
+            errText.textContent = msg;
+            errBox.classList.add('show');
+        }
+
+        function hideError() {
+            errBox.classList.remove('show');
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            hideError();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Por favor completa todos los campos.');
+                return;
+            }
+
+            // Estado de carga
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="loading-spinner"></span> Ingresando...';
+
+            // Simula petición (reemplazar con fetch/AJAX real)
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+
+                if (username === 'admin' && password === '123') {
+                    window.location.href = 'src/views/admin/dashboard.php';
+                }if (username === 'seller' && password === '123') {
+                    window.location.href = 'src/views/seller/pos.php';  
+                } else {
+                    showError('Usuario o contraseña incorrectos.');
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').focus();
+                }
+            }, 800);
+        });
+
+        // Ocultar error al escribir
+        document.getElementById('username').addEventListener('input', hideError);
+        document.getElementById('password').addEventListener('input', hideError);
+    </script>
+
 </body>
 </html>
