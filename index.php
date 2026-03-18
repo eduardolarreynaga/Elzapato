@@ -59,11 +59,6 @@
                 <button type="submit" class="btn-login" id="btn-submit">
                     <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                 </button>
-
-                <div class="auth-footer">
-                    <a href="#" class="auth-link">¿Olvidaste tu contraseña?</a>
-                    <a href="#" class="auth-link">Registrarse</a>
-                </div>
             </form>
         </div>
 
