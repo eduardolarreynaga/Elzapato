@@ -60,11 +60,6 @@ INSERT INTO usuarios (nombre_usuario, password_hash, rol) VALUES
 ('admin', '$2y$10$abcdefghijklmnopqrstuv', 'admin'),
 ('cajero1', '$2y$10$abcdefghijklmnopqrstuv', 'cajero');
 
--- METODOS DE PAGO 
-INSERT INTO metodos_pago (nombre_metodo) VALUES
-('Efectivo'),
-('Tarjeta'),
-('Transferencia');
 
 -- COMPRA DE EJEMPLO
 INSERT INTO compras (id_proveedor) VALUES
