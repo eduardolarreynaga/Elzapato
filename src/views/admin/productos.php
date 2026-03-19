@@ -47,13 +47,13 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="ventas.php">
                             <i class="fas fa-shopping-cart"></i>
                             <span>Ventas</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="clientes.php">
                             <i class="fas fa-users"></i>
                             <span>Clientes</span>
                         </a>
@@ -76,8 +76,8 @@
                             <span>Reportes</span>
                         </a>
                     </li>
-                    <li class="separator"></li>
-                    <li>
+                    <li class="separator logout-separator"></li>
+                    <li class="logout-item">
                         <a href="/ElZapato/index.php">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Salir</span>
@@ -97,7 +97,7 @@
             </div>
         </aside>
 
-        <!-- ========== MAIN CONTENT ========== -->
+         <!-- ========== MAIN CONTENT ========== -->
         <main class="main-content">
             <!-- Header -->
             <header class="dashboard-header">
@@ -106,20 +106,15 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <h1>Productos</h1>
-
-                <div class="stat-mini-item">
-                    <span class="stat-mini-label">Total</span>
-                    <span class="stat-mini-value">156</span>
-                </div>
-                <div class="stat-mini-item">
-                    <span class="stat-mini-label">Valor</span>
-                    <span class="stat-mini-value">$45.8k</span>
-                </div>
                 </div>
                 <div class="header-right">
                     <div class="header-search">
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Buscar productos..." id="searchProduct">
+                    </div>
+                    <div class="header-notifications" hidden>
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
                     </div>
                     <div class="header-date">
                         <i class="fas fa-calendar-alt"></i>
@@ -127,19 +122,29 @@
                     </div>
                 </div>
             </header>
-
-            <!-- Stats rápidas -->
-            <div class="stats-mini">
-
-                <div class="stat-mini-item">
-                    <span class="stat-mini-label">Activos</span>
-                    <span class="stat-mini-value">142</span>
+            
+            
+            <div class="stats-grid stats-list">
+                <div class="stats-list-item">
+                    <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
+                    <span class="stats-list-value">156</span>
                 </div>
-                <div class="stat-mini-item">
-                    <span class="stat-mini-label">Stock Bajo</span>
-                    <span class="stat-mini-value warning">8</span>
+                <div class="stats-list-item">
+                    <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
+                    <span class="stats-list-value">142</span>
                 </div>
- <!-- Barra de acciones -->
+                <div class="stats-list-item">
+                    <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
+                    <span class="stats-list-value">8</span>
+                </div>
+                <div class="stats-list-item">
+                    <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
+                    <span class="stats-list-value">$45.8k</span>
+                </div>
+            </div>
+
+
+            <!-- Barra de acciones -->
             <div class="actions-bar">
                 <div class="actions-left">
                     <button class="btn-primary" id="btnNuevoProducto">
@@ -171,11 +176,6 @@
                     </button>
                 </div>
             </div>
-                
-
-            </div>
-
-           
 
             <!-- Tabla de productos -->
             <div class="table-container">

@@ -445,6 +445,8 @@ body {
 
 .sidebar-nav {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     padding: 20px 0;
 }
@@ -453,10 +455,22 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
 }
 
 .sidebar-nav li {
     margin: 5px 0;
+}
+
+.sidebar-nav li.logout-separator {
+    margin-top: auto;
+}
+
+.sidebar-nav li.logout-item {
+    margin-bottom: 0;
 }
 
 .sidebar-nav li.separator {
@@ -641,6 +655,43 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     margin-bottom: 30px;
+}
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stats-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+    border-bottom: 1px solid var(--primary-soft);
+    padding: 10px 0;
+}
+
+.stats-list-item:last-child {
+    border-bottom: none;
+}
+
+.stats-list-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.stats-list-label i {
+    color: var(--primary-dark);
+}
+
+.stats-list-value {
+    color: var(--text-dark);
+    font-weight: 700;
 }
 
 .stat-card {
@@ -1046,6 +1097,25 @@ body {
     box-shadow: none;
     gap: 14px;
     flex-wrap: wrap;
+}
+
+.products-stats.stats-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.products-stats.stats-list .stats-list-item {
+    padding: 8px 0;
+}
+
+.products-stats.stats-list .stats-list-label {
+    font-size: 0.9rem;
+}
+
+.products-stats.stats-list .stats-list-value {
+    font-size: 0.95rem;
 }
 
 .stats-left,
