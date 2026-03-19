@@ -103,7 +103,7 @@
                 if (username === 'admin' && password === '123') {
                     window.location.href = 'src/views/admin/dashboard.php';
                 }if (username === 'seller' && password === '123') {
-                    window.location.href = 'src/views/seller/pos.php';  
+                    window.location.href = 'src/views/layouts/principal.php';  
                 } else {
                     showError('Usuario o contraseña incorrectos.');
                     document.getElementById('password').value = '';
