@@ -1,0 +1,67 @@
+/* Paleta de colores oficial */
+:root {
+    --bg-claro: #E4E0E1;
+    --tono-suave: #D6C0B3;
+    --tono-detalle: #AB886D;
+    --texto-negro: #000000;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fdfdfd;
+}
+
+/* Header Estilos */
+.main-header {
+    background-color: var(--bg-claro);
+    border-bottom: 2px solid var(--tono-suave);
+    padding: 10px 20px;
+}
+
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-menu {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--texto-negro);
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--tono-detalle);
+}
+
+.nav-link.active {
+    color: var(--tono-detalle);
+    border-bottom: 2px solid var(--tono-detalle);
+}
+
+.header-utils {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: var(--tono-detalle);
+}
+
+.cart-badge {
+    background-color: var(--tono-suave);
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: var(--texto-negro);
+    font-weight: bold;
+}

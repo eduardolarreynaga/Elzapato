@@ -63,16 +63,10 @@
                 <button type="submit" class="btn-login" id="btn-submit">
                     <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                 </button>
-
-                <div class="auth-footer">
-                    <a href="#" class="auth-link">¿Olvidaste tu contraseña?</a>
-                    <a href="#" class="auth-link">Registrarse</a>
-                </div>
             </form>
         </div>
 
     </div>
-
 
     <script>
         const form    = document.getElementById('login-form');
@@ -113,7 +107,7 @@
                 if (username === 'admin' && password === '123') {
                     window.location.href = 'src/views/admin/dashboard.php';
                 }if (username === 'seller' && password === '123') {
-                    window.location.href = 'src/views/seller/pos.php';  
+                    window.location.href = 'src/views/layouts/principal.php';  
                 } else {
                     showError('Usuario o contraseña incorrectos.');
                     document.getElementById('password').value = '';
@@ -126,6 +120,5 @@
         document.getElementById('username').addEventListener('input', hideError);
         document.getElementById('password').addEventListener('input', hideError);
     </script>
-
 </body>
 </html>

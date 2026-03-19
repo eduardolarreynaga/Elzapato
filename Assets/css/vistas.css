@@ -1,0 +1,31 @@
+/* Vista Blog */
+.blog-form-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border: 1px solid var(--tono-suave);
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--tono-suave);
+    border-radius: 4px;
+    box-sizing: border-box; /* Importante para el padding */
+}
+
+.btn-primary {
+    background-color: var(--tono-detalle);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
