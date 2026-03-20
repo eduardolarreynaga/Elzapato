@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ventas - Zapatería El Zapato</title>
+    <title>Empleados - Zapatería El Zapato</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@
                             <span>Categorías</span>
                         </a>
                     </li>
-                    <li class="active">
+                    <li>
                         <a href="ventas.php">
                             <i class="fas fa-shopping-cart"></i>
                             <span>Ventas</span>
@@ -52,7 +52,7 @@
                             <span>Clientes</span>
                         </a>
                     </li>
-                    <li>
+                    <li class="active">
                         <a href="empleados.php">
                             <i class="fas fa-user-tie"></i>
                             <span>Empleados</span>
@@ -97,12 +97,12 @@
                     <button class="menu-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1>Ventas</h1>
+                    <h1>Empleados</h1>
                 </div>
                 <div class="header-right">
                     <div class="header-search">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar por cliente o # venta..." id="searchVenta">
+                        <input type="text" placeholder="Buscar por usuario o rol..." id="searchEmpleado">
                     </div>
                     <div class="header-date">
                         <i class="fas fa-calendar-alt"></i>
@@ -113,86 +113,74 @@
 
             <div class="stats-grid stats-list">
                 <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-receipt"></i> Ventas Registradas</span>
-                    <span class="stats-list-value">245</span>
+                    <span class="stats-list-label"><i class="fas fa-user-tie"></i> Empleados Totales</span>
+                    <span class="stats-list-value">8</span>
                 </div>
                 <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Total Facturado</span>
-                    <span class="stats-list-value">$18,940</span>
+                    <span class="stats-list-label"><i class="fas fa-user-shield"></i> Administradores</span>
+                    <span class="stats-list-value">2</span>
                 </div>
                 <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-credit-card"></i> Pagos con Tarjeta</span>
-                    <span class="stats-list-value">98</span>
+                    <span class="stats-list-label"><i class="fas fa-cash-register"></i> Cajeros</span>
+                    <span class="stats-list-value">6</span>
                 </div>
                 <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-user-check"></i> Ventas con Cliente</span>
-                    <span class="stats-list-value">210</span>
+                    <span class="stats-list-label"><i class="fas fa-user-check"></i> Activos</span>
+                    <span class="stats-list-value">8</span>
                 </div>
             </div>
 
             <div class="table-card">
                 <div class="table-header">
-                    <h3>Listado de Ventas</h3>
+                    <h3>Listado de Empleados (Tabla usuarios)</h3>
                     <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="data-table" id="ventasTable">
+                    <table class="data-table" id="empleadosTable">
                         <thead>
                             <tr>
-                                <th># Venta</th>
-                                <th>Cliente</th>
-                                <th>Cajero</th>
-                                <th>Método de Pago</th>
-                                <th>Fecha</th>
-                                <th>Total</th>
+                                <th>ID Usuario</th>
+                                <th>Nombre Usuario</th>
+                                <th>Rol</th>
+                                <th>Fecha Creación</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>V-000245</td>
-                                <td>Juan Pérez</td>
+                                <td>1</td>
                                 <td>admin</td>
-                                <td>Efectivo</td>
-                                <td>16/03/2026 10:15</td>
-                                <td>$120.00</td>
-                                <td><span class="status-badge completed">Completada</span></td>
+                                <td>admin</td>
+                                <td>18/03/2026 09:10</td>
+                                <td><span class="status-badge completed">Activo</span></td>
                             </tr>
                             <tr>
-                                <td>V-000244</td>
-                                <td>María García</td>
-                                <td>admin</td>
-                                <td>Tarjeta</td>
-                                <td>16/03/2026 09:48</td>
-                                <td>$89.50</td>
-                                <td><span class="status-badge completed">Completada</span></td>
+                                <td>2</td>
+                                <td>cajero01</td>
+                                <td>cajero</td>
+                                <td>18/03/2026 09:15</td>
+                                <td><span class="status-badge completed">Activo</span></td>
                             </tr>
                             <tr>
-                                <td>V-000243</td>
-                                <td>Cliente Mostrador</td>
-                                <td>admin</td>
-                                <td>Transferencia</td>
-                                <td>15/03/2026 18:10</td>
-                                <td>$150.00</td>
-                                <td><span class="status-badge pending">Pendiente</span></td>
+                                <td>3</td>
+                                <td>cajero02</td>
+                                <td>cajero</td>
+                                <td>18/03/2026 09:18</td>
+                                <td><span class="status-badge completed">Activo</span></td>
                             </tr>
                             <tr>
-                                <td>V-000242</td>
-                                <td>Ana Martínez</td>
-                                <td>admin</td>
-                                <td>Tarjeta</td>
-                                <td>15/03/2026 17:02</td>
-                                <td>$73.00</td>
-                                <td><span class="status-badge completed">Completada</span></td>
+                                <td>4</td>
+                                <td>cajero03</td>
+                                <td>cajero</td>
+                                <td>18/03/2026 09:22</td>
+                                <td><span class="status-badge completed">Activo</span></td>
                             </tr>
                             <tr>
-                                <td>V-000241</td>
-                                <td>Carlos López</td>
+                                <td>5</td>
+                                <td>admin2</td>
                                 <td>admin</td>
-                                <td>Efectivo</td>
-                                <td>15/03/2026 16:37</td>
-                                <td>$210.00</td>
-                                <td><span class="status-badge completed">Completada</span></td>
+                                <td>18/03/2026 09:27</td>
+                                <td><span class="status-badge pending">Sin sesión</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -213,9 +201,9 @@
             document.querySelector('.sidebar').classList.toggle('active');
         });
 
-        document.getElementById('searchVenta').addEventListener('input', function(e) {
+        document.getElementById('searchEmpleado').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase().trim();
-            document.querySelectorAll('#ventasTable tbody tr').forEach(row => {
+            document.querySelectorAll('#empleadosTable tbody tr').forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
             });
         });
