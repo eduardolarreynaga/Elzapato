@@ -1,3 +1,10 @@
+<?php
+session_start();
+// Si viene el rol por la URL, lo guardamos en la sesión
+if (isset($_GET['set_role'])) {
+    $_SESSION['user_role'] = $_GET['set_role'];
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,7 +18,7 @@
 </head>
 <body>
 
-    <?php include 'header.php'; ?>
+    <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
 
     <section class="hero">
         <h1>Bienvenido a ElZapato</h1>

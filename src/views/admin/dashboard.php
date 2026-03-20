@@ -33,6 +33,12 @@
             
             <nav class="sidebar-nav">
                 <ul>
+                    <li>
+                        <a href="/ElZapato/index.php">
+                            <i class="fas fa-home"></i>
+                            <span>Pagina principal</span>
+                        </a>
+                    </li>
                     <li class="active">
                         <a href="#">
                             <i class="fas fa-tachometer-alt"></i>

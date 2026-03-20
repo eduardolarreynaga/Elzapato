@@ -65,3 +65,18 @@ body {
     color: var(--texto-negro);
     font-weight: bold;
 }
+
+.btn-waze {
+    display: block;
+    width: 20%;
+    background-color: var(--tono-suave);
+    color: var(--texto-negro);
+    text-align: center;
+    padding: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+}
