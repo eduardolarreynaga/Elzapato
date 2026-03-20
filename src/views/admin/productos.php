@@ -59,7 +59,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="empleados.php">
                             <i class="fas fa-user-tie"></i>
                             <span>Empleados</span>
                         </a>
