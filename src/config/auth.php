@@ -1,7 +1,11 @@
 <?php
 
 require_once __DIR__ . '/app.php';
-require_once __DIR__ . '/../models/Usuario.php';
+
+$usuarioModelPath = __DIR__ . '/../models/Usuario.php';
+if (file_exists($usuarioModelPath)) {
+    require_once $usuarioModelPath;
+}
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -38,11 +42,14 @@ if (!function_exists('login_user')) {
         $_SESSION['last_activity'] = time();
         
         
-        try {
-            $usuarioModel = new Usuario();
-            $usuarioModel->registrarLoginLog($userData['id_usuario'], true);
-        } catch (Exception $e) {
-            error_log("Error al registrar log de login: " . $e->getMessage());
+        if (class_exists('Usuario')) {
+            try {
+                $usuarioClass = 'Usuario';
+                $usuarioModel = new $usuarioClass();
+                $usuarioModel->registrarLoginLog($userData['id_usuario'], true);
+            } catch (Exception $e) {
+                error_log("Error al registrar log de login: " . $e->getMessage());
+            }
         }
     }
 }
@@ -51,9 +58,10 @@ if (!function_exists('logout_user')) {
     function logout_user(): void
     {
         
-        if (isset($_SESSION['id_usuario'])) {
+        if (isset($_SESSION['id_usuario']) && class_exists('Usuario')) {
             try {
-                $usuarioModel = new Usuario();
+                $usuarioClass = 'Usuario';
+                $usuarioModel = new $usuarioClass();
                 $usuarioModel->registrarLogoutLog($_SESSION['id_usuario']);
             } catch (Exception $e) {
                 error_log("Error al registrar log de logout: " . $e->getMessage());

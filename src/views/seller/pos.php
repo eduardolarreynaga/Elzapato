@@ -1,3 +1,15 @@
+<?php
+require_once __DIR__ . '/../../config/auth.php';
+
+if (!is_authenticated()) {
+    redirect_to('index.php');
+}
+
+$currentRole = get_current_user_role();
+if (!in_array($currentRole, ['seller', 'admin'], true)) {
+    redirect_to('index.php');
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
