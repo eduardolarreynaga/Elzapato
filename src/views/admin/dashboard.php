@@ -40,7 +40,7 @@
                         </a>
                     </li>
                     <li class="active">
-                        <a href="#">
+                        <a href="dashboard.php">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -58,19 +58,19 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="ventas.php">
                             <i class="fas fa-shopping-cart"></i>
                             <span>Ventas</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="clientes.php">
                             <i class="fas fa-users"></i>
                             <span>Clientes</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="empleados.php">
                             <i class="fas fa-user-tie"></i>
                             <span>Empleados</span>
                         </a>
@@ -87,14 +87,14 @@
                             <span>Reportes</span>
                         </a>
                     </li>
-                    <li class="separator"></li>
+                    <li class="separator logout-separator"></li>
                     <li hidden>
                         <a href="#">
                             <i class="fas fa-cog"></i>
                             <span>Configuración</span>
                         </a>
                     </li>
-                    <li>
+                    <li class="logout-item">
                         <a href="/ElZapato/index.php">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Salir</span>
