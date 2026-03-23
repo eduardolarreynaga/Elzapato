@@ -40,7 +40,7 @@ $activeMenu = $activeMenu ?? '';
             </li>
             <li class="separator logout-separator"></li>
             <li class="logout-item">
-                <a href="/ElZapato/index.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a>
+                <a href="/ElZapato/src/views/public/logout.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a>
             </li>
         </ul>
     </nav>
