@@ -25,6 +25,65 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
     
     <!-- Estilos CSS -->
     <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
+    <style>
+        .menu-items ul {
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important;
+            gap: 10px !important;
+        }
+
+        .menu-items li.product-item {
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            min-height: 91px !important;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.05)), url('/ElZapato/Assets/img/zapa.jpeg') center/cover no-repeat !important;
+            background-color: transparent !important;
+        }
+
+        .menu-items li.product-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 29px;
+            background: rgba(255, 255, 255, 0.72);
+            z-index: 1;
+        }
+
+        .menu-items li.product-item .item {
+            position: absolute;
+            left: 8px;
+            bottom: 6px;
+            z-index: 2;
+            margin: 0 !important;
+            max-width: calc(100% - 60px);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #111 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-items li.product-item .category {
+            display: none !important;
+        }
+
+        .menu-items li.product-item .price {
+            position: absolute;
+            right: 8px;
+            bottom: 6px;
+            z-index: 2;
+            margin: 0 !important;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #111 !important;
+        }
+    </style>
 </head>
 <body>
     <div class="register">
