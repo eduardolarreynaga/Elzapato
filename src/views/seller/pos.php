@@ -144,22 +144,26 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
                 <button class="num-btn">3</button>
                 
                 <!-- Fila 2 -->
-                <button class="action-btn"><i class="fas fa-ban"></i> Anular</button>
+                <button class="action-btn"><i class="fa fa-times"></i> Reiniciar</button>
                 <button class="num-btn">4</button>
                 <button class="num-btn">5</button>
                 <button class="num-btn">6</button>
                 
                 <!-- Fila 3 -->
-                <button class="action-btn"><i class="fa fa-times"></i> Cant.</button>
+                
+                <!-- <button class="num-btn">.00</button> -->
+                 <button class="action-btn">.00</button>
                 <button class="num-btn">7</button>
                 <button class="num-btn">8</button>
                 <button class="num-btn">9</button>
                 
                 <!-- Fila 4 -->
-                <button class="action-btn exit-btn" ></button>
-                <button class="action-btn keyboard-toggle active" data-toggle-keyboard title="Ocultar/mostrar teclado" aria-label="Ocultar o mostrar teclado" type="button"></button>
+                <button class="action-btn exit-btn" ><i class="fas fa-ban"></i> Anular</button>
+                <!-- <button class="action-btn keyboard-toggle active" data-toggle-keyboard title="Ocultar/mostrar teclado" aria-label="Ocultar o mostrar teclado" type="button"></button> -->
                 <button class="num-btn">0</button>
-                <button class="num-btn">.00</button>
+                <button class="action-btn"><i class="fa fa-minus"></i></button>
+                <button class="action-btn"><i class="fa fa-plus"></i></button>
+
             </div>
 
             <div class="left-keys">
