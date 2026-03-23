@@ -27,7 +27,7 @@ if ($incomingRole !== null) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ElZapato - Dashboard Principal</title>
     
-    <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css?v=20260323">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>

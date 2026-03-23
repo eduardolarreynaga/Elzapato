@@ -4,7 +4,7 @@ require_auth('admin');
 
 $activeMenu = 'ventas';
 $pageTitle = 'Ventas';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-ventas.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-ventas.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Ventas';
@@ -15,7 +15,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="ventas-page">
-            <div class="stats-grid">
+            <div class="stats-grid stats-list">
                 <div class="stats-list-item">
                     <span class="stats-list-label"><i class="fas fa-receipt"></i> Ventas Registradas</span>
                     <span class="stats-list-value">245</span>

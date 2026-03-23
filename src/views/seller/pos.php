@@ -24,7 +24,7 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
     <!-- Estilos CSS -->
-    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css?v=20260323">
     <style>
         .menu-items ul {
             grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important;
@@ -85,7 +85,7 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
         }
     </style>
 </head>
-<body>
+<body class="keyboard-hidden">
     <div class="register">
         <!-- ========== COLUMNA IZQUIERDA: TICKET DE VENTA ========== -->
         <div class="left">
@@ -103,25 +103,25 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
                     <tbody>
                         <!-- Productos en el ticket actual -->
                         <tr>
-                            <td>1</td>
+                            <td>x1</td>
                             <td>Zapato Casual - Negro T42</td>
                             <td>$45.00</td>
                             <td>$45.00</td>
                         </tr>
                         <tr>
-                            <td>2</td>
+                            <td>x2</td>
                             <td>Tenis Deportivo - Blanco T40</td>
                             <td>$60.00</td>
                             <td>$120.00</td>
                         </tr>
                         <tr>
-                            <td>1</td>
+                            <td>x1</td>
                             <td>Botín Cuero - Marrón T39</td>
                             <td>$75.00</td>
                             <td>$75.00</td>
                         </tr>
                         <tr>
-                            <td>1</td>
+                            <td>x1</td>
                             <td>Sandalia Playa - Azul T36</td>
                             <td>$25.00</td>
                             <td>$25.00</td>
@@ -156,10 +156,26 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
                 <button class="num-btn">9</button>
                 
                 <!-- Fila 4 -->
-                <button class="action-btn exit-btn" onclick="window.location.href='/ElZapato/index.php'"><i class="fas fa-sign-out-alt"></i> Salir</button>
-                <div class="empty-cell"></div>
+                <button class="action-btn exit-btn" ></button>
+                <button class="action-btn keyboard-toggle active" data-toggle-keyboard title="Ocultar/mostrar teclado" aria-label="Ocultar o mostrar teclado" type="button"></button>
                 <button class="num-btn">0</button>
                 <button class="num-btn">.00</button>
+            </div>
+
+            <div class="left-keys">
+                <ul>
+                    <li onclick="window.location.href='/ElZapato/index.php'" role="button" tabindex="0" title="Salir">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Salir</span>
+                    </li>
+                    <li class="keyboard-toggle active" data-toggle-keyboard role="button" tabindex="0" title="Ocultar/mostrar teclado" aria-label="Ocultar o mostrar teclado">
+                        <i class="fas fa-keyboard"></i>
+                    </li>
+                    <li onclick="window.print()" role="button" tabindex="0" title="Imprimir">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimir</span>
+                    </li>
+                </ul>
             </div>
         </div>
 
@@ -288,6 +304,6 @@ if (!in_array($currentRole, ['seller', 'admin'], true)) {
     </div>
 
     <!-- Script principal -->
-    <script src="/ElZapato/Assets/js/script.js" defer></script>
+    <script src="/ElZapato/Assets/js/script.js?v=20260323" defer></script>
 </body>
 </html>

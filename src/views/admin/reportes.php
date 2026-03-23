@@ -4,7 +4,7 @@ require_auth('admin');
 
 $activeMenu = 'reportes';
 $pageTitle = 'Reportes';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-reportes.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-reportes.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Reportes';

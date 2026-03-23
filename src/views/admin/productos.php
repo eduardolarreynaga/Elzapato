@@ -4,7 +4,7 @@ require_auth('admin');
 
 $activeMenu = 'productos';
 $pageTitle = 'Productos';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-productos.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-productos.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Productos';
@@ -15,7 +15,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 <div class="productos-page">
 <!-- Resumen de productos -->
-<div class="stats-grid" aria-label="Resumen de productos">
+<div class="stats-grid stats-list" aria-label="Resumen de productos">
     <div class="stats-list-item">
         <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
         <span class="stats-list-value">156</span>

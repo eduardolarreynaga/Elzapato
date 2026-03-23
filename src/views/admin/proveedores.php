@@ -4,7 +4,7 @@ require_auth('admin');
 
 $activeMenu = 'proveedores';
 $pageTitle = 'Proveedores';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-proveedores.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-proveedores.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Proveedores';
@@ -15,7 +15,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="proveedores-page">
-    <div class="stats-grid">
+    <div class="stats-grid stats-list">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-truck"></i> Proveedores Totales</span>
             <span class="stats-list-value">14</span>
@@ -136,20 +136,20 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="modal-body">
             <form id="proveedorForm">
                 <div class="form-group">
-                    <label>Nombre Empresa (proveedores.nombre_empresa)</label>
+                    <label>Nombre Empresa</label>
                     <input class="form-control" id="proveedorEmpresa" type="text" required>
                 </div>
                 <div class="form-group">
-                    <label>Contacto (proveedores.contacto_nombre)</label>
+                    <label>Contacto</label>
                     <input class="form-control" id="proveedorContacto" type="text">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Teléfono (proveedores.telefono)</label>
+                        <label>Teléfono</label>
                         <input class="form-control" id="proveedorTelefono" type="text">
                     </div>
                     <div class="form-group">
-                        <label>Email (proveedores.email)</label>
+                        <label>Email</label>
                         <input class="form-control" id="proveedorEmail" type="email">
                     </div>
                 </div>

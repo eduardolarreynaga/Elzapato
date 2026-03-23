@@ -25,8 +25,13 @@ if (!function_exists('require_auth')) {
             redirect_to('index.php');
         }
 
-        if ($requiredRole !== null && ($_SESSION['rol'] ?? null) !== $requiredRole) {
-            redirect_to('index.php');
+        if ($requiredRole !== null) {
+            $userRole = $_SESSION['rol'] ?? null;
+            $allowedRoles = array_map('trim', explode(',', $requiredRole));
+            
+            if (!in_array($userRole, $allowedRoles, true)) {
+                redirect_to('index.php');
+            }
         }
     }
 }

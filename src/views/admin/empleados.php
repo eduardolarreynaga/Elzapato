@@ -4,7 +4,7 @@ require_auth('admin');
 
 $activeMenu = 'empleados';
 $pageTitle = 'Empleados';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-empleados.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-empleados.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Empleados';
@@ -15,7 +15,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="empleados-page">
-    <div class="stats-grid">
+    <div class="stats-grid stats-list">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-user-tie"></i> Empleados Totales</span>
             <span class="stats-list-value">8</span>
@@ -135,16 +135,16 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="modal-body">
             <form id="empleadoForm">
                 <div class="form-group">
-                    <label>Nombre Usuario (usuarios.nombre_usuario)</label>
+                    <label>Nombre Usuario</label>
                     <input class="form-control" id="empleadoUsuario" type="text" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Password (usuarios.password)</label>
+                        <label>Password</label>
                         <input class="form-control" id="empleadoPassword" type="password" required>
                     </div>
                     <div class="form-group">
-                        <label>Rol (usuarios.rol)</label>
+                        <label>Rol</label>
                         <select class="form-control" id="empleadoRol" required>
                             <option value="">Seleccionar rol</option>
                             <option value="admin">Admin</option>

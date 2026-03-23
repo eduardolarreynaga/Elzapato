@@ -1,7 +1,3 @@
-<?php
-require_once __DIR__ . '/../../config/auth.php';
-require_auth('seller');
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

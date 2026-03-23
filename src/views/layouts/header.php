@@ -71,10 +71,12 @@ $currentUrl = htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/ElZapato/src/views/p
         </div>
 
         <ul class="nav-menu">
+            <li><a href="/ElZapato/src/views/public/principal.php" class="nav-link">Inicio</a></li>
             <li id="li-pos" style="display: none;">
-                <a href="/ElZapato/src/views/seller/pos.php" class="nav-link">Punto venta</a>
+                <a href="/ElZapato/src/views/seller/pos.php" class="nav-link">Punto de venta</a>
             </li>
-            <li><a href="/ElZapato/src/views/seller/punto_venta.php" class="nav-link">Contactos</a></li>
+            <li><a href="/ElZapato/src/views/public/punto_venta.php" class="nav-link">Contactos</a></li>
+            <li><a href="/ElZapato/src/views/public/nosotros.php" class="nav-link">Nosotros</a></li>
             <li id="li-panel" style="display: none;">
             <?php if ($rol === 'admin' && $panelLink !== null): ?>
                 <a class="nav-link" id="panel-link" href="<?php echo htmlspecialchars($panelLink['href'], ENT_QUOTES, 'UTF-8'); ?>">

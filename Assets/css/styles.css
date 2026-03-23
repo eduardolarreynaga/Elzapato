@@ -36,15 +36,21 @@ body {
 /* ===== COLUMNA IZQUIERDA ===== */
 .left {
     border-radius: 5px;
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: relative;
     z-index: 10;
+    height: 100vh;
+    min-height: 0;
+    border-right: 2px solid var(--primary-dark);
 }
 
 /* Ventana de pedido */
 .order-window {
     background: var(--primary-light);
-    height: 35vh;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
     overflow-y: auto;
     border: 0;
     padding: 0;
@@ -96,8 +102,8 @@ body {
 /* Total del pedido */
 .order-total {
     background: var(--primary-light);
-    height: 10vh;
-    font-size: min(6vh, 2.5rem);
+    height: clamp(60px, 10vh, 96px);
+    font-size: clamp(1.2rem, 3.2vh, 2.2rem);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -105,17 +111,91 @@ body {
     color: var(--text-dark);
     border-top: 2px solid var(--primary-dark);
     font-weight: 700;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.left-keys {
+    flex: 0 0 auto;
+    height: 10vh;
+    min-height: 60px;
+    width: 100%;
+    background: var(--primary-dark);
+    border-top: 2px solid var(--primary-soft);
+    border-bottom: 0;
+}
+
+.left-keys ul {
+    display: flex;
+    flex-wrap: nowrap;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    height: 100%;
+    width: 100%;
+    color: var(--primary-light);
+}
+
+.left-keys li {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: clamp(0.7rem, 1.1vw, 0.85rem);
+    text-align: center;
+    padding: 0 6px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    height: 100%;
+}
+
+.left-keys li:last-child {
+    border-right: none;
+}
+
+.left-keys li i {
+    margin-bottom: 4px;
+    font-size: clamp(1rem, 2vw, 1.4rem);
+}
+
+.left-keys li span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    line-height: 1.2;
+}
+
+.left-keys li:hover {
+    background: var(--primary-soft);
+    color: var(--text-dark);
+}
+
+.left-keys li.keyboard-toggle i {
+    margin-bottom: 0;
+}
+
+.left-keys li.keyboard-toggle span {
+    display: none;
 }
 
 /* Botones numéricos y de acción */
 .buttons {
     display: grid;
     height: 55vh;
+    max-height: 55vh;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
     background: var(--primary-soft);
     gap: 2px;
     padding: 2px;
+    overflow: hidden;
+    transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+    flex: 0 0 auto;
 }
 
 .buttons button {
@@ -175,6 +255,17 @@ body {
 .buttons .empty-cell {
     background: transparent;
     border: none;
+}
+
+body.keyboard-hidden .buttons {
+    max-height: 0;
+    height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border: 0;
+    gap: 0;
+    pointer-events: none;
 }
 
 /* ===== COLUMNA DERECHA ===== */
@@ -362,6 +453,21 @@ body {
 .payment-keys li:hover {
     background: var(--primary-soft);
     color: var(--text-dark);
+}
+
+.payment-keys li.keyboard-toggle {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.payment-keys li.keyboard-toggle.active {
+    background: var(--primary-soft);
+    color: var(--text-dark);
+}
+
+.keyboard-toggle.active {
+    background-color: var(--primary-soft) !important;
+    color: var(--text-dark) !important;
+    border-color: var(--primary-dark) !important;
 }
 
 /* Ajuste para cuando hay muchos productos - el scroll solo en menu-items */

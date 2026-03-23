@@ -4,7 +4,7 @@ require_auth('admin');
 
 $activeMenu = 'clientes';
 $pageTitle = 'Clientes';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-clientes.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-clientes.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Clientes';
@@ -14,7 +14,7 @@ $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
 <div class="clientes-page">
-    <div class="stats-grid">
+    <div class="stats-grid stats-list">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-users"></i> Clientes Totales</span>
             <span class="stats-list-value">132</span>
@@ -130,16 +130,16 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="modal-body">
             <form id="clienteForm">
                 <div class="form-group">
-                    <label>Nombre (clientes.nombre)</label>
+                    <label>Nombre</label>
                     <input class="form-control" id="clienteNombre" type="text" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Teléfono (clientes.telefono)</label>
+                        <label>Teléfono</label>
                         <input class="form-control" id="clienteTelefono" type="text">
                     </div>
                     <div class="form-group">
-                        <label>Email (clientes.email)</label>
+                        <label>Email</label>
                         <input class="form-control" id="clienteEmail" type="email">
                     </div>
                 </div>
