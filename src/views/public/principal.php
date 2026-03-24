@@ -1,3 +1,25 @@
+<?php
+session_start();
+// Si viene el rol por la URL, lo guardamos en la sesión (compatibilidad)
+$incomingRole = $_GET['login_success'] ?? $_GET['set_role'] ?? null;
+
+if ($incomingRole !== null) {
+    $role = strtolower(trim((string) $incomingRole));
+
+    if (in_array($role, ['admin', 'seller'], true)) {
+        $_SESSION['user_role'] = $role;
+        $_SESSION['rol'] = $role;
+
+        if (!isset($_SESSION['usuario'])) {
+            $_SESSION['usuario'] = $role;
+        }
+
+        if (!isset($_SESSION['id_usuario'])) {
+            $_SESSION['id_usuario'] = $role === 'admin' ? 1 : 2;
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,13 +27,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ElZapato - Dashboard Principal</title>
     
-    <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css?v=20260323">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-    <?php include 'header.php'; ?>
+    <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
 
     <section class="hero">
         <h1>Bienvenido a ElZapato</h1>

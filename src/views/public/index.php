@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zapatería POS - Iniciar Sesión</title>
     
-    <!-- Font Awesome para iconos -->
+    <!-- Font Awesome para iconos (opcional, para mejorar el diseño) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
     <!-- Fuente Roboto -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- CSS principal -->
+    <!-- Tu archivo CSS principal -->
     <link rel="stylesheet" href="/ElZapato/Assets/css/login.css">
     <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
 </head>
@@ -44,15 +42,8 @@
                     <label for="username">Usuario</label>
                     <div class="input-wrapper">
                         <i class="fas fa-user field-icon"></i>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="username"
-                            name="username"
-                            placeholder="Ingresa tu usuario"
-                            required
-                            autofocus
-                        >
+                        <input type="text" class="form-control" id="username" name="username"
+                               placeholder="Ingresa tu usuario" required autofocus>
                     </div>
                 </div>
 
@@ -60,29 +51,23 @@
                     <label for="password">Contraseña</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock field-icon"></i>
-                        <input
-                            type="password"
-                            class="form-control"
-                            id="password"
-                            name="password"
-                            placeholder="Ingresa tu contraseña"
-                            required
-                        >
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="Ingresa tu contraseña" required>
                     </div>
                 </div>
-
-                <button type="submit" class="btn-login" id="btn-submit">
-                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-                </button>
+            
+                    <button type="submit" class="btn-login" id="btn-submit">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
             </form>
         </div>
 
     </div>
 
     <script>
-        const form = document.getElementById('login-form');
-        const btn = document.getElementById('btn-submit');
-        const errBox = document.getElementById('error-msg');
+        const form    = document.getElementById('login-form');
+        const btn     = document.getElementById('btn-submit');
+        const errBox  = document.getElementById('error-msg');
         const errText = document.getElementById('error-text');
 
         function showError(msg) {
@@ -94,7 +79,7 @@
             errBox.classList.remove('show');
         }
 
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
             hideError();
 
@@ -110,21 +95,23 @@
             btn.classList.add('loading');
             btn.innerHTML = '<span class="loading-spinner"></span> Ingresando...';
 
-            // Simulación de petición
+            // Simula petición (reemplazar con fetch/AJAX real)
             setTimeout(() => {
-                btn.classList.remove('loading');
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
 
-                if (username === 'admin' && password === '123') {
-                    window.location.href = 'src/views/admin/dashboard.php';
-                } else if (username === 'seller' && password === '123') {
-                    window.location.href = 'src/views/layouts/principal.php';
-                } else {
-                    showError('Usuario o contraseña incorrectos.');
-                    document.getElementById('password').value = '';
-                    document.getElementById('password').focus();
-                }
-            }, 800);
+            if (username === 'admin' && password === '123') {
+                // Redirigimos pasando el rol por la URL
+                window.location.href = '../public/principal.php?login_success=admin';
+            } else if (username === 'seller' && password === '123') {
+                // Redirigimos pasando el rol por la URL
+                window.location.href = '../public/principal.php?login_success=seller';
+            } else {
+                showError('Usuario o contraseña incorrectos.');
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        }, 800);
         });
 
         // Ocultar error al escribir

@@ -63,6 +63,35 @@ const ventaActual = {
 console.log("Datos de productos cargados:", productos);
 console.log("Venta actual:", ventaActual);
 
+const keyboardToggles = document.querySelectorAll('[data-toggle-keyboard]');
+
+if (keyboardToggles.length > 0) {
+    const syncKeyboardToggleState = function() {
+        const hidden = document.body.classList.contains('keyboard-hidden');
+        keyboardToggles.forEach(function(toggle) {
+            toggle.classList.toggle('active', hidden);
+        });
+    };
+
+    const toggleKeyboard = function() {
+        document.body.classList.toggle('keyboard-hidden');
+        syncKeyboardToggleState();
+    };
+
+    keyboardToggles.forEach(function(toggle) {
+        toggle.addEventListener('click', toggleKeyboard);
+
+        toggle.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggleKeyboard();
+            }
+        });
+    });
+
+    syncKeyboardToggleState();
+}
+
 // Aquí podrías agregar funciones para:
 // - Cargar productos en la interfaz
 // - Agregar productos al ticket

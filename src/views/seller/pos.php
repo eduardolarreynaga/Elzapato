@@ -1,3 +1,15 @@
+<?php
+require_once __DIR__ . '/../../config/auth.php';
+
+if (!is_authenticated()) {
+    redirect_to('index.php');
+}
+
+$currentRole = get_current_user_role();
+if (!in_array($currentRole, ['seller', 'admin'], true)) {
+    redirect_to('index.php');
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,9 +24,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
     <!-- Estilos CSS -->
-    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css?v=20260323">
+    <style>
+        .menu-items ul {
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important;
+            gap: 10px !important;
+        }
+
+        .menu-items li.product-item {
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            min-height: 91px !important;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.05)), url('/ElZapato/Assets/img/zapa.jpeg') center/cover no-repeat !important;
+            background-color: transparent !important;
+        }
+
+        .menu-items li.product-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 29px;
+            background: rgba(255, 255, 255, 0.72);
+            z-index: 1;
+        }
+
+        .menu-items li.product-item .item {
+            position: absolute;
+            left: 8px;
+            bottom: 6px;
+            z-index: 2;
+            margin: 0 !important;
+            max-width: calc(100% - 60px);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #111 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-items li.product-item .category {
+            display: none !important;
+        }
+
+        .menu-items li.product-item .price {
+            position: absolute;
+            right: 8px;
+            bottom: 6px;
+            z-index: 2;
+            margin: 0 !important;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #111 !important;
+        }
+    </style>
 </head>
-<body>
+<body class="keyboard-hidden">
     <div class="register">
         <!-- ========== COLUMNA IZQUIERDA: TICKET DE VENTA ========== -->
         <div class="left">
@@ -32,25 +103,25 @@
                     <tbody>
                         <!-- Productos en el ticket actual -->
                         <tr>
-                            <td>1</td>
+                            <td>x1</td>
                             <td>Zapato Casual - Negro T42</td>
                             <td>$45.00</td>
                             <td>$45.00</td>
                         </tr>
                         <tr>
-                            <td>2</td>
+                            <td>x2</td>
                             <td>Tenis Deportivo - Blanco T40</td>
                             <td>$60.00</td>
                             <td>$120.00</td>
                         </tr>
                         <tr>
-                            <td>1</td>
+                            <td>x1</td>
                             <td>Botín Cuero - Marrón T39</td>
                             <td>$75.00</td>
                             <td>$75.00</td>
                         </tr>
                         <tr>
-                            <td>1</td>
+                            <td>x1</td>
                             <td>Sandalia Playa - Azul T36</td>
                             <td>$25.00</td>
                             <td>$25.00</td>
@@ -73,22 +144,42 @@
                 <button class="num-btn">3</button>
                 
                 <!-- Fila 2 -->
-                <button class="action-btn"><i class="fas fa-ban"></i> Anular</button>
+                <button class="action-btn"><i class="fa fa-times"></i> Reiniciar</button>
                 <button class="num-btn">4</button>
                 <button class="num-btn">5</button>
                 <button class="num-btn">6</button>
                 
                 <!-- Fila 3 -->
-                <button class="action-btn"><i class="fa fa-times"></i> Cant.</button>
+                
+                <!-- <button class="num-btn">.00</button> -->
+                 <button class="action-btn">.00</button>
                 <button class="num-btn">7</button>
                 <button class="num-btn">8</button>
                 <button class="num-btn">9</button>
                 
                 <!-- Fila 4 -->
-                <button class="action-btn exit-btn" onclick="window.location.href='/ElZapato/index.php'"><i class="fas fa-sign-out-alt"></i> Salir</button>
-                <div class="empty-cell"></div>
+                <button class="action-btn exit-btn" ><i class="fas fa-ban"></i> Anular</button>
+                <!-- <button class="action-btn keyboard-toggle active" data-toggle-keyboard title="Ocultar/mostrar teclado" aria-label="Ocultar o mostrar teclado" type="button"></button> -->
                 <button class="num-btn">0</button>
-                <button class="num-btn">.00</button>
+                <button class="action-btn"><i class="fa fa-minus"></i></button>
+                <button class="action-btn"><i class="fa fa-plus"></i></button>
+
+            </div>
+
+            <div class="left-keys">
+                <ul>
+                    <li onclick="window.location.href='/ElZapato/index.php'" role="button" tabindex="0" title="Salir">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Salir</span>
+                    </li>
+                    <li class="keyboard-toggle active" data-toggle-keyboard role="button" tabindex="0" title="Ocultar/mostrar teclado" aria-label="Ocultar o mostrar teclado">
+                        <i class="fas fa-keyboard"></i>
+                    </li>
+                    <li onclick="window.print()" role="button" tabindex="0" title="Imprimir">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimir</span>
+                    </li>
+                </ul>
             </div>
         </div>
 
@@ -217,6 +308,6 @@
     </div>
 
     <!-- Script principal -->
-    <script src="/ElZapato/Assets/js/script.js" defer></script>
+    <script src="/ElZapato/Assets/js/script.js?v=20260323" defer></script>
 </body>
 </html>

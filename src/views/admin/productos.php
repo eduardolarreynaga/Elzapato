@@ -1,155 +1,45 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos - Zapatería El Zapato</title>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-    <!-- Fuente Roboto -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Estilos CSS -->
-    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
-    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
-</head>
-<body class="dashboard-body">
-    <div class="dashboard">
-        <!-- ========== SIDEBAR ========== -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <img src="/ElZapato/Assets/img/logo.png" alt="Logo" style="height: auto; width: 60px;">
-                    <h2>ElZapato</h2>
-                </div>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul>
-                    <li>
-                        <a href="dashboard.php">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="active">
-                        <a href="productos.php">
-                            <i class="fas fa-box"></i>
-                            <span>Productos</span>
-                        </a>
-                    </li>
-                    <li hidden>
-                        <a href="#">
-                            <i class="fas fa-tags"></i>
-                            <span>Categorías</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="ventas.php">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Ventas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="clientes.php">
-                            <i class="fas fa-users"></i>
-                            <span>Clientes</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="fas fa-user-tie"></i>
-                            <span>Empleados</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="fas fa-truck"></i>
-                            <span>Proveedores</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Reportes</span>
-                        </a>
-                    </li>
-                    <li class="separator logout-separator"></li>
-                    <li class="logout-item">
-                        <a href="/ElZapato/index.php">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Salir</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <i class="fas fa-user-circle"></i>
-                    <div>
-                        <span class="user-name">Admin</span>
-                        <span class="user-role">Administrador</span>
-                    </div>
-                </div>
-            </div>
-        </aside>
+<?php
+require_once __DIR__ . '/../../config/auth.php';
+require_auth('admin');
 
-         <!-- ========== MAIN CONTENT ========== -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="menu-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1>Productos</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar productos..." id="searchProduct">
-                    </div>
-                    <div class="header-notifications" hidden>
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </div>
-                    <div class="header-date">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span id="current-date"></span>
-                    </div>
-                </div>
-            </header>
-            
-            
-            <div class="stats-grid stats-list">
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
-                    <span class="stats-list-value">156</span>
-                </div>
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
-                    <span class="stats-list-value">142</span>
-                </div>
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
-                    <span class="stats-list-value">8</span>
-                </div>
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
-                    <span class="stats-list-value">$45.8k</span>
-                </div>
-            </div>
+$activeMenu = 'productos';
+$pageTitle = 'Productos';
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-productos.css'];
+require __DIR__ . '/../layouts/admin-shell-start.php';
 
+$pageHeading = 'Productos';
+$searchInputId = 'searchProduct';
+$searchPlaceholder = 'Buscar productos...';
+$showSearch = true;
+require __DIR__ . '/../layouts/admin-header.php';
+?>
+<div class="productos-page">
+<!-- Resumen de productos -->
+<div class="stats-grid stats-list" aria-label="Resumen de productos">
+    <div class="stats-list-item">
+        <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
+        <span class="stats-list-value">156</span>
+    </div>
+    <div class="stats-list-item">
+        <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
+        <span class="stats-list-value">142</span>
+    </div>
+    <div class="stats-list-item">
+        <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
+        <span class="stats-list-value">8</span>
+    </div>
+    <div class="stats-list-item">
+        <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
+        <span class="stats-list-value">$45.8k</span>
+    </div>
+</div>
 
-            <!-- Barra de acciones -->
-            <div class="actions-bar">
-                <div class="actions-left">
-                    <button class="btn-primary" id="btnNuevoProducto">
-                        <i class="fas fa-plus"></i> Nuevo Producto
-                    </button>
+<!-- Barra de acciones -->
+<div class="actions-bar">
+    <div class="actions-left">
+        <button class="btn-outline-primary" id="btnNuevoProducto">
+            <i class="fas fa-plus"></i> Nuevo Producto
+        </button>
                     <div class="filters">
                         <select class="filter-select" id="filterCategory">
                             <option value="">Categoría</option>
@@ -165,6 +55,9 @@
                             <option value="inactivo">Inactivo</option>
                             <option value="bajo_stock">Stock Bajo</option>
                         </select>
+                        <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
                     </div>
                 </div>
                 <div class="actions-right">
@@ -531,8 +424,9 @@
                     <button class="page-btn">13</button>
                 </div>
             </div>
-        </main>
-    </div>
+</div><!-- /.productos-page -->
+
+<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
 
     <!-- Modal Simple -->
     <div class="modal" id="productModal">
@@ -606,18 +500,6 @@
     </div>
 
     <script>
-        // Fecha actual
-        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        // Toggle menú móvil
-        document.querySelector('.menu-toggle').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-
         // Select All
         document.getElementById('selectAll').addEventListener('change', function(e) {
             document.querySelectorAll('.product-select').forEach(cb => cb.checked = e.target.checked);
@@ -655,6 +537,12 @@
             }
             const status = row.querySelector('.badge-active, .badge-inactive')?.textContent.toLowerCase() || '';
             return status.includes(value);
+        });
+
+        document.getElementById('btnResetProductoFiltros')?.addEventListener('click', function () {
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterStatus').value   = '';
+            document.querySelectorAll('#productsTableBody tr').forEach(row => row.style.display = '');
         });
 
         // Modal
@@ -710,5 +598,5 @@
         // Botón nuevo producto
         document.getElementById('btnNuevoProducto').addEventListener('click', openModal);
     </script>
-</body>
-</html>
+
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>

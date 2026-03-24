@@ -1,0 +1,19 @@
+.productos-page {
+    display: block;
+}
+
+.product-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-sku {
+    font-size: 0.8rem;
+    color: var(--primary-dark);
+}
+
+.actions-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
