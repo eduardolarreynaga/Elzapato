@@ -32,13 +32,7 @@ body::before {
     border-radius: 22px;
     overflow: hidden;
     box-shadow: 0 28px 64px rgba(0,0,0,.20), 0 8px 24px rgba(0,0,0,.10);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background: linear-gradient(135deg, #E4E0E1 0%, #D6C0B3 100%);
-    padding: 20px;
-    font-family: 'Roboto', sans-serif;
 }
 
 /* ── Panel izquierdo (marca) ── */

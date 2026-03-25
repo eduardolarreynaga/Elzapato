@@ -1,0 +1,3 @@
+#reportesContent .table-card-full {
+    grid-column: 1 / -1;
+}

@@ -1,140 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - Zapatería El Zapato</title>
-    
-    <!-- Font Awesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-    <!-- Fuente Roboto -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    
-    <!-- Estilos CSS -->
-    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css">
-        <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
-</head>
-<body class="dashboard-body">
-    <div class="dashboard">
-        <!-- ========== SIDEBAR ========== -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                
-                <div class="logo">
-                    <!-- <i class="fas fa-shoe-prints fa-2x"></i> -->
-                    <img src="/ElZapato/Assets/img/logo.png" style="height: auto; width: 60px;" alt="">    
-                    <h2>ElZapato</h2>
-                </div>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="active">
-                        <a href="dashboard.php">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="productos.php">
-                            <i class="fas fa-box"></i>
-                            <span>Productos</span>
-                        </a>
-                    </li>
-                    <li hidden>
-                        <a href="#">
-                            <i class="fas fa-tags"></i>
-                            <span>Categorías</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="ventas.php">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Ventas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="clientes.php">
-                            <i class="fas fa-users"></i>
-                            <span>Clientes</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="empleados.php">
-                            <i class="fas fa-user-tie"></i>
-                            <span>Empleados</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="fas fa-truck"></i>
-                            <span>Proveedores</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Reportes</span>
-                        </a>
-                    </li>
-                    <li class="separator logout-separator"></li>
-                    <li hidden>
-                        <a href="#">
-                            <i class="fas fa-cog"></i>
-                            <span>Configuración</span>
-                        </a>
-                    </li>
-                    <li class="logout-item">
-                        <a href="/ElZapato/index.php">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Salir</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <i class="fas fa-user-circle fa-2x"></i>
-                    <div>
-                        <span class="user-name">Usuario: Admin</span>
-                        <span class="user-role">Administrador</span>
-                    </div>
-                </div>
-            </div>
-        </aside>
+<?php
+require_once __DIR__ . '/../../config/auth.php';
+require_auth('admin');
 
-        <!-- ========== MAIN CONTENT ========== -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="menu-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1>Dashboard</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar...">
-                    </div>
-                    <div class="header-notifications" hidden>
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </div>
-                    <div class="header-date">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span id="current-date"></span>
-                    </div>
-                </div>
-            </header>
+$activeMenu = 'dashboard';
+$pageTitle = 'Dashboard';
+$pageStyles = [];
+require __DIR__ . '/../layouts/admin-shell-start.php';
 
-        
+$pageHeading = 'Dashboard';
+$searchPlaceholder = 'Buscar...';
+$showSearch = true;
+require __DIR__ . '/../layouts/admin-header.php';
+?>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
             <!-- Tables Section -->
             <div class="tables-grid">
@@ -315,91 +194,84 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
 
     <script>
-        // Fecha actual
-        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
         // Gráfico de ventas
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-                datasets: [{
-                    label: 'Ventas ($)',
-                    data: [850, 1200, 950, 1450, 1680, 2100, 1850],
-                    borderColor: '#AB886D',
-                    backgroundColor: 'rgba(171, 136, 109, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        const salesCanvas = document.getElementById('salesChart');
+        if (salesCanvas && typeof Chart !== 'undefined') {
+            const salesCtx = salesCanvas.getContext('2d');
+            new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data: [850, 1200, 950, 1450, 1680, 2100, 1850],
+                        borderColor: '#AB886D',
+                        backgroundColor: 'rgba(171, 136, 109, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     },
-                    x: {
-                        grid: {
-                            display: false
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // Gráfico de categorías
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Deportivo', 'Casual', 'Botas', 'Formal', 'Sandalias'],
-                datasets: [{
-                    data: [35, 25, 20, 12, 8],
-                    backgroundColor: [
-                        '#AB886D',
-                        '#D6C0B3',
-                        '#E4E0E1',
-                        '#C1A392',
-                        '#B89A87'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+        const categoryCanvas = document.getElementById('categoryChart');
+        if (categoryCanvas && typeof Chart !== 'undefined') {
+            const categoryCtx = categoryCanvas.getContext('2d');
+            new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Deportivo', 'Casual', 'Botas', 'Formal', 'Sandalias'],
+                    datasets: [{
+                        data: [35, 25, 20, 12, 8],
+                        backgroundColor: [
+                            '#AB886D',
+                            '#D6C0B3',
+                            '#E4E0E1',
+                            '#C1A392',
+                            '#B89A87'
+                        ],
+                        borderWidth: 0
+                    }]
                 },
-                cutout: '70%'
-            }
-        });
-
-        // Toggle menu para móviles
-        document.querySelector('.menu-toggle').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                    ,
+                    cutout: '70%'
+                }
+            });
+        }
     </script>
-</body>
-</html>
+
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>

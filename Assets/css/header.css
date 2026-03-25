@@ -56,6 +56,7 @@ body {
     align-items: center;
     gap: 20px;
     color: var(--tono-detalle);
+    position: relative;
 }
 
 .cart-badge {
@@ -64,4 +65,111 @@ body {
     border-radius: 20px;
     color: var(--texto-negro);
     font-weight: bold;
+}
+
+.btn-waze {
+    display: block;
+    width: auto;
+    min-width: 150px;
+    background-color: var(--tono-suave);
+    color: var(--texto-negro);
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-waze:hover {
+    background-color: var(--tono-detalle);
+    color: #fff;
+}
+
+.nav-item.dropdown {
+    list-style: none;
+}
+
+.user-dropdown {
+    position: relative;
+}
+
+.user-dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 5px;
+    font-size: 0.95rem;
+}
+
+.user-dropdown-toggle:hover,
+.user-dropdown.open .user-dropdown-toggle {
+    background-color: var(--tono-detalle);
+    color: #fff;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 240px;
+    background-color: #fff;
+    border: 1px solid var(--tono-suave);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    padding: 8px 0;
+    display: none;
+    z-index: 1000;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 16px;
+    padding-left: 16px;
+    background: none;
+    border: none;
+    color: var(--texto-negro);
+    text-decoration: none;
+    text-align: left;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(214, 192, 179, 0.2);
+    color: var(--tono-detalle);
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: 6px 0;
+    background-color: rgba(214, 192, 179, 0.9);
+}
+
+.text-danger {
+    color: #d9534f;
+}
+
+.logout-dropdown-btn {
+    font: inherit;
+}
+
+.mr-1 {
+    margin-right: 0.35rem;
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
 }
