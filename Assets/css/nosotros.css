@@ -1,0 +1,425 @@
+/* ============================================
+   ESTILOS ESPECÍFICOS PARA LA PÁGINA NOSOTROS
+   Ubicación: /assets/css/pages/nosotros.css
+   ============================================ */
+
+/* Paleta de colores oficial (heredada de principal.css) */
+:root {
+    --bg-claro: #E4E0E1;
+    --tono-suave: #D6C0B3;
+    --tono-detalle: #AB886D;
+    --texto-negro: #000000;
+}
+
+/* ============================================
+   ANIMACIONES
+============================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ============================================
+   SECCIÓN PRINCIPAL
+============================================ */
+.about-section {
+    padding: 80px 20px;
+    position: relative;
+    overflow-x: hidden;
+    background-color: var(--bg-claro);
+}
+
+.about-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ============================================
+   TÍTULO PRINCIPAL
+============================================ */
+.section-title {
+    text-align: center;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin-bottom: 50px;
+    position: relative;
+    display: inline-block;
+    width: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--texto-negro) 0%, var(--tono-detalle) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        white-space: normal;
+        width: 90%;
+        font-size: 2rem;
+    }
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--tono-detalle), transparent);
+}
+
+/* ============================================
+   TEXTO INTRODUCTORIO
+============================================ */
+.about-intro {
+    margin-bottom: 50px;
+}
+
+.about-intro p {
+    font-size: clamp(1rem, 3vw, 1.1rem);
+    line-height: 1.8;
+    margin-bottom: 20px;
+    text-align: left;
+    color: var(--texto-negro);
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: backwards;
+}
+
+.about-intro p:nth-child(1) { animation-delay: 0.1s; }
+.about-intro p:nth-child(2) { animation-delay: 0.2s; }
+.about-intro p:nth-child(3) { animation-delay: 0.3s; }
+
+.about-intro i {
+    color: var(--tono-detalle);
+    margin-right: 8px;
+}
+
+/* ============================================
+   PUNTOS DESTACADOS
+============================================ */
+.about-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin: 50px 0;
+    width: 100%;
+}
+
+.about-point {
+    background: white;
+    border-radius: 15px;
+    padding: 30px 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid var(--tono-suave);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+}
+
+.about-point:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: var(--tono-detalle);
+}
+
+.about-point i {
+    font-size: 2.5rem;
+    color: var(--tono-detalle);
+    transition: transform 0.3s;
+}
+
+.about-point:hover i {
+    transform: scale(1.1);
+}
+
+.about-point span {
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--texto-negro);
+}
+
+/* ============================================
+   GRID MISIÓN, VISIÓN, VALORES
+============================================ */
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 60px 0;
+    width: 100%;
+}
+
+.about-card {
+    background: white;
+    border-radius: 20px;
+    padding: 35px 25px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid transparent;
+}
+
+.about-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    border-color: var(--tono-suave);
+}
+
+.about-card i {
+    font-size: 3rem;
+    color: var(--tono-detalle);
+    transition: transform 0.3s;
+}
+
+.about-card:hover i {
+    transform: scale(1.1);
+}
+
+.about-card h3 {
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    margin: 10px 0;
+    color: var(--texto-negro);
+}
+
+.about-card p {
+    line-height: 1.6;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    text-align: center;
+    color: #444;
+}
+
+@media (max-width: 968px) {
+    .about-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+}
+
+@media (max-width: 640px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+/* ============================================
+   ESTADÍSTICAS
+============================================ */
+.about-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 60px 0;
+    width: 100%;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 30px 20px;
+    background: white;
+    border-radius: 20px;
+    transition: all 0.3s;
+    border: 1px solid var(--tono-suave);
+}
+
+.stat-item:hover {
+    transform: scale(1.02);
+    border-color: var(--tono-detalle);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: bold;
+    display: block;
+    color: var(--tono-detalle);
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .about-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+/* ============================================
+   CIERRE
+============================================ */
+.about-closing {
+    text-align: center;
+    margin-top: 60px;
+    padding: 40px 30px;
+    background: white;
+    border-radius: 30px;
+    position: relative;
+    border: 1px solid var(--tono-suave);
+}
+
+.about-closing::before {
+    content: '❝';
+    position: absolute;
+    top: -20px;
+    left: 30px;
+    font-size: 6rem;
+    opacity: 0.1;
+    font-family: serif;
+    color: var(--tono-detalle);
+}
+
+.about-closing::after {
+    content: '❞';
+    position: absolute;
+    bottom: -40px;
+    right: 30px;
+    font-size: 6rem;
+    opacity: 0.1;
+    font-family: serif;
+    color: var(--tono-detalle);
+}
+
+.about-closing p {
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: var(--texto-negro);
+}
+
+.about-closing p:first-child {
+    font-weight: bold;
+    font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+}
+
+.about-closing p:first-child i {
+    color: #e74c3c;
+    margin-right: 8px;
+}
+
+.made-in-slv {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: var(--tono-detalle);
+}
+
+/* ============================================
+   BOTÓN FLOTANTE
+============================================ */
+.floating-shoe {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 55px;
+    height: 55px;
+    background: var(--tono-detalle);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    animation: float 3s ease-in-out infinite;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+.floating-shoe:hover {
+    transform: scale(1.1);
+    background: var(--tono-suave);
+    color: var(--texto-negro);
+}
+
+@media (max-width: 768px) {
+    .floating-shoe {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
+/* ============================================
+   FOOTER
+============================================ */
+.main-footer {
+    background: var(--texto-negro);
+    color: var(--bg-claro);
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
+}
+
+.main-footer p {
+    margin: 0;
+}
+
+.footer-contact {
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.footer-contact i {
+    margin: 0 5px;
+    color: var(--tono-detalle);
+}
+
+/* ============================================
+   RESPONSIVE GENERAL
+============================================ */
+@media (max-width: 768px) {
+    .about-section {
+        padding: 50px 15px;
+    }
+    
+    .about-points {
+        gap: 15px;
+    }
+    
+    .about-point {
+        padding: 20px 15px;
+    }
+    
+    .about-card {
+        padding: 25px 20px;
+    }
+    
+    .about-closing {
+        padding: 30px 20px;
+    }
+}
+
+html {
+    scroll-behavior: smooth;
+}
