@@ -1,7 +1,25 @@
 <?php
-require_once __DIR__ . '/../../config/auth.php';
+// 1. Cargar dependencias con rutas corregidas (3 niveles hacia arriba)
+require_once __DIR__ . '/../../config/auth.php'; // Este asumo que sigue en src/config
 require_auth('admin');
 
+// 2. Cargar Modelos y Controladores desde la RAÍZ (../../../)
+require_once __DIR__ . '/../../../model/proveedor_model.php';
+require_once __DIR__ . '/../../../controller/proveedor_controller.php';
+
+// 3. Inicializar controlador y procesar lógica
+$controlador = new ControladorProveedor();
+
+// Si se envió el formulario de nuevo proveedor
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["nuevoNombreEmpresa"])) {
+    $controlador->ctrCrearProveedor();
+}
+
+// Obtener datos para la vista
+$proveedores = $controlador->ctrMostrarProveedores();
+$stats = $controlador->ctrMostrarEstadisticas();
+
+// 4. Configuración de cabeceras de la página
 $activeMenu = 'proveedores';
 $pageTitle = 'Proveedores';
 $pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-proveedores.css'];
@@ -18,19 +36,19 @@ require __DIR__ . '/../layouts/admin-header.php';
     <div class="stats-grid stats-list">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-truck"></i> Proveedores Totales</span>
-            <span class="stats-list-value">14</span>
+            <span class="stats-list-value"><?php echo $stats['total_proveedores'] ?? 0; ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-shopping-basket"></i> Compras del Mes</span>
-            <span class="stats-list-value">27</span>
+            <span class="stats-list-value"><?php echo $stats['compras_mes'] ?? 0; ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-box-open"></i> Unidades Compradas</span>
-            <span class="stats-list-value">1,640</span>
+            <span class="stats-list-value"><?php echo number_format($stats['unidades_compradas'] ?? 0); ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Monto Comprado</span>
-            <span class="stats-list-value">$26,480</span>
+            <span class="stats-list-value">$<?php echo number_format($stats['monto_comprado'] ?? 0, 2); ?></span>
         </div>
     </div>
 
@@ -63,8 +81,8 @@ require __DIR__ . '/../layouts/admin-header.php';
 
     <div class="table-card">
         <div class="table-header">
-            <h3>Listado de Proveedores (Tabla proveedores)</h3>
-            <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+            <h3>Listado de Proveedores</h3>
+            <a href="proveedores.php" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
         </div>
         <div class="table-responsive">
             <table class="data-table" id="proveedoresTable">
@@ -79,46 +97,22 @@ require __DIR__ . '/../layouts/admin-header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Calzado Andino SAC</td>
-                        <td>Rosa Medina</td>
-                        <td>+51 998 442 120</td>
-                        <td>ventas@andino.com</td>
-                        <td data-order="2026-03-10">10/03/2026</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Distribuidora Nova</td>
-                        <td>Joel Díaz</td>
-                        <td>+51 977 320 111</td>
-                        <td>contacto@nova.pe</td>
-                        <td data-order="2026-03-11">11/03/2026</td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Importaciones Lima Shoes</td>
-                        <td>Carla Torres</td>
-                        <td>+51 945 100 320</td>
-                        <td>compras@limashoes.pe</td>
-                        <td data-order="2026-03-12">12/03/2026</td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>Mayorista del Pacífico</td>
-                        <td>Marco Ruiz</td>
-                        <td>+51 966 500 088</td>
-                        <td>marco@pacifico.com</td>
-                        <td data-order="2026-03-14">14/03/2026</td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>Textiles y Calzado Sur</td>
-                        <td>Lucía Salas</td>
-                        <td>+51 922 381 403</td>
-                        <td>l.salas@calzadosur.pe</td>
-                        <td data-order="2026-03-18">18/03/2026</td>
-                    </tr>
+                    <?php if (empty($proveedores)): ?>
+                        <tr><td colspan="6" style="text-align:center;">No se encontraron proveedores registrados.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($proveedores as $p): ?>
+                        <tr>
+                            <td><?php echo $p['id_proveedor']; ?></td>
+                            <td><strong><?php echo htmlspecialchars($p['nombre_empresa']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($p['contacto_nombre'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($p['telefono'] ?? '-'); ?></td>
+                            <td><?php echo htmlspecialchars($p['email'] ?? '-'); ?></td>
+                            <td data-order="<?php echo $p['fecha_registro']; ?>">
+                                <?php echo date('d/m/Y', strtotime($p['fecha_registro'])); ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -134,23 +128,23 @@ require __DIR__ . '/../layouts/admin-header.php';
             <button class="modal-close" type="button" onclick="closeProveedorModal()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <form id="proveedorForm">
+            <form id="proveedorForm" method="POST" action="proveedores.php">
                 <div class="form-group">
                     <label>Nombre Empresa</label>
-                    <input class="form-control" id="proveedorEmpresa" type="text" required>
+                    <input class="form-control" name="nuevoNombreEmpresa" id="proveedorEmpresa" type="text" required>
                 </div>
                 <div class="form-group">
-                    <label>Contacto</label>
-                    <input class="form-control" id="proveedorContacto" type="text">
+                    <label>Contacto (Nombre)</label>
+                    <input class="form-control" name="nuevoContacto" id="proveedorContacto" type="text">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Teléfono</label>
-                        <input class="form-control" id="proveedorTelefono" type="text">
+                        <input class="form-control" name="nuevoTelefono" id="proveedorTelefono" type="text">
                     </div>
                     <div class="form-group">
                         <label>Email</label>
-                        <input class="form-control" id="proveedorEmail" type="email">
+                        <input class="form-control" name="nuevoEmail" id="proveedorEmail" type="email">
                     </div>
                 </div>
             </form>
@@ -170,7 +164,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 
     function applyProveedoresFilters() {
         const term = (searchProveedor?.value || '').toLowerCase().trim();
-        const rows = Array.from(proveedoresTableBody.querySelectorAll('tr'));
+        const rows = Array.from(proveedoresTableBody.querySelectorAll('tr:not(.no-data)'));
 
         rows.forEach((row) => {
             const rowText = row.textContent.toLowerCase();
@@ -204,21 +198,29 @@ require __DIR__ . '/../layouts/admin-header.php';
 
     function closeProveedorModal() {
         document.getElementById('proveedorModal').classList.remove('active');
+        document.getElementById('proveedorForm').reset();
     }
 
     function saveProveedor() {
-        alert('Proveedor guardado correctamente');
-        closeProveedorModal();
+        const form = document.getElementById('proveedorForm');
+        if(form.checkValidity()) {
+            form.submit();
+        } else {
+            form.reportValidity();
+        }
     }
 
     searchProveedor?.addEventListener('input', applyProveedoresFilters);
     filterProveedorNombre?.addEventListener('change', applyProveedoresFilters);
     filterProveedorFecha?.addEventListener('change', applyProveedoresFilters);
+    
     document.getElementById('btnResetProveedorFiltros')?.addEventListener('click', function () {
         if (filterProveedorNombre) filterProveedorNombre.value = '';
         if (filterProveedorFecha)  filterProveedorFecha.value  = '';
+        if (searchProveedor) searchProveedor.value = '';
         applyProveedoresFilters();
     });
+
     document.getElementById('btnNuevoProveedor')?.addEventListener('click', openProveedorModal);
 </script>
 
