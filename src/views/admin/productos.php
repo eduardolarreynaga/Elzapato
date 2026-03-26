@@ -4,7 +4,10 @@ require_auth('admin');
 
 $activeMenu = 'productos';
 $pageTitle = 'Productos';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-productos.css'];
+$pageStyles = [
+    '/ElZapato/Assets/css/pages/admin-stats.css',
+    '/ElZapato/Assets/css/pages/admin-productos.css'
+];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
 $pageHeading = 'Productos';
@@ -12,660 +15,238 @@ $searchInputId = 'searchProduct';
 $searchPlaceholder = 'Buscar productos...';
 $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
+
+// --- CONTROLADORES Y MODELOS ---
+require_once "../../../controller/productosController.php";
+require_once "../../../model/ProductosModel.php";
+require_once "../../../controller/categoriasController.php";
+require_once "../../../model/CategoriasModel.php";
+require_once "../../../controller/marcasController.php";
+require_once "../../../model/MarcasModel.php";
+
+// Procesar acciones POST
+$controlador = new ProductosController();
+$controlador->ctrCrearProducto();   
+$controlador->ctrActualizarProducto(); 
+
+// --- LÓGICA DE PAGINACIÓN ---
+$productosPorPagina = 5;
+$paginaActual = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
+$base = ($paginaActual - 1) * $productosPorPagina;
+
+// Cargar datos
+$todosLosProductos = ProductosController::ctrMostrarProductos(); // Para contar total
+$totalProductos = count($todosLosProductos);
+$totalPaginas = ceil($totalProductos / $productosPorPagina);
+
+// Productos solo de la página actual
+$productos = ProductosController::ctrMostrarProductosPaginados("productos", "producto_variante", $base, $productosPorPagina);
+$categorias = CategoriasController::ctrMostrarCategorias();
+$marcas = MarcasController::ctrMostrarMarcas();
 ?>
+
 <div class="productos-page">
-<!-- Resumen de productos -->
-<div class="stats-grid stats-list" aria-label="Resumen de productos">
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
-        <span class="stats-list-value">156</span>
-    </div>
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
-        <span class="stats-list-value">142</span>
-    </div>
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
-        <span class="stats-list-value">8</span>
-    </div>
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
-        <span class="stats-list-value">$45.8k</span>
-    </div>
-</div>
-
-<!-- Barra de acciones -->
-<div class="actions-bar">
-    <div class="actions-left">
-        <button class="btn-outline-primary" id="btnNuevoProducto">
-            <i class="fas fa-plus"></i> Nuevo Producto
-        </button>
-                    <div class="filters">
-                        <select class="filter-select" id="filterCategory">
-                            <option value="">Categoría</option>
-                            <option value="deportivo">Deportivo</option>
-                            <option value="casual">Casual</option>
-                            <option value="formal">Formal</option>
-                            <option value="botas">Botas</option>
-                            <option value="sandalias">Sandalias</option>
-                        </select>
-                        <select class="filter-select" id="filterStatus">
-                            <option value="">Estado</option>
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                            <option value="bajo_stock">Stock Bajo</option>
-                        </select>
-                        <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                    </div>
-                </div>
-                <div class="actions-right">
-                    <button class="btn-icon" title="Importar">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="btn-icon" title="Exportar">
-                        <i class="fas fa-upload"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabla de productos -->
-            <div class="table-container">
-                <table class="products-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="selectAll">
-                            </th>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Estado</th>
-                            <th style="width: 100px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <!-- Deportivos -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Tenis Deportivo</span>
-                                        <span class="product-sku">TND-001</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Deportivo</span></td>
-                            <td>$60.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">45</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-icon small" title="Más" onclick="showMenu('P001')">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Tenis Running</span>
-                                        <span class="product-sku">TNR-002</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Deportivo</span></td>
-                            <td>$70.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">32</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Tenis Basketball</span>
-                                        <span class="product-sku">TNB-003</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Deportivo</span></td>
-                            <td>$120.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">8</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <!-- Casuales -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Zapato Casual</span>
-                                        <span class="product-sku">ZPC-004</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Casual</span></td>
-                            <td>$45.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">56</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Mocasín</span>
-                                        <span class="product-sku">MCS-005</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Casual</span></td>
-                            <td>$50.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">7</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Alpargata</span>
-                                        <span class="product-sku">ALP-006</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Casual</span></td>
-                            <td>$30.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">23</span>
-                            </td>
-                            <td><span class="badge badge-inactive">Inactivo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <!-- Botas -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Botín Cuero</span>
-                                        <span class="product-sku">BTC-007</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Botas</span></td>
-                            <td>$75.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">3</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                               <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Bota Trekking</span>
-                                        <span class="product-sku">BTR-008</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Botas</span></td>
-                            <td>$95.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">15</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                               <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Bota Lluvia</span>
-                                        <span class="product-sku">BLL-009</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Botas</span></td>
-                            <td>$40.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">28</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <!-- Formales -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Zapato Formal</span>
-                                        <span class="product-sku">ZPF-010</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Formal</span></td>
-                            <td>$85.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">22</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                               <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Zapato Taco</span>
-                                        <span class="product-sku">ZPT-011</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Formal</span></td>
-                            <td>$90.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">6</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <!-- Sandalias -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Sandalia Playa</span>
-                                        <span class="product-sku">SND-012</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Sandalias</span></td>
-                            <td>$25.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">67</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Ojotas</span>
-                                        <span class="product-sku">OJT-013</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Sandalias</span></td>
-                            <td>$15.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">89</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-    <button class="btn-icon small" title="Editar" onclick="editProduct(this)">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn-icon small">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Paginación simple -->
-            <div class="pagination-simple">
-                <span class="pagination-info">Mostrando 1-13 de 156 productos</span>
-                <div class="pagination-pages">
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">5</button>
-                    <span class="page-dots">...</span>
-                    <button class="page-btn">13</button>
-                </div>
-            </div>
-</div><!-- /.productos-page -->
-
-<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
-
-    <!-- Modal Simple -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-box"></i> Nuevo Producto</h3>
-                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="productForm">
-                    <div class="form-group">
-                        <label>Nombre del Producto</label>
-                        <input type="text" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Categoría</label>
-                            <select class="form-control">
-                                <option>Deportivo</option>
-                                <option>Casual</option>
-                                <option>Formal</option>
-                                <option>Botas</option>
-                                <option>Sandalias</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Marca</label>
-                            <select class="form-control">
-                                <option>Nike</option>
-                                <option>Adidas</option>
-                                <option>Flexi</option>
-                                <option>Cat</option>
-                                <option>Havaianas</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Precio Venta</label>
-                            <input type="number" class="form-control" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label>Stock</label>
-                            <input type="number" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea class="form-control" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-                <button class="btn-primary" onclick="saveProduct()">Guardar</button>
-            </div>
+    <!-- Resumen de productos -->
+    <div class="stats-grid stats-list">
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
+            <span class="stats-list-value"><?= $totalProductos ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
+            <span class="stats-list-value"><?= count(array_filter($todosLosProductos, fn($p)=>strtolower($p['estado'])=="activo")) ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
+            <span class="stats-list-value"><?= count(array_filter($todosLosProductos, fn($p)=>($p['stock'] ?? 0) <= 10)) ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
+            <span class="stats-list-value">$<?= number_format(array_sum(array_map(fn($p)=>($p['precio_venta'] ?? 0) * ($p['stock'] ?? 0), $todosLosProductos)) / 1000, 1) ?>k</span>
         </div>
     </div>
 
-    <!-- Menú contextual para acciones -->
-    <div class="context-menu" id="contextMenu">
-        <ul>
-            <li onclick="showVariants()"><i class="fas fa-pallet"></i> Variantes</li>
-            <li onclick="showHistory()"><i class="fas fa-history"></i> Historial</li>
-            <li class="separator"></li>
-            <li onclick="deleteProduct()" class="text-danger"><i class="fas fa-trash"></i> Eliminar</li>
-        </ul>
+    <!-- Barra de acciones -->
+    <div class="actions-bar">
+        <div class="actions-left">
+            <button class="btn-outline-primary" id="btnNuevoProducto">
+                <i class="fas fa-plus"></i> Nuevo Producto
+            </button>
+            <div class="filters">
+                <select class="filter-select" id="filterCategory">
+                    <option value="">Categoría</option>
+                    <?php foreach ($categorias as $cat): ?>
+                        <option value="<?= $cat['id_categoria'] ?>"><?= $cat['nombre_categoria'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+        </div>
+        <div class="actions-right">
+            <button class="btn-icon" title="Importar"><i class="fas fa-download"></i></button>
+            <a href="../../files/exportar-productos.php" class="btn-icon" title="Exportar" target="_blank">
+                <i class="fas fa-upload"></i>
+            </a>
+        </div>
     </div>
 
-    <script>
-        // Select All
-        document.getElementById('selectAll').addEventListener('change', function(e) {
-            document.querySelectorAll('.product-select').forEach(cb => cb.checked = e.target.checked);
-        });
+    <!-- Tabla de productos -->
+    <div class="table-container">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Marca</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th style="width: 100px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($productos as $p): 
+                    $stockClass = ($p['stock'] ?? 0) <= 10 ? 'stock-warning' : 'stock-ok';
+                    $estadoClass = strtolower($p['estado'] ?? '') == 'activo' ? 'badge-active' : 'badge-inactive';
+                ?>
+                <tr data-id="<?= $p['id_producto'] ?>"
+                    data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>"
+                    data-categoria="<?= $p['id_categoria'] ?>"
+                    data-marca="<?= $p['id_marca'] ?>"
+                    data-precio="<?= $p['precio_venta'] ?>"
+                    data-stock="<?= $p['stock'] ?>"
+                    data-descripcion="<?= htmlspecialchars($p['descripcion']) ?>"
+                    data-estado="<?= $p['estado'] ?>">
+                    <td><span class="product-name"><?= htmlspecialchars($p['nombre_producto']) ?></span></td>
+                    <td><span class="badge badge-category"><?= htmlspecialchars($p['nombre_categoria']) ?></span></td>
+                    <td><?= htmlspecialchars($p['nombre_marca'] ?? 'N/A') ?></td>
+                    <td>$<?= number_format($p['precio_venta'] ?? 0, 2) ?></td>
+                    <td><span class="stock-badge <?= $stockClass ?>"><?= $p['stock'] ?? 0 ?></span></td>
+                    <td><span class="badge <?= $estadoClass ?>"><?= ucfirst($p['estado'] ?? 'Inactivo') ?></span></td>
+                    <td>
+                        <button class="btn-icon small" title="Editar" onclick="editProduct(this)"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon small">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 
-        // Búsqueda
-        document.getElementById('searchProduct').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('#productsTableBody tr').forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-        });
+    <!-- Paginación Simple Dinámica -->
+    <div class="pagination-simple" style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 10px 8px;">
+        
+        <span class="pagination-info" style="color: #888; font-size: 0.9rem;">
+            Mostrando <?= ($base + 1) ?>-<?= ($base + count($productos)) ?> de <?= $totalProductos ?> productos
+        </span>
 
-        // Filtros
-        function setupFilter(selectId, filterFn) {
-            document.getElementById(selectId).addEventListener('change', function(e) {
-                const value = e.target.value;
-                document.querySelectorAll('#productsTableBody tr').forEach(row => {
-                    row.style.display = filterFn(row, value) ? '' : 'none';
-                });
-            });
-        }
+        <div class="pagination-pages" style="display: flex; gap: 8px; align-items: center;">
+            <?php
+            $rango = 2; // Número de páginas a mostrar alrededor de la actual
 
-        setupFilter('filterCategory', (row, value) => {
-            if (!value) return true;
-            const category = row.querySelector('.badge-category')?.textContent.toLowerCase() || '';
-            return category.includes(value);
-        });
+            for ($i = 1; $i <= $totalPaginas; $i++) {
+                // Lógica para mostrar los botones o los puntos (...)
+                if ($i == 1 || $i == $totalPaginas || ($i >= $paginaActual - $rango && $i <= $paginaActual + $rango)) {
+                    $activeClass = ($paginaActual == $i) ? 'active' : '';
+                    $style = ($paginaActual == $i) 
+                        ? 'background: #A67C52; color: white; border: 1px solid #A67C52;' 
+                        : 'background: white; color: #333; border: 1px solid #ddd;';
+                    
+                    echo '<a href="productos?pagina='.$i.'" class="page-btn '.$activeClass.'" 
+                            style="padding: 6px 12px; border-radius: 4px; text-decoration: none; min-width: 35px; text-align: center; font-weight: 500; font-size: 0.9rem; '.$style.'">
+                            '.$i.'
+                        </a>';
+                } 
+                // Mostrar puntos suspensivos
+                elseif ($i == $paginaActual - $rango - 1 || $i == $paginaActual + $rango + 1) {
+                    echo '<span class="page-dots" style="color: #888; padding: 0 5px;">...</span>';
+                }
+            }
+            ?>
+        </div>
+    </div>
 
-        function applyFilters() {
-    const term = document.getElementById('searchProduct').value.toLowerCase();
-    const category = document.getElementById('filterCategory').value.toLowerCase();
-    const status = document.getElementById('filterStatus').value.toLowerCase();
+</div>
 
-    document.querySelectorAll('#productsTableBody tr').forEach(row => {
-        const text = row.textContent.toLowerCase();
-        const rowCategory = row.querySelector('.badge-category')?.textContent.toLowerCase() || '';
-        const rowStatus = row.querySelector('.badge-active, .badge-inactive')?.textContent.toLowerCase() || '';
-        const stockWarning = row.querySelector('.stock-warning');
+<!-- Modal Crear / Editar Producto (Mismo código anterior) -->
+<div class="modal" id="productModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle"><i class="fas fa-box"></i> Nuevo Producto</h3>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="productForm" method="post">
+                <input type="hidden" name="id_producto" id="id_producto">
+                <div class="form-group"><label>Nombre</label><input type="text" name="nombre_producto" id="nombre_producto" class="form-control" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Categoría</label>
+                        <select name="id_categoria" id="id_categoria" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <?php foreach ($categorias as $cat): ?><option value="<?= $cat['id_categoria'] ?>"><?= $cat['nombre_categoria'] ?></option><?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Marca</label>
+                        <select name="id_marca" id="id_marca" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <?php foreach ($marcas as $m): ?><option value="<?= $m['id_marca'] ?>"><?= $m['nombre_marca'] ?></option><?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Precio</label><input type="number" step="0.01" name="precio_venta" id="precio_venta" class="form-control" required></div>
+                    <div class="form-group"><label>Stock</label><input type="number" name="stock" id="stock" class="form-control" required></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea name="descripcion" id="descripcion" class="form-control"></textarea></div>
+                <div class="form-group" id="groupEstado" style="display:none;"><label>Estado</label><select name="estado" id="estado" class="form-control"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button><button type="submit" class="btn-primary">Guardar Cambios</button></div>
+            </form>
+        </div>
+    </div>
+</div>
 
-        const matchSearch = term === '' || text.includes(term);
-        const matchCategory = category === '' || rowCategory.includes(category);
+<script>
+const modal = document.getElementById('productModal');
 
-        let matchStatus = true;
-        if (status === 'activo') matchStatus = rowStatus.includes('activo');
-        else if (status === 'inactivo') matchStatus = rowStatus.includes('inactivo');
-        else if (status === 'bajo_stock') matchStatus = !!stockWarning;
-
-        row.style.display = (matchSearch && matchCategory && matchStatus) ? '' : 'none';
+// Búsqueda en tiempo real
+document.getElementById('searchProduct').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    document.querySelectorAll('.products-table tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
     });
-}
-
-// Eventos
-document.getElementById('searchProduct').addEventListener('input', applyFilters);
-document.getElementById('filterCategory').addEventListener('change', applyFilters);
-document.getElementById('filterStatus').addEventListener('change', applyFilters);
-
-// Reset
-document.getElementById('btnResetProductoFiltros').addEventListener('click', function () {
-    document.getElementById('searchProduct').value = '';
-    document.getElementById('filterCategory').value = '';
-    document.getElementById('filterStatus').value = '';
-    applyFilters();
 });
 
-        // Modal
-        function openModal() {
-            document.getElementById('productModal').classList.add('active');
-        }
+// Modal de Nuevo
+document.getElementById('btnNuevoProducto').onclick = function() {
+    document.getElementById('productForm').reset();
+    document.getElementById('id_producto').value = "";
+    document.getElementById('groupEstado').style.display = 'none';
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Nuevo Producto';
+    modal.style.display = 'flex';
+};
 
-        function closeModal() {
-            document.getElementById('productModal').classList.remove('active');
-        }
+// Función Editar
+function editProduct(btn) {
+    const tr = btn.closest('tr');
+    document.getElementById('id_producto').value = tr.dataset.id;
+    document.getElementById('nombre_producto').value = tr.dataset.nombre;
+    document.getElementById('id_categoria').value = tr.dataset.categoria;
+    document.getElementById('id_marca').value = tr.dataset.marca;
+    document.getElementById('precio_venta').value = tr.dataset.precio;
+    document.getElementById('stock').value = tr.dataset.stock;
+    document.getElementById('descripcion').value = tr.dataset.descripcion;
+    document.getElementById('estado').value = tr.dataset.estado;
+    document.getElementById('groupEstado').style.display = 'block';
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
+    modal.style.display = 'flex';
+}
 
-        function saveProduct() {
-            alert('Producto guardado correctamente');
-            closeModal();
-        }
+function closeModal() { modal.style.display = 'none'; }
+window.onclick = (e) => { if (e.target == modal) closeModal(); }
+</script>
 
-        // Menú contextual
-        let currentProduct = null;
-        
-        function showMenu(productId) {
-            currentProduct = productId;
-            const menu = document.getElementById('contextMenu');
-            menu.classList.add('active');
-            
-            // Cerrar al hacer clic fuera
-            setTimeout(() => {
-                document.addEventListener('click', function closeMenu(e) {
-                    if (!menu.contains(e.target) && !e.target.closest('.btn-icon')) {
-                        menu.classList.remove('active');
-                        document.removeEventListener('click', closeMenu);
-                    }
-                });
-            }, 100);
-        }
-
-        function showVariants() {
-            alert('Mostrar variantes del producto');
-            document.getElementById('contextMenu').classList.remove('active');
-        }
-
-        function showHistory() {
-            alert('Mostrar historial del producto');
-            document.getElementById('contextMenu').classList.remove('active');
-        }
-
-        function deleteProduct() {
-            if (confirm('¿Eliminar producto?')) {
-                alert('Producto eliminado');
-            }
-            document.getElementById('contextMenu').classList.remove('active');
-        }
-
-        // Botón nuevo producto
-        document.getElementById('btnNuevoProducto').addEventListener('click', openModal);
-    </script>
-
-<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
+<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
