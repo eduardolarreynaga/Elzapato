@@ -2,6 +2,29 @@
 require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
+// 1. CARGAR CONTROLADORES Y MODELOS
+require_once "../../../controller/ventasController.php"; 
+require_once "../../../model/VentasModel.php";
+
+// 2. OBTENER TODAS LAS VENTAS DE LA BD
+$ventas = VentasController::ctrMostrarVentas();
+
+// 3. CÁLCULO DE ESTADÍSTICAS REALES
+$totalVentas = count($ventas);
+$totalFacturado = 0;
+$pagosTarjeta = 0;
+$ventasConCliente = 0;
+
+foreach ($ventas as $v) {
+    $totalFacturado += (float)$v["total_venta"];
+    if (isset($v["metodo_pago"]) && strtolower($v["metodo_pago"]) == 'tarjeta') {
+        $pagosTarjeta++;
+    }
+    if (isset($v["nombre_cliente"]) && $v["nombre_cliente"] != 'Cliente Mostrador') {
+        $ventasConCliente++;
+    }
+}
+
 $activeMenu = 'ventas';
 $pageTitle = 'Ventas';
 $pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-ventas.css'];
@@ -15,156 +38,117 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="ventas-page">
-            <div class="stats-grid stats-list">
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-receipt"></i> Ventas Registradas</span>
-                    <span class="stats-list-value">245</span>
-                </div>
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Total Facturado</span>
-                    <span class="stats-list-value">$18,940</span>
-                </div>
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-credit-card"></i> Pagos con Tarjeta</span>
-                    <span class="stats-list-value">98</span>
-                </div>
-                <div class="stats-list-item">
-                    <span class="stats-list-label"><i class="fas fa-user-check"></i> Ventas con Cliente</span>
-                    <span class="stats-list-value">210</span>
-                </div>
-            </div>
+    
+    <div class="stats-grid stats-list">
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-receipt"></i> Ventas Registradas</span>
+            <span class="stats-list-value"><?= $totalVentas ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Total Facturado</span>
+            <span class="stats-list-value">$<?= number_format($totalFacturado, 2) ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-credit-card"></i> Pagos con Tarjeta</span>
+            <span class="stats-list-value"><?= $pagosTarjeta ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-user-check"></i> Ventas con Cliente</span>
+            <span class="stats-list-value"><?= $ventasConCliente ?></span>
+        </div>
+    </div>
 
-            <!-- Barra de acciones -->
-            <div class="actions-bar">
-                <div class="actions-left">
-                    <div class="filters">
-                        <select class="filter-select" id="filterVentaMetodo">
-                            <option value="">Método de Pago</option>
-                            <option value="efectivo">Efectivo</option>
-                            <option value="tarjeta">Tarjeta</option>
-                            <option value="transferencia">Transferencia</option>
-                        </select>
-                        <select class="filter-select" id="filterVentaEstado">
-                            <option value="">Estado</option>
-                            <option value="completada">Completada</option>
-                            <option value="pendiente">Pendiente</option>
-                        </select>
-                        <button class="btn-outline-primary" id="btnResetVentaFiltros" type="button" title="Limpiar filtros">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                    </div>
-                </div>
-                <div class="actions-right">
-                    <button class="btn-icon" title="Exportar" type="button"><i class="fas fa-upload"></i></button>
-                </div>
+    <div class="actions-bar">
+        <div class="actions-left">
+            <div class="filters">
+                <select class="filter-select" id="filterVentaMetodo">
+                    <option value="">Método de Pago</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="transferencia">Transferencia</option>
+                </select>
+                <button class="btn-outline-primary" id="btnResetVentaFiltros" type="button" title="Limpiar filtros">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
             </div>
+        </div>
+        </div>
 
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Listado de Ventas</h3>
-                    <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table" id="ventasTable">
-                        <thead>
-                            <tr>
-                                <th># Venta</th>
-                                <th>Cliente</th>
-                                <th>Cajero</th>
-                                <th>Método de Pago</th>
-                                <th>Fecha</th>
-                                <th>Total</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>V-000245</td>
-                                <td>Juan Pérez</td>
-                                <td>admin</td>
-                                <td>Efectivo</td>
-                                <td>16/03/2026 10:15</td>
-                                <td>$120.00</td>
-                                <td><span class="status-badge completed">Completada</span></td>
-                            </tr>
-                            <tr>
-                                <td>V-000244</td>
-                                <td>María García</td>
-                                <td>admin</td>
-                                <td>Tarjeta</td>
-                                <td>16/03/2026 09:48</td>
-                                <td>$89.50</td>
-                                <td><span class="status-badge completed">Completada</span></td>
-                            </tr>
-                            <tr>
-                                <td>V-000243</td>
-                                <td>Cliente Mostrador</td>
-                                <td>admin</td>
-                                <td>Transferencia</td>
-                                <td>15/03/2026 18:10</td>
-                                <td>$150.00</td>
-                                <td><span class="status-badge pending">Pendiente</span></td>
-                            </tr>
-                            <tr>
-                                <td>V-000242</td>
-                                <td>Ana Martínez</td>
-                                <td>admin</td>
-                                <td>Tarjeta</td>
-                                <td>15/03/2026 17:02</td>
-                                <td>$73.00</td>
-                                <td><span class="status-badge completed">Completada</span></td>
-                            </tr>
-                            <tr>
-                                <td>V-000241</td>
-                                <td>Carlos López</td>
-                                <td>admin</td>
-                                <td>Efectivo</td>
-                                <td>15/03/2026 16:37</td>
-                                <td>$210.00</td>
-                                <td><span class="status-badge completed">Completada</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            </div>
-
-<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
+    <div class="table-card">
+        <div class="table-header">
+            <h3>Listado de Ventas</h3>
+            <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="ventasTable">
+                <thead>
+                    <tr>
+                        <th># Venta</th>
+                        <th>Cliente</th>
+                        <th>Cajero</th>
+                        <th>Método de Pago</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if(empty($ventas)): ?>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">No se encontraron registros de ventas.</td>
+                    </tr>
+                    <?php else: ?>
+                        <?php foreach ($ventas as $venta): ?>
+                        <tr>
+                            <td style="font-weight: bold; color: #A67C52;">
+                                V-<?= str_pad($venta["id_venta"], 6, "0", STR_PAD_LEFT) ?>
+                            </td>
+                            <td><?= htmlspecialchars($venta["nombre_cliente"]) ?></td>
+                            <td><small><?= htmlspecialchars($venta["nombre_usuario"]) ?></small></td>
+                            <td><?= htmlspecialchars($venta["metodo_pago"]) ?></td>
+                            <td><?= date("d/m/Y H:i", strtotime($venta["fecha_venta"])) ?></td>
+                            <td style="font-weight: bold;">$<?= number_format($venta["total_venta"], 2) ?></td>
+                            <td>
+                                <span class="status-badge completed">Completada</span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
+    const searchVenta = document.getElementById('searchVenta');
+    const filterMetodo = document.getElementById('filterVentaMetodo');
 
-        const searchVenta     = document.getElementById('searchVenta');
-        const filterMetodo      = document.getElementById('filterVentaMetodo');
-        const filterEstadoVenta = document.getElementById('filterVentaEstado');
+    function applyVentasFilters() {
+        const term = (searchVenta?.value || '').toLowerCase().trim();
+        const metodo = (filterMetodo?.value || '').toLowerCase();
 
-        function applyVentasFilters() {
-            const term   = (searchVenta?.value || '').toLowerCase().trim();
-            const metodo = (filterMetodo?.value || '').toLowerCase();
-            const estado = (filterEstadoVenta?.value || '').toLowerCase();
+        document.querySelectorAll('#ventasTable tbody tr').forEach(row => {
+            if(row.cells.length < 2) return;
 
-            document.querySelectorAll('#ventasTable tbody tr').forEach(row => {
-                const text        = row.textContent.toLowerCase();
-                const metodoCell  = row.children[3]?.textContent.toLowerCase() || '';
-                const estadoCell  = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+            const text = row.textContent.toLowerCase();
+            const metodoCell = row.cells[3]?.textContent.toLowerCase() || '';
 
-                const passSearch = term   === '' || text.includes(term);
-                const passMetodo = metodo === '' || metodoCell.includes(metodo);
-                const passEstado = estado === '' || estadoCell.includes(estado);
+            const passSearch = term === '' || text.includes(term);
+            const passMetodo = metodo === '' || metodoCell.includes(metodo);
 
-                row.style.display = passSearch && passMetodo && passEstado ? '' : 'none';
-            });
-        }
-
-        searchVenta?.addEventListener('input', applyVentasFilters);
-        filterMetodo?.addEventListener('change', applyVentasFilters);
-        filterEstadoVenta?.addEventListener('change', applyVentasFilters);
-
-        document.getElementById('btnResetVentaFiltros')?.addEventListener('click', function () {
-            if (filterMetodo)      filterMetodo.value = '';
-            if (filterEstadoVenta) filterEstadoVenta.value = '';
-            if (searchVenta)       searchVenta.value = '';
-            applyVentasFilters();
+            row.style.display = (passSearch && passMetodo) ? '' : 'none';
         });
-    </script>
+    }
 
-<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
+    searchVenta?.addEventListener('input', applyVentasFilters);
+    filterMetodo?.addEventListener('change', applyVentasFilters);
+
+    document.getElementById('btnResetVentaFiltros')?.addEventListener('click', function () {
+        if (filterMetodo) filterMetodo.value = '';
+        if (searchVenta) searchVenta.value = '';
+        applyVentasFilters();
+    });
+</script>
+
+<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
