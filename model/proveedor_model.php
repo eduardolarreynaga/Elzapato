@@ -36,4 +36,20 @@ class ModeloProveedor {
         $stmt->execute();
         return $stmt->fetch();
     }
+
+    static public function mdlEditarProveedor($tabla, $datos) {
+    $stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre_empresa = :nombre, contacto_nombre = :contacto, telefono = :tel, email = :email WHERE id_proveedor = :id");
+
+    $stmt->bindParam(":nombre", $datos["nombre_empresa"], PDO::PARAM_STR);
+    $stmt->bindParam(":contacto", $datos["contacto_nombre"], PDO::PARAM_STR);
+    $stmt->bindParam(":tel", $datos["telefono"], PDO::PARAM_STR);
+    $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+    $stmt->bindParam(":id", $datos["id_proveedor"], PDO::PARAM_INT);
+
+    if ($stmt->execute()) {
+        return "ok";
+    } else {
+        return "error";
+    }
+}
 }

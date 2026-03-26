@@ -31,4 +31,20 @@ class ControladorProveedor {
             }
         }
     }
+
+    public function ctrEditarProveedor() {
+    if (isset($_POST["editarIdProveedor"])) {
+        $tabla = "proveedores";
+        $datos = array(
+            "id_proveedor" => $_POST["editarIdProveedor"],
+            "nombre_empresa" => $_POST["editarEmpresa"],
+            "contacto_nombre" => $_POST["editarContacto"],
+            "telefono" => $_POST["editarTelefono"],
+            "email" => $_POST["editarEmail"]
+        );
+
+        $respuesta = ModeloProveedor::mdlEditarProveedor($tabla, $datos);
+        return $respuesta;
+    }
+}
 }
