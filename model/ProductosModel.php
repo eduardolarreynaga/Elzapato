@@ -127,4 +127,31 @@ class ProductosModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Estadísticas de ventas de los últimos 7 días
+    static public function mdlVentasSemana() {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT DAYNAME(fecha_venta) as dia, SUM(total_venta) as total 
+            FROM ventas 
+            WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            GROUP BY DAYOFWEEK(fecha_venta) 
+            ORDER BY fecha_venta ASC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Ventas agrupadas por el nombre de la categoría
+    static public function mdlVentasPorCategoria() {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT c.nombre_categoria as etiqueta, SUM(dv.cantidad) as valor
+            FROM detalle_venta dv
+            INNER JOIN producto_variante pv ON dv.id_variante = pv.id_variante
+            INNER JOIN productos p ON pv.id_producto = p.id_producto
+            INNER JOIN categorias c ON p.id_categoria = c.id_categoria
+            GROUP BY c.id_categoria
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

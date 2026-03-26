@@ -105,4 +105,12 @@ class ProductosController {
         $respuesta = ProductosModel::mdlProductosMasVendidos($tabla);
         return $respuesta;
     }
+
+    static public function ctrVentasSemana() {
+        return ProductosModel::mdlVentasSemana();
+    }
+
+    static public function ctrVentasPorCategoria() {
+        return ProductosModel::mdlVentasPorCategoria();
+    }
 }
