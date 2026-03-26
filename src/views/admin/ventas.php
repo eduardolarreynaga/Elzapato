@@ -9,7 +9,7 @@ require_once "../../../model/VentasModel.php";
 // 2. OBTENER TODAS LAS VENTAS DE LA BD
 $ventas = VentasController::ctrMostrarVentas();
 
-// 3. CÁLCULO DE ESTADÍSTICAS REALES
+// 3. CÁLCULO DE ESTADÍSTICAS PARA LOS WIDGETS
 $totalVentas = count($ventas);
 $totalFacturado = 0;
 $pagosTarjeta = 0;
@@ -27,9 +27,11 @@ foreach ($ventas as $v) {
 
 $activeMenu = 'ventas';
 $pageTitle = 'Ventas';
+// Mantenemos tus estilos originales
 $pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-ventas.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
+// CONFIGURACIÓN DEL HEADER (Aquí es donde se genera la fecha y el buscador)
 $pageHeading = 'Ventas';
 $searchInputId = 'searchVenta';
 $searchPlaceholder = 'Buscar por cliente o # venta...';
@@ -67,16 +69,16 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <option value="tarjeta">Tarjeta</option>
                     <option value="transferencia">Transferencia</option>
                 </select>
-                <button class="btn-outline-primary" id="btnResetVentaFiltros" type="button" title="Limpiar filtros">
+                <button class="btn-outline-primary" id="btnResetVentaFiltros" type="button">
                     <i class="fas fa-times"></i> Limpiar
                 </button>
             </div>
         </div>
-        </div>
+    </div>
 
     <div class="table-card">
         <div class="table-header">
-            <h3>Listado de Ventas</h3>
+            <h3>Listado de Ventas Realizadas</h3>
             <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
         </div>
         <div class="table-responsive">
@@ -121,6 +123,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 </div>
 
 <script>
+    // Filtrado JS
     const searchVenta = document.getElementById('searchVenta');
     const filterMetodo = document.getElementById('filterVentaMetodo');
 
@@ -130,13 +133,10 @@ require __DIR__ . '/../layouts/admin-header.php';
 
         document.querySelectorAll('#ventasTable tbody tr').forEach(row => {
             if(row.cells.length < 2) return;
-
             const text = row.textContent.toLowerCase();
             const metodoCell = row.cells[3]?.textContent.toLowerCase() || '';
-
             const passSearch = term === '' || text.includes(term);
             const passMetodo = metodo === '' || metodoCell.includes(metodo);
-
             row.style.display = (passSearch && passMetodo) ? '' : 'none';
         });
     }
@@ -152,3 +152,4 @@ require __DIR__ . '/../layouts/admin-header.php';
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
