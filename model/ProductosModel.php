@@ -111,4 +111,20 @@ class ProductosModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    static public function mdlProductosMasVendidos($tabla) {
+    // Esta consulta suma las cantidades vendidas agrupando por el nombre del producto
+        $stmt = Conexion::conectar()->prepare("
+            SELECT p.nombre_producto, SUM(dv.cantidad) as total_vendido 
+            FROM $tabla p
+            INNER JOIN producto_variante pv ON p.id_producto = pv.id_producto
+            INNER JOIN detalle_venta dv ON pv.id_variante = dv.id_variante
+            GROUP BY p.id_producto 
+            ORDER BY total_vendido DESC 
+            LIMIT 5
+        ");
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

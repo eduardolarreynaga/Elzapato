@@ -99,4 +99,10 @@ class ProductosController {
         $respuesta = ProductosModel::mdlMostrarProductosPaginados($tabla1, $tabla2, $base, $tope);
         return $respuesta;
     }
+
+    static public function ctrProductosMasVendidos() {
+        $tabla = "productos";
+        $respuesta = ProductosModel::mdlProductosMasVendidos($tabla);
+        return $respuesta;
+    }
 }
