@@ -92,6 +92,33 @@ if (keyboardToggles.length > 0) {
     syncKeyboardToggleState();
 }
 
+function editProduct(button) {
+    const row = button.closest('tr');
+    const id = row.querySelector('.product-sku').textContent.replace('P','');
+    const nombre = row.querySelector('.product-name').textContent;
+    const precio = row.querySelector('td:nth-child(4)').textContent.replace('$','');
+    const stock = row.querySelector('.stock-badge').textContent;
+
+    // Llenar formulario
+    document.getElementById('editId').value = id;
+    document.getElementById('editNombre').value = nombre;
+    document.getElementById('editPrecio').value = parseFloat(precio);
+    document.getElementById('editStock').value = stock;
+
+    // Mostrar modal
+    document.getElementById('editProductModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editProductModal').style.display = 'none';
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('editProductModal');
+    if (event.target == modal) modal.style.display = "none";
+};
+
 // Aquí podrías agregar funciones para:
 // - Cargar productos en la interfaz
 // - Agregar productos al ticket
