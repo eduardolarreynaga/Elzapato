@@ -17,12 +17,12 @@ INSERT INTO categorias (nombre_categoria) VALUES
 ('Botas');
 
 -- PRODUCTOS
-INSERT INTO productos (nombre_producto, descripcion, id_marca, id_categoria) VALUES
-('Nike Air Max', 'Zapatilla deportiva con amortiguación Air', 1, 1),
-('Adidas Superstar', 'Zapatilla clásica con puntera de goma', 2, 2),
-('Puma Runner', 'Zapatilla ligera para correr', 3, 1),
-('Converse Chuck Taylor', 'Zapatilla clásica de lona', 4, 2),
-('Vans Old Skool', 'Zapatilla de skate clásica', 5, 2);
+INSERT INTO productos (id_proveedor, nombre_producto, descripcion, id_marca, id_categoria) VALUES
+(1, 'Nike Air Max', 'Zapatilla deportiva con amortiguación Air', 1, 1),
+(2, 'Adidas Superstar', 'Zapatilla clásica con puntera de goma', 2, 2),
+(3, 'Puma Runner', 'Zapatilla ligera para correr', 3, 1),
+(4, 'Converse Chuck Taylor', 'Zapatilla clásica de lona', 4, 2),
+(2, 'Vans Old Skool', 'Zapatilla de skate clásica', 5, 2);
 
 -- VARIANTES DE PRODUCTO
 INSERT INTO producto_variante (id_producto, talla, color, codigo_barras, precio_venta, stock) VALUES
@@ -70,3 +70,18 @@ INSERT INTO detalle_compra (id_compra, id_variante, cantidad, precio_unitario) V
 (1, 1, 10, 60.00),
 (1, 2, 10, 60.00),
 (1, 4, 12, 55.00);
+
+
+-- PASO A: hacer una venta
+INSERT INTO ventas (id_usuario, id_cliente, id_metodo_pago, total_venta) 
+VALUES (1, 1, 1, 85.00);
+
+-- PASO B: Registrar el detalle de la venta
+INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario, subtotal) 
+VALUES (1, 1, 1, 85.00, 85.00);
+
+-- DATOS INICIALES METODOS DE PAGO
+INSERT INTO metodos_pago (nombre_metodo) VALUES
+('Efectivo'),
+('Tarjeta'),
+('Transferencia');
