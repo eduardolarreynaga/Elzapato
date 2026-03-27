@@ -92,6 +92,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <th>Fecha</th>
                         <th>Total</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,6 +113,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                             <td style="font-weight: bold;">$<?= number_format($venta["total_venta"], 2) ?></td>
                             <td>
                                 <span class="status-badge completed">Completada</span>
+                            </td>
+                            <td>
+                                <button class="btn-icon small" onclick="editVenta(this)"><i class="fas fa-edit"></i></button>
                             </td>
                         </tr>
                         <?php endforeach; ?>

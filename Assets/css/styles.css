@@ -65,7 +65,7 @@ body {
 .order-window tr {
     display: grid;
     width: 100%;
-    grid-template-columns: 1fr 4fr 2fr 2fr;
+    grid-template-columns: 1fr 4fr 2fr 2fr 1.5fr;
     overflow-x: hidden;
     color: var(--text-dark);
 }
@@ -80,6 +80,12 @@ body {
 .order-window td:nth-child(4) {
     display: grid;
     justify-content: flex-end;
+}
+
+.order-window td:nth-child(5),
+.order-window th:nth-child(5) {
+    display: grid;
+    justify-content: center;
 }
 
 .order-window tbody tr:nth-child(even) {

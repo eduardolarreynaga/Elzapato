@@ -75,6 +75,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <th>Teléfono</th>
                         <th>Email</th>
                         <th>Estado</th>
+                        <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,6 +85,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td>+51 999 111 222</td>
                         <td>juan.perez@email.com</td>
                         <td><span class="status-badge completed">Activo</span></td>
+                        <td>
+                        <button class="btn-icon small" onclick="editCliente(this)"><i class="fas fa-edit"></i></button>
+                    </td>
                     </tr>
                     <tr>
                         <td>2</td>
@@ -91,6 +95,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td>+51 988 210 300</td>
                         <td>maria.garcia@email.com</td>
                         <td><span class="status-badge completed">Activo</span></td>
+                        <td>
+                        <button class="btn-icon small" onclick="editCliente(this)"><i class="fas fa-edit"></i></button>
+                    </td>
                     </tr>
                     <tr>
                         <td>3</td>
@@ -98,6 +105,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td>+51 977 654 910</td>
                         <td>carlos.lopez@email.com</td>
                         <td><span class="status-badge completed">Activo</span></td>
+                        <td>
+                        <button class="btn-icon small" onclick="editCliente(this)"><i class="fas fa-edit"></i></button>
+                    </td>
                     </tr>
                     <tr>
                         <td>4</td>
@@ -105,6 +115,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td>+51 966 445 120</td>
                         <td>ana.martinez@email.com</td>
                         <td><span class="status-badge pending">Incompleto</span></td>
+                        <td>
+                        <button class="btn-icon small" onclick="editCliente(this)"><i class="fas fa-edit"></i></button>
+                    </td>
                     </tr>
                     <tr>
                         <td>5</td>
@@ -112,6 +125,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td>-</td>
                         <td>-</td>
                         <td><span class="status-badge pending">Sin datos</span></td>
+                        <td>
+                        <button class="btn-icon small" onclick="editCliente(this)"><i class="fas fa-edit"></i></button>
+                    </td>
                     </tr>
                 </tbody>
             </table>

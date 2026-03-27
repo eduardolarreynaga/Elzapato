@@ -49,7 +49,7 @@ function renderizarTablaPOS() {
 
         const fila = document.createElement('tr');
         fila.innerHTML = `
-            <td>x${item.cantidad}</td>
+            <td class="ticket-qty" data-index="${index}" title="Clic para restar una unidad" style="cursor:pointer; user-select:none;">x${item.cantidad}</td>
             <td>${item.nombre}</td>
             <td>$${item.precio.toFixed(2)}</td>
             <td>$${item.subtotal.toFixed(2)}</td>
@@ -75,6 +75,24 @@ window.eliminarDelCarrito = function(index) {
 };
 
 /**
+ * Resta 1 unidad de una línea del carrito.
+ * Si llega a 0, elimina el producto del ticket.
+ */
+window.restarCantidadDelCarrito = function(index) {
+    const item = carrito[index];
+    if (!item) return;
+
+    if (item.cantidad > 1) {
+        item.cantidad--;
+        item.subtotal = item.cantidad * item.precio;
+    } else {
+        carrito.splice(index, 1);
+    }
+
+    renderizarTablaPOS();
+};
+
+/**
  * Limpia todo el carrito (Botón Reiniciar/Anular)
  */
 window.resetVenta = function() {
@@ -93,6 +111,20 @@ window.resetVenta = function() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- CLIC EN CANTIDAD DEL TICKET (RESTA 1) ---
+    const ticketBody = document.querySelector('#ticketTable tbody');
+    if (ticketBody) {
+        ticketBody.addEventListener('click', function(e) {
+            const qtyCell = e.target.closest('.ticket-qty');
+            if (!qtyCell) return;
+
+            const index = parseInt(qtyCell.getAttribute('data-index'), 10);
+            if (!Number.isNaN(index)) {
+                window.restarCantidadDelCarrito(index);
+            }
+        });
+    }
 
     // --- DETECTAR CLIC EN PRODUCTOS ---
     document.addEventListener('click', function(e) {
