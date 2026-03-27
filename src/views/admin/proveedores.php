@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
-require_once __DIR__ . '/../../../model/proveedor_model.php';
-require_once __DIR__ . '/../../../controller/proveedor_controller.php';
+require_once __DIR__ . '/../../../model/ProveedorModel.php';
+require_once __DIR__ . '/../../../controller/proveedorController.php';
 
 $controlador = new ControladorProveedor();
 $mensajeAlerta = "";
