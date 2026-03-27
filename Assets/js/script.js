@@ -54,7 +54,7 @@ function renderizarTablaPOS() {
             <td>$${item.precio.toFixed(2)}</td>
             <td>$${item.subtotal.toFixed(2)}</td>
             <td style="width: 30px; text-align: center;">
-                <i class="fas fa-trash" style="color:#ff5f5f; cursor:pointer;" onclick="eliminarDelCarrito(${index})"></i>
+                <i class="fas fa-trash" style="color:#AB886D; cursor:pointer;" onclick="eliminarDelCarrito(${index})"></i>
             </td>
         `;
         tbody.appendChild(fila);

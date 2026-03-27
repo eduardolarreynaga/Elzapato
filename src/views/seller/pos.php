@@ -100,6 +100,7 @@ $categorias = CategoriasController::ctrMostrarCategorias();
                             <th>Producto</th>
                             <th>Precio</th>
                             <th>Subtotal</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -112,22 +113,23 @@ $categorias = CategoriasController::ctrMostrarCategorias();
             </div>
 
             <div class="buttons">
-                <button class="action-btn" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                <button class="action-btn"><i class="fa fa-plus"></i></button>
                 <button class="num-btn">1</button>
                 <button class="num-btn">2</button>
                 <button class="num-btn">3</button>
-                <button class="action-btn" onclick="resetVenta()"><i class="fa fa-times"></i> Reiniciar</button>
+                <button class="action-btn"><i class="fa fa-minus"></i></button>
                 <button class="num-btn">4</button>
                 <button class="num-btn">5</button>
                 <button class="num-btn">6</button>
-                <button class="action-btn">.00</button>
+                
+                <button class="action-btn" onclick="resetVenta()"><i class="fa fa-times"></i> Reiniciar</button>
                 <button class="num-btn">7</button>
                 <button class="num-btn">8</button>
                 <button class="num-btn">9</button>
                 <button class="action-btn exit-btn"><i class="fas fa-ban"></i> Anular</button>
                 <button class="num-btn">0</button>
-                <button class="action-btn"><i class="fa fa-minus"></i></button>
-                <button class="action-btn"><i class="fa fa-plus"></i></button>
+                <button class="action-btn">.00</button>
+                <button class="action-btn"><i class="fa fa-equals"></i></button>
             </div>
 
             <div class="left-keys">
@@ -188,8 +190,7 @@ $categorias = CategoriasController::ctrMostrarCategorias();
                 <ul>
                     <li class="payment-method" data-method="efectivo"><i class="fas fa-money-bill-alt fa-2x"></i><span>Efectivo</span></li>
                     <li class="payment-method" data-method="tarjeta"><i class="fas fa-credit-card fa-2x"></i><span>Tarjeta</span></li>
-                    <li class="payment-method" data-method="transferencia"><i class="fas fa-exchange-alt fa-2x"></i><span>Transf.</span></li>
-                    <li class="payment-method" data-method="gift"><i class="fas fa-gift fa-2x"></i><span>Gift Card</span></li>
+                    
                     <li class="payment-method" data-method="empleado"><i class="fas fa-user fa-2x"></i><span>Empleado</span></li>
                 </ul>
             </div>
