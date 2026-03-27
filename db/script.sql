@@ -20,6 +20,7 @@ CREATE TABLE categorias (
 -- TABLA PRODUCTOS
 CREATE TABLE productos (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
+    id_proveedor INT,
     nombre_producto VARCHAR(150) NOT NULL,
     descripcion TEXT,
     id_marca INT,
@@ -28,7 +29,8 @@ CREATE TABLE productos (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (id_marca) REFERENCES marcas(id_marca),
-    FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria)
+    FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria),
+    FOREIGN KEY (id_proveedor) REFERENCES proveedores(id_proveedor)
 );
 
 -- VARIANTES DE PRODUCTO
@@ -125,8 +127,12 @@ CREATE TABLE detalle_venta (
     FOREIGN KEY (id_variante) REFERENCES producto_variante(id_variante)
 );
 
--- DATOS INICIALES METODOS DE PAGO
-INSERT INTO metodos_pago (nombre_metodo) VALUES
-('Efectivo'),
-('Tarjeta'),
-('Transferencia');
+-- TRIGGERS
+DELIMITER $$
+CREATE TRIGGER `actualizar_stock_venta` AFTER INSERT ON `detalle_venta` FOR EACH ROW BEGIN
+    UPDATE producto_variante 
+    SET stock = stock - NEW.cantidad
+    WHERE id_variante = NEW.id_variante;
+END
+$$
+DELIMITER ;
