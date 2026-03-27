@@ -161,3 +161,4 @@ new Chart(document.getElementById('topProductsChart'), {
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>

@@ -210,3 +210,4 @@ require __DIR__ . '/../layouts/admin-header.php';
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>

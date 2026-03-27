@@ -241,3 +241,4 @@ document.getElementById('searchProduct').addEventListener('keyup', function() {
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
