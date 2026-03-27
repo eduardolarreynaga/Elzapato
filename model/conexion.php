@@ -4,8 +4,8 @@ class Conexion {
     
         $host = "localhost";
         $dbName = "pos_zapateria"; 
-        $user = "admin";
-        $password = "."; // en WAMP no tiene contraseña
+        $user = "root";
+        $password = ""; // en WAMP no tiene contraseña
 
         try {
             $link = new PDO("mysql:host=$host;dbname=$dbName", $user, $password);
