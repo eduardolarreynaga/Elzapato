@@ -173,3 +173,84 @@ body {
 .mr-2 {
     margin-right: 0.5rem;
 }
+
+/* Estilos específicos para el icono de Punto de Venta */
+.pos-icon-btn {
+    font-size: 1.6rem; /* Tamaño notable para el icono */
+    color: var(--texto-negro);
+    text-decoration: none;
+    transition: color 0.3s, transform 0.2s;
+    display: none; /* Se controla por JS */
+    align-items: center;
+    justify-content: center;
+}
+
+.pos-icon-btn:hover {
+    color: var(--tono-detalle);
+    transform: scale(1.1); /* Efecto sutil de crecimiento */
+}
+
+/* Ajuste para asegurar alineación en el contenedor de utilidades */
+.header-utils {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: var(--tono-detalle);
+    position: relative;
+}
+
+/* Contenedor principal del Loader (ESTO CUBRE TODA LA PANTALLA) */
+/* Contenedor que bloquea toda la pantalla */
+#loader-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #E4E0E1; /* Tu color oficial sólido */
+    display: flex;
+    flex-direction: column; /* Asegura que los puntos salgan abajo */
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+/* Ajuste del GIF de pantalla de carga */
+#loader-gif {
+    width: 450px;
+    height: auto;
+    /* Estas propiedades ayudan a que no se vea borroso al escalar */
+    image-rendering: -webkit-optimize-contrast; /* Para Chrome/Safari */
+    image-rendering: crisp-edges; /* Para Firefox */
+    shape-rendering: geometricPrecision;
+}
+/* Puntos suspensivos animados */
+.loader-text-container {
+    margin-top: 20px;
+    font-size: 3rem;
+    color: #AB886D; /* Tu --tono-detalle */
+    font-family: Arial, sans-serif;
+}
+
+.dot {
+    animation: loadingDots 1.4s infinite;
+    opacity: 0;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loadingDots {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Clase para ocultar */
+.loader-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
