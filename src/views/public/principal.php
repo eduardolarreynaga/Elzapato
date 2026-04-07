@@ -42,19 +42,19 @@ if ($incomingRole !== null) {
 
     <section class="promo-container">
         <div class="card">
-            <i class="fas fa-shipping-fast"></i>
-            <h3>Envíos Rápidos</h3>
-            <p>Entregas en todo El Salvador en menos de 48 horas.</p>
+            <i class="fas fa-shoe-prints"></i>
+            <h3>Variedad de Calzado</h3>
+            <p>Encuentra estilos casuales, deportivos y formales para toda ocasión.</p>
         </div>
         <div class="card">
-            <i class="fas fa-shield-halved"></i>
-            <h3>Garantía Total</h3>
-            <p>Cambios y devoluciones sin complicaciones por 30 días.</p>
+            <i class="fas fa-ruler-combined"></i>
+            <h3>Tallas Disponibles</h3>
+            <p>Contamos con diferentes tallas y modelos para brindar una mejor opción al cliente.</p>
         </div>
         <div class="card">
-            <i class="fas fa-tags"></i>
-            <h3>Ofertas de Temporada</h3>
-            <p>Aprovecha hasta un 40% de descuento en calzado deportivo.</p>
+            <i class="fas fa-store"></i>
+            <h3>Atención en Tienda</h3>
+            <p>Brindamos atención directa y apoyo en la elección del calzado ideal.</p>
         </div>
     </section>
 
@@ -81,6 +81,11 @@ if ($incomingRole !== null) {
                 <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5" alt="Zapato">
                 <h4>Formal Business Black</h4>
                 <p class="price">$60.00</p>
+            </div>
+            <div class="product-item">
+                <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519" alt="Zapato">
+                <h4>Urban Street Gray</h4>
+                <p class="price">$49.99</p>
             </div>
         </div>
     </section>
