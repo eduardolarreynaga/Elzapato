@@ -2,276 +2,163 @@
 require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
+require_once "../../../controller/productosController.php";
+require_once "../../../model/ProductosModel.php";
+
+// --- DATOS REALES ---
+
+// 1. Top Productos (Barras)
+$topVendidos = ProductosController::ctrProductosMasVendidos(); 
+$nombresTop = array_column($topVendidos, 'nombre_producto');
+$cantidadesTop = array_column($topVendidos, 'total_vendido');
+
+// 2. Ventas Semana (Línea)
+$ventasSemana = ProductosController::ctrVentasSemana();
+$diasSemanales = array_column($ventasSemana, 'dia');
+$totalesSemanales = array_column($ventasSemana, 'total');
+
+// 3. Categorías (Dona)
+$ventasCategorias = ProductosController::ctrVentasPorCategoria();
+$nombresCats = array_column($ventasCategorias, 'etiqueta');
+$valoresCats = array_column($ventasCategorias, 'valor');
+
+// 4. Stock Bajo
+$todosLosProductos = ProductosController::ctrMostrarProductos(); 
+$stockBajo = array_filter($todosLosProductos, fn($p) => ($p['stock'] ?? 0) <= 10);
+
 $activeMenu = 'dashboard';
 $pageTitle = 'Dashboard';
-$pageStyles = [];
 require __DIR__ . '/../layouts/admin-shell-start.php';
-
-$pageHeading = 'Dashboard';
-$searchPlaceholder = 'Buscar...';
-$showSearch = true;
+$pageHeading = 'Dashboard El Zapato';
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
-            <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-            <!-- Tables Section -->
-            <div class="tables-grid">
-                <!-- Productos más vendidos -->
-                <div class="table-card">
-                    <div class="table-header">
-                        <h3>Productos Más Vendidos</h3>
-                        <a href="#" class="view-all">Ver todos <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Categoría</th>
-                                    <th>Cantidad</th>
-                                    <th>Ingresos</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="product-cell">
-                                            <span class="product-name">Tenis Deportivo</span>
-                                            <span class="product-sku">#TND-001</span>
-                                        </div>
-                                    </td>
-                                    <td>Deportivo</td>
-                                    <td>45</td>
-                                    <td>$2,700.00</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="product-cell">
-                                            <span class="product-name">Botín Cuero</span>
-                                            <span class="product-sku">#BTC-023</span>
-                                        </div>
-                                    </td>
-                                    <td>Botas</td>
-                                    <td>32</td>
-                                    <td>$2,400.00</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="product-cell">
-                                            <span class="product-name">Zapato Casual</span>
-                                            <span class="product-sku">#ZPC-045</span>
-                                        </div>
-                                    </td>
-                                    <td>Casual</td>
-                                    <td>28</td>
-                                    <td>$1,260.00</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="product-cell">
-                                            <span class="product-name">Sandalia Playa</span>
-                                            <span class="product-sku">#SND-012</span>
-                                        </div>
-                                    </td>
-                                    <td>Sandalias</td>
-                                    <td>25</td>
-                                    <td>$625.00</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="product-cell">
-                                            <span class="product-name">Zapato Formal</span>
-                                            <span class="product-sku">#ZPF-078</span>
-                                        </div>
-                                    </td>
-                                    <td>Formal</td>
-                                    <td>18</td>
-                                    <td>$1,530.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Últimas ventas -->
-                <div class="table-card">
-                    <div class="table-header">
-                        <h3>Últimas Ventas</h3>
-                        <a href="#" class="view-all">Ver todos <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th># Venta</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#V00125</td>
-                                    <td>Juan Pérez</td>
-                                    <td>12/03/2026</td>
-                                    <td>$120.00</td>
-                                    <td><span class="status-badge completed">Completada</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#V00124</td>
-                                    <td>María García</td>
-                                    <td>12/03/2026</td>
-                                    <td>$85.00</td>
-                                    <td><span class="status-badge completed">Completada</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#V00123</td>
-                                    <td>Carlos López</td>
-                                    <td>11/03/2026</td>
-                                    <td>$210.00</td>
-                                    <td><span class="status-badge completed">Completada</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#V00122</td>
-                                    <td>Ana Martínez</td>
-                                    <td>11/03/2026</td>
-                                    <td>$75.00</td>
-                                    <td><span class="status-badge pending">Pendiente</span></td>
-                                </tr>
-                                <tr>
-                                    <td>#V00121</td>
-                                    <td>Roberto Sánchez</td>
-                                    <td>10/03/2026</td>
-                                    <td>$155.00</td>
-                                    <td><span class="status-badge completed">Completada</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div class="dashboard-content" style="padding: 20px; background-color: #f8f9fa; min-height: 100vh;">
+    
+    <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-bottom: 25px;">
+        <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; min-height: 380px;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;">Rendimiento de Ventas Semana</h3>
+            <div style="flex-grow: 1; position: relative; width: 100%; height: 300px;">
+                <canvas id="salesChart"></canvas>
             </div>
+        </div>
 
-            <!-- Stock bajo alerta -->
-            <div class="alert-card">
-                <div class="alert-header">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Productos con Stock Bajo</h3>
-                </div>
-                <div class="alert-content">
-                    <div class="stock-item">
-                        <div class="stock-info">
-                            <span class="stock-name">Tenis Deportivo - Blanco T42</span>
-                            <span class="stock-code">#TND-001-42</span>
-                        </div>
-                        <div class="stock-status">
-                            <span class="stock-current">5 uds</span>
-                            <span class="stock-min">Mín: 10 uds</span>
-                            <button class="btn-restock"><i class="fas fa-plus"></i> Reponer</button>
-                        </div>
-                    </div>
-                    <div class="stock-item">
-                        <div class="stock-info">
-                            <span class="stock-name">Botín Cuero - Marrón T39</span>
-                            <span class="stock-code">#BTC-023-39</span>
-                        </div>
-                        <div class="stock-status">
-                            <span class="stock-current">3 uds</span>
-                            <span class="stock-min">Mín: 8 uds</span>
-                            <button class="btn-restock"><i class="fas fa-plus"></i> Reponer</button>
-                        </div>
-                    </div>
-                    <div class="stock-item">
-                        <div class="stock-info">
-                            <span class="stock-name">Zapato Formal - Negro T41</span>
-                            <span class="stock-code">#ZPF-078-41</span>
-                        </div>
-                        <div class="stock-status">
-                            <span class="stock-current">4 uds</span>
-                            <span class="stock-min">Mín: 10 uds</span>
-                            <button class="btn-restock"><i class="fas fa-plus"></i> Reponer</button>
-                        </div>
-                    </div>
-                </div>
+        <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; min-height: 380px;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;">Ventas por Categoría</h3>
+            <div style="flex-grow: 1; position: relative; width: 100%; height: 300px;">
+                <canvas id="categoryChart"></canvas>
             </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-bottom: 25px;">
+        <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 380px;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;">Productos Más Vendidos</h3>
+            <div style="position: relative; width: 100%; height: 300px;">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 380px;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;"><i class="fas fa-exclamation-triangle" style="color: #A67C52;"></i> Stock Bajo</h3>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <?php if(empty($stockBajo)): ?>
+                    <p style="text-align: center; color: #999; padding-top: 50px;">No hay productos con stock bajo.</p>
+                <?php else: ?>
+                    <?php foreach (array_slice($stockBajo, 0, 6) as $s): ?>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1;">
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($s['nombre_producto']) ?></span>
+                            <small style="color: #888;">Talla: <?= $s['talla'] ?? 'N/A' ?></small>
+                        </div>
+                        <span style="color: #e74c3c; font-weight: bold; background: #fff5f5; padding: 4px 8px; border-radius: 6px;"><?= $s['stock'] ?> uds</span>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    };
+
+    // 1. Rendimiento Ventas
+    new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($diasSemanales) ?>,
+            datasets: [{
+                label: 'Ventas ($)',
+                data: <?= json_encode($totalesSemanales) ?>,
+                borderColor: '#A67C52',
+                backgroundColor: 'rgba(166, 124, 82, 0.1)',
+                fill: true, tension: 0.4
+            }]
+        },
+        options: commonOptions
+    });
+
+    // 2. Ventas por Categoría
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: <?= json_encode($nombresCats) ?>,
+            datasets: [{
+                data: <?= json_encode($valoresCats) ?>,
+                backgroundColor: ['#A67C52', '#D6C0B3', '#242424', '#8a6d51', '#C0A080']
+            }]
+        },
+        options: { ...commonOptions, cutout: '70%' }
+    });
+
+    // 3. Más Vendidos
+new Chart(document.getElementById('topProductsChart'), {
+    type: 'bar',
+    data: {
+        labels: <?= json_encode($nombresTop) ?>,
+        datasets: [{
+            label: 'Unidades',
+            data: <?= json_encode($cantidadesTop) ?>,
+            backgroundColor: '#A67C52',
+            borderRadius: 8,
+            // --- ESTO ARREGLA EL ANCHO DE LAS BARRAS ---
+            maxBarThickness: 50, // Evita que la barra sea gigante si hay pocos datos
+            barPercentage: 0.5   // Ajusta el espacio que ocupa la barra en su columna
+        }]
+    },
+    options: { 
+        ...commonOptions, 
+        plugins: { 
+            legend: { display: false } 
+        },
+        scales: {
+            y: {
+                beginAtZero: true, // Siempre empezar en 0
+                ticks: {
+                    stepSize: 1, // Solo números enteros (1, 2, 3...) ya que vendes unidades
+                    precision: 0
+                },
+                grid: {
+                    drawBorder: false,
+                    color: '#f1f1f1'
+                }
+            },
+            x: {
+                grid: {
+                    display: false // Limpia el fondo para que se vea más moderno
+                }
+            }
+        }
+    }
+});
+</script>
+
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
-
-    <script>
-        // Gráfico de ventas
-        const salesCanvas = document.getElementById('salesChart');
-        if (salesCanvas && typeof Chart !== 'undefined') {
-            const salesCtx = salesCanvas.getContext('2d');
-            new Chart(salesCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-                    datasets: [{
-                        label: 'Ventas ($)',
-                        data: [850, 1200, 950, 1450, 1680, 2100, 1850],
-                        borderColor: '#AB886D',
-                        backgroundColor: 'rgba(171, 136, 109, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Gráfico de categorías
-        const categoryCanvas = document.getElementById('categoryChart');
-        if (categoryCanvas && typeof Chart !== 'undefined') {
-            const categoryCtx = categoryCanvas.getContext('2d');
-            new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Deportivo', 'Casual', 'Botas', 'Formal', 'Sandalias'],
-                    datasets: [{
-                        data: [35, 25, 20, 12, 8],
-                        backgroundColor: [
-                            '#AB886D',
-                            '#D6C0B3',
-                            '#E4E0E1',
-                            '#C1A392',
-                            '#B89A87'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                    ,
-                    cutout: '70%'
-                }
-            });
-        }
-    </script>
-
 <?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>

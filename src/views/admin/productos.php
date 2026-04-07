@@ -2,601 +2,243 @@
 require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
+// --- CONTROLADORES Y MODELOS ---
+require_once "../../../controller/productosController.php";
+require_once "../../../model/ProductosModel.php";
+require_once "../../../controller/categoriasController.php";
+require_once "../../../model/CategoriasModel.php";
+require_once "../../../controller/marcasController.php";
+require_once "../../../model/MarcasModel.php";
+
+// 1. PROCESAR ACCIONES (El controlador ahora maneja la DB y las Imágenes)
+$controlador = new ProductosController();
+$controlador->ctrCrearProducto();   
+$controlador->ctrActualizarProducto(); 
+
+// 2. LÓGICA DE PAGINACIÓN CORREGIDA
+$productosPorPagina = 5;
+$paginaActual = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
+if ($paginaActual < 1) { $paginaActual = 1; }
+
+$base = ($paginaActual - 1) * $productosPorPagina;
+
+// Cargamos datos para estadísticas y tabla
+$todosLosProductos = ProductosController::ctrMostrarProductos(); 
+$totalProductos = count($todosLosProductos);
+$totalPaginas = ceil($totalProductos / $productosPorPagina);
+
+$productos = ProductosController::ctrMostrarProductosPaginados("productos", "producto_variante", max(0, $base), $productosPorPagina);
+$categorias = CategoriasController::ctrMostrarCategorias();
+$marcas = MarcasController::ctrMostrarMarcas();
+
+// Configuración Layout
 $activeMenu = 'productos';
 $pageTitle = 'Productos';
 $pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-productos.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 
-$pageHeading = 'Productos';
+// Header
+$pageHeading = 'Inventario de Productos';
 $searchInputId = 'searchProduct';
-$searchPlaceholder = 'Buscar productos...';
+$searchPlaceholder = 'Buscar por nombre, categoría...';
 $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
+
 <div class="productos-page">
-<!-- Resumen de productos -->
-<div class="stats-grid stats-list" aria-label="Resumen de productos">
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
-        <span class="stats-list-value">156</span>
+    
+    <div class="stats-grid stats-list">
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
+            <span class="stats-list-value"><?= $totalProductos ?></span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
+            <span class="stats-list-value">
+                <?= count(array_filter($todosLosProductos, fn($p) => strtolower($p['estado'] ?? "") == "activo")) ?>
+            </span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
+            <span class="stats-list-value">
+                <?= count(array_filter($todosLosProductos, fn($p) => ($p['stock'] ?? 0) <= 10)) ?>
+            </span>
+        </div>
     </div>
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
-        <span class="stats-list-value">142</span>
-    </div>
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
-        <span class="stats-list-value">8</span>
-    </div>
-    <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
-        <span class="stats-list-value">$45.8k</span>
-    </div>
-</div>
 
-<!-- Barra de acciones -->
-<div class="actions-bar">
-    <div class="actions-left">
-        <button class="btn-outline-primary" id="btnNuevoProducto">
-            <i class="fas fa-plus"></i> Nuevo Producto
-        </button>
-                    <div class="filters">
-                        <select class="filter-select" id="filterCategory">
-                            <option value="">Categoría</option>
-                            <option value="deportivo">Deportivo</option>
-                            <option value="casual">Casual</option>
-                            <option value="formal">Formal</option>
-                            <option value="botas">Botas</option>
-                            <option value="sandalias">Sandalias</option>
-                        </select>
-                        <select class="filter-select" id="filterStatus">
-                            <option value="">Estado</option>
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                            <option value="bajo_stock">Stock Bajo</option>
-                        </select>
-                        <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                    </div>
-                </div>
-                <div class="actions-right">
-                    <button class="btn-icon" title="Importar">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="btn-icon" title="Exportar">
-                        <i class="fas fa-upload"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabla de productos -->
-            <div class="table-container">
-                <table class="products-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="selectAll">
-                            </th>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Estado</th>
-                            <th style="width: 100px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <!-- Deportivos -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Tenis Deportivo</span>
-                                        <span class="product-sku">TND-001</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Deportivo</span></td>
-                            <td>$60.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">45</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small" title="Editar" onclick="editProduct('P001')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-icon small" title="Más" onclick="showMenu('P001')">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Tenis Running</span>
-                                        <span class="product-sku">TNR-002</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Deportivo</span></td>
-                            <td>$70.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">32</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Tenis Basketball</span>
-                                        <span class="product-sku">TNB-003</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Deportivo</span></td>
-                            <td>$120.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">8</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Casuales -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Zapato Casual</span>
-                                        <span class="product-sku">ZPC-004</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Casual</span></td>
-                            <td>$45.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">56</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Mocasín</span>
-                                        <span class="product-sku">MCS-005</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Casual</span></td>
-                            <td>$50.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">7</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Alpargata</span>
-                                        <span class="product-sku">ALP-006</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Casual</span></td>
-                            <td>$30.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">23</span>
-                            </td>
-                            <td><span class="badge badge-inactive">Inactivo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Botas -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Botín Cuero</span>
-                                        <span class="product-sku">BTC-007</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Botas</span></td>
-                            <td>$75.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">3</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Bota Trekking</span>
-                                        <span class="product-sku">BTR-008</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Botas</span></td>
-                            <td>$95.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">15</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Bota Lluvia</span>
-                                        <span class="product-sku">BLL-009</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Botas</span></td>
-                            <td>$40.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">28</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Formales -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Zapato Formal</span>
-                                        <span class="product-sku">ZPF-010</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Formal</span></td>
-                            <td>$85.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">22</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Zapato Taco</span>
-                                        <span class="product-sku">ZPT-011</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Formal</span></td>
-                            <td>$90.00</td>
-                            <td>
-                                <span class="stock-badge stock-warning">6</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Sandalias -->
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Sandalia Playa</span>
-                                        <span class="product-sku">SND-012</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Sandalias</span></td>
-                            <td>$25.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">67</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td><input type="checkbox" class="product-select"></td>
-                            <td>
-                                <div class="product-info">
-                                    <div class="product-details">
-                                        <span class="product-name">Ojotas</span>
-                                        <span class="product-sku">OJT-013</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-category">Sandalias</span></td>
-                            <td>$15.00</td>
-                            <td>
-                                <span class="stock-badge stock-ok">89</span>
-                            </td>
-                            <td><span class="badge badge-active">Activo</span></td>
-                            <td>
-                                <div class="actions-cell">
-                                    <button class="btn-icon small"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-icon small"><i class="fas fa-ellipsis-v"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Paginación simple -->
-            <div class="pagination-simple">
-                <span class="pagination-info">Mostrando 1-13 de 156 productos</span>
-                <div class="pagination-pages">
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">5</button>
-                    <span class="page-dots">...</span>
-                    <button class="page-btn">13</button>
-                </div>
-            </div>
-</div><!-- /.productos-page -->
-
-<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
-
-    <!-- Modal Simple -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-box"></i> Nuevo Producto</h3>
-                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="productForm">
-                    <div class="form-group">
-                        <label>Nombre del Producto</label>
-                        <input type="text" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Categoría</label>
-                            <select class="form-control">
-                                <option>Deportivo</option>
-                                <option>Casual</option>
-                                <option>Formal</option>
-                                <option>Botas</option>
-                                <option>Sandalias</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Marca</label>
-                            <select class="form-control">
-                                <option>Nike</option>
-                                <option>Adidas</option>
-                                <option>Flexi</option>
-                                <option>Cat</option>
-                                <option>Havaianas</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Precio Venta</label>
-                            <input type="number" class="form-control" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label>Stock</label>
-                            <input type="number" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea class="form-control" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-                <button class="btn-primary" onclick="saveProduct()">Guardar</button>
+    <div class="actions-bar">
+        <div class="actions-left">
+            <button class="btn-outline-primary" id="btnNuevoProducto">
+                <i class="fas fa-plus"></i> Registrar Calzado
+            </button>
+            <div class="filters">
+                <select class="filter-select" id="filterCategory">
+                    <option value="">Todas las Categorías</option>
+                    <?php foreach ($categorias as $cat): ?>
+                        <option value="<?= $cat['id_categoria'] ?>"><?= $cat['nombre_categoria'] ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
         </div>
     </div>
 
-    <!-- Menú contextual para acciones -->
-    <div class="context-menu" id="contextMenu">
-        <ul>
-            <li onclick="showVariants()"><i class="fas fa-pallet"></i> Variantes</li>
-            <li onclick="showHistory()"><i class="fas fa-history"></i> Historial</li>
-            <li class="separator"></li>
-            <li onclick="deleteProduct()" class="text-danger"><i class="fas fa-trash"></i> Eliminar</li>
-        </ul>
+    <div class="table-container">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Vista</th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Marca</th>
+                    <th>Precio Venta</th>
+                    <th>Existencias</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if($productos): foreach ($productos as $p): 
+                    $stockClass = ($p['stock'] ?? 0) <= 10 ? 'stock-warning' : 'stock-ok';
+                    $estadoClass = (strtolower($p['estado'] ?? '') == 'activo') ? 'badge-active' : 'badge-inactive';
+                    
+                    // Buscar imagen por ID
+                    $ruta_img = "/ElZapato/Assets/img/zapa.jpeg"; 
+                    $formatos = ['jpg', 'jpeg', 'png', 'webp'];
+                    foreach($formatos as $f){
+                        if(file_exists(__DIR__ . "/../../../Assets/img/productos/{$p['id_producto']}.$f")){
+                            $ruta_img = "/ElZapato/Assets/img/productos/{$p['id_producto']}.$f";
+                            break;
+                        }
+                    }
+                ?>
+                <tr data-id="<?= $p['id_producto'] ?>"
+                    data-nombre="<?= htmlspecialchars($p['nombre_producto'] ?? "") ?>"
+                    data-categoria="<?= $p['id_categoria'] ?>"
+                    data-marca="<?= $p['id_marca'] ?>"
+                    data-precio="<?= $p['precio_venta'] ?>"
+                    data-stock="<?= $p['stock'] ?>"
+                    data-descripcion="<?= htmlspecialchars($p['descripcion'] ?? "") ?>"
+                    data-estado="<?= $p['estado'] ?? "activo" ?>">
+                    
+                    <td><img src="<?= $ruta_img ?>?v=<?= time() ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;"></td>
+                    <td><strong><?= htmlspecialchars($p['nombre_producto'] ?? "") ?></strong></td>
+                    <td><span class="badge badge-category"><?= htmlspecialchars($p['nombre_categoria'] ?? "Sin categoría") ?></span></td>
+                    <td><?= htmlspecialchars($p['nombre_marca'] ?? 'Genérica') ?></td>
+                    <td>$<?= number_format($p['precio_venta'] ?? 0, 2) ?></td>
+                    <td><span class="stock-badge <?= $stockClass ?>"><?= $p['stock'] ?? 0 ?></span></td>
+                    <td><span class="badge <?= $estadoClass ?>"><?= ucfirst($p['estado'] ?? 'Inactivo') ?></span></td>
+                    <td>
+                        <button class="btn-icon small" onclick="editProduct(this)"><i class="fas fa-edit"></i></button>
+                    </td>
+                </tr>
+                <?php endforeach; endif; ?>
+            </tbody>
+        </table>
     </div>
 
-    <script>
-        // Select All
-        document.getElementById('selectAll').addEventListener('change', function(e) {
-            document.querySelectorAll('.product-select').forEach(cb => cb.checked = e.target.checked);
-        });
+    <div class="pagination-simple" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+        <span style="font-size: 0.85rem; color: #666;">Página <?= $paginaActual ?> de <?= $totalPaginas ?></span>
+        <div style="display: flex; gap: 5px;">
+            <?php for ($i = 1; $i <= $totalPaginas; $i++): 
+                $btnStyle = ($paginaActual == $i) ? 'background: #A67C52; color: white;' : 'background: #f4f4f4; color: #333;';
+            ?>
+                <a href="productos.php?pagina=<?= $i ?>" style="padding: 5px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; <?= $btnStyle ?>"><?= $i ?></a>
+            <?php endfor; ?>
+        </div>
+    </div>
+</div>
 
-        // Búsqueda
-        document.getElementById('searchProduct').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('#productsTableBody tr').forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-        });
-
-        // Filtros
-        function setupFilter(selectId, filterFn) {
-            document.getElementById(selectId).addEventListener('change', function(e) {
-                const value = e.target.value;
-                document.querySelectorAll('#productsTableBody tr').forEach(row => {
-                    row.style.display = filterFn(row, value) ? '' : 'none';
-                });
-            });
-        }
-
-        setupFilter('filterCategory', (row, value) => {
-            if (!value) return true;
-            const category = row.querySelector('.badge-category')?.textContent.toLowerCase() || '';
-            return category.includes(value);
-        });
-
-        setupFilter('filterStatus', (row, value) => {
-            if (!value) return true;
-            if (value === 'bajo_stock') {
-                return row.querySelector('.stock-badge')?.classList.contains('stock-warning') || false;
-            }
-            const status = row.querySelector('.badge-active, .badge-inactive')?.textContent.toLowerCase() || '';
-            return status.includes(value);
-        });
-
-        document.getElementById('btnResetProductoFiltros')?.addEventListener('click', function () {
-            document.getElementById('filterCategory').value = '';
-            document.getElementById('filterStatus').value   = '';
-            document.querySelectorAll('#productsTableBody tr').forEach(row => row.style.display = '');
-        });
-
-        // Modal
-        function openModal() {
-            document.getElementById('productModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('productModal').classList.remove('active');
-        }
-
-        function saveProduct() {
-            alert('Producto guardado correctamente');
-            closeModal();
-        }
-
-        // Menú contextual
-        let currentProduct = null;
-        
-        function showMenu(productId) {
-            currentProduct = productId;
-            const menu = document.getElementById('contextMenu');
-            menu.classList.add('active');
+<div class="modal" id="productModal" style="display: none; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999;">
+    <div class="modal-content" style="background:white; padding:30px; border-radius:15px; width:480px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <form id="productForm" method="post" enctype="multipart/form-data">
+            <h3 id="modalTitle" style="color:#A67C52; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Producto</h3>
+            <input type="hidden" name="id_producto" id="id_producto">
             
-            // Cerrar al hacer clic fuera
-            setTimeout(() => {
-                document.addEventListener('click', function closeMenu(e) {
-                    if (!menu.contains(e.target) && !e.target.closest('.btn-icon')) {
-                        menu.classList.remove('active');
-                        document.removeEventListener('click', closeMenu);
-                    }
-                });
-            }, 100);
-        }
+            <div style="text-align:center; margin-bottom:20px;">
+                <img id="previewImg" src="/ElZapato/Assets/img/zapa.jpeg" style="width:120px; height:120px; object-fit:cover; border:2px dashed #ccc; border-radius:12px; cursor:pointer;" title="Click para cambiar imagen" onclick="document.getElementById('imagen_producto').click()">
+                <input type="file" name="imagen_producto" id="imagen_producto" style="display:none" accept="image/*" onchange="previewImage(this)">
+                <p style="font-size: 0.75rem; color: #888; margin-top: 5px;">Formatos sugeridos: JPG, PNG, WEBP</p>
+            </div>
 
-        function showVariants() {
-            alert('Mostrar variantes del producto');
-            document.getElementById('contextMenu').classList.remove('active');
-        }
+            <div class="form-group"><label>Nombre del Calzado</label><input type="text" name="nombre_producto" id="nombre_producto" class="form-control" required></div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div class="form-group"><label>Categoría</label>
+                    <select name="id_categoria" id="id_categoria" class="form-control">
+                        <?php foreach($categorias as $c): ?> <option value="<?= $c['id_categoria'] ?>"><?= $c['nombre_categoria'] ?></option> <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group"><label>Marca</label>
+                    <select name="id_marca" id="id_marca" class="form-control">
+                        <?php foreach($marcas as $m): ?> <option value="<?= $m['id_marca'] ?>"><?= $m['nombre_marca'] ?></option> <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
 
-        function showHistory() {
-            alert('Mostrar historial del producto');
-            document.getElementById('contextMenu').classList.remove('active');
-        }
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div class="form-group"><label>Precio Venta ($)</label><input type="number" step="0.01" name="precio_venta" id="precio_venta" class="form-control" required></div>
+                <div class="form-group"><label>Stock Inicial</label><input type="number" name="stock" id="stock" class="form-control" required></div>
+            </div>
 
-        function deleteProduct() {
-            if (confirm('¿Eliminar producto?')) {
-                alert('Producto eliminado');
-            }
-            document.getElementById('contextMenu').classList.remove('active');
-        }
+            <div class="form-group" id="groupEstado" style="display:none;">
+                <label>Estado del Producto</label>
+                <select name="estado" id="estado" class="form-control">
+                    <option value="activo">Activo (Visible en POS)</option>
+                    <option value="inactivo">Inactivo (Oculto)</option>
+                </select>
+            </div>
 
-        // Botón nuevo producto
-        document.getElementById('btnNuevoProducto').addEventListener('click', openModal);
-    </script>
+            <div style="margin-top:25px; display:flex; justify-content:flex-end; gap:12px;">
+                <button type="button" onclick="closeModal()" class="btn-secondary" style="padding: 10px 20px; border-radius: 8px;">Cerrar</button>
+                <button type="submit" class="btn-primary" style="padding: 10px 20px; border-radius: 8px;">Guardar Información</button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('previewImg').src = e.target.result; }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function editProduct(btn) {
+    const tr = btn.closest('tr');
+    document.getElementById('id_producto').value = tr.dataset.id;
+    document.getElementById('nombre_producto').value = tr.dataset.nombre;
+    document.getElementById('id_categoria').value = tr.dataset.categoria;
+    document.getElementById('id_marca').value = tr.dataset.marca;
+    document.getElementById('precio_venta').value = tr.dataset.precio;
+    document.getElementById('stock').value = tr.dataset.stock;
+    document.getElementById('estado').value = tr.dataset.estado;
+    document.getElementById('previewImg').src = tr.querySelector('img').src;
+    document.getElementById('groupEstado').style.display = 'block';
+    document.getElementById('modalTitle').innerText = 'Editar Calzado';
+    document.getElementById('productModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('productModal').style.display = 'none'; }
+
+document.getElementById('btnNuevoProducto').onclick = function() {
+    document.getElementById('productForm').reset();
+    document.getElementById('id_producto').value = "";
+    document.getElementById('groupEstado').style.display = 'none';
+    document.getElementById('previewImg').src = "/ElZapato/Assets/img/zapa.jpeg";
+    document.getElementById('modalTitle').innerText = 'Nuevo Registro de Calzado';
+    document.getElementById('productModal').style.display = 'flex';
+};
+
+// Buscador en tiempo real simple
+document.getElementById('searchProduct').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    document.querySelectorAll('.products-table tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+});
+</script>
+
+<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
 <?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
