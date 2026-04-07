@@ -73,7 +73,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                             <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($s['nombre_producto']) ?></span>
                             <small style="color: #888;">Talla: <?= $s['talla'] ?? 'N/A' ?></small>
                         </div>
-                        <span style="color: #e74c3c; font-weight: bold; background: #fff5f5; padding: 4px 8px; border-radius: 6px;"><?= $s['stock'] ?> uds</span>
+                        <span style="color: #bc6e32; font-weight: bold; background: #fff5f5; padding: 4px 8px; border-radius: 6px;"><?= $s['stock'] ?> uds</span>
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
