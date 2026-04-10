@@ -10,17 +10,27 @@ require_once "../../../model/CategoriasModel.php";
 require_once "../../../controller/marcasController.php";
 require_once "../../../model/MarcasModel.php";
 
-// 1. PROCESAR ACCIONES (El controlador ahora maneja la DB y las Imágenes)
+// 1. PROCESAR ACCIONES
 $controlador = new ProductosController();
 $controlador->ctrCrearProducto();   
 $controlador->ctrActualizarProducto(); 
 
-// 2. LÓGICA DE PAGINACIÓN CORREGIDA
-$productosPorPagina = 5;
+// 2. LÓGICA DE PAGINACIÓN (Mover esto un poquito arriba)
 $paginaActual = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
 if ($paginaActual < 1) { $paginaActual = 1; }
 
+// >>> AHORA SÍ, AQUÍ VA LO DE ELIMINAR <<<
+if (isset($_POST["id_eliminar"])) {
+    $respuesta = $controlador->ctrEliminarProducto(); 
+    if ($respuesta == "ok") {
+        echo '<script>window.location = "productos.php?pagina=' . $paginaActual . '";</script>';
+    }
+}
+
+// RESTO DE LA PAGINACIÓN
+$productosPorPagina = 5;
 $base = ($paginaActual - 1) * $productosPorPagina;
+
 
 // Cargamos datos para estadísticas y tabla
 $todosLosProductos = ProductosController::ctrMostrarProductos(); 
@@ -127,9 +137,20 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <td>$<?= number_format($p['precio_venta'] ?? 0, 2) ?></td>
                     <td><span class="stock-badge <?= $stockClass ?>"><?= $p['stock'] ?? 0 ?></span></td>
                     <td><span class="badge <?= $estadoClass ?>"><?= ucfirst($p['estado'] ?? 'Inactivo') ?></span></td>
-                    <td>
-                        <button class="btn-icon small" onclick="editProduct(this)"><i class="fas fa-edit"></i></button>
-                    </td>
+                    <!-- Busca esta sección cerca de la línea 125 -->
+<td>
+    <button class="btn-icon small" onclick="editProduct(this)" title="Editar">
+        <i class="fas fa-edit"></i>
+    </button>
+    
+    <!-- NUEVO BOTÓN DE ELIMINAR -->
+    <button class="btn-icon small btn-delete" 
+            onclick="deleteProduct(<?= $p['id_producto'] ?>)" 
+            style="color: #7a5c45" title="Eliminar">
+        <i class="fas fa-trash"></i>
+    </button>
+</td>
+
                 </tr>
                 <?php endforeach; endif; ?>
             </tbody>
@@ -238,7 +259,25 @@ document.getElementById('searchProduct').addEventListener('keyup', function() {
         row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
     });
 });
+
 </script>
+
+<script>
+function deleteProduct(id) {
+    if (confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.')) {
+        // Creamos un formulario dinámico para enviar la petición por POST
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="id_eliminar" value="${id}">
+            <input type="hidden" name="accion" value="eliminar">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
 <?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>

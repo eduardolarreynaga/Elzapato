@@ -8,14 +8,23 @@ require_once __DIR__ . '/../../../controller/proveedorController.php';
 $controlador = new ControladorProveedor();
 $mensajeAlerta = "";
 
-// --- LÓGICA DE PROCESAMIENTO (POST) ---
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST["nuevoNombreEmpresa"])) {
         $respuesta = $controlador->ctrCrearProveedor();
         if($respuesta == "ok") $mensajeAlerta = "guardado";
+
     } else if (isset($_POST["editarIdProveedor"])) {
         $respuesta = $controlador->ctrEditarProveedor();
         if($respuesta == "ok") $mensajeAlerta = "editado";
+
+    } elseif (isset($_POST["id_eliminar_proveedor"])) {
+        $respuesta = $controlador->ctrEliminarProveedor();
+
+        if($respuesta == "ok"){
+            header("Location: proveedores.php");
+            exit();
+        }
     }
 }
 
@@ -88,17 +97,33 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td style="padding: 15px;"><?php echo htmlspecialchars($p['telefono'] ?: '---'); ?></td>
                         <td style="padding: 15px; color: #A67C52;"><?php echo htmlspecialchars($p['email'] ?: '---'); ?></td>
                         <td style="padding: 15px; text-align: center;">
-                            <button class="btn-icon btnEditarProveedor" 
-                                style="background: none; border: 1px solid #ddd; color: #A67C52; padding: 6px 10px; border-radius: 6px; cursor: pointer;"
-                                data-id="<?php echo $p['id_proveedor']; ?>"
-                                data-empresa="<?php echo $p['nombre_empresa']; ?>"
-                                data-contacto="<?php echo $p['contacto_nombre']; ?>"
-                                data-tel="<?php echo $p['telefono']; ?>"
-                                data-email="<?php echo $p['email']; ?>">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                    </tr>
+
+    <!-- EDITAR -->
+    <button class="btn-icon btnEditarProveedor" 
+        style="background: none; border: 1px solid #ddd; color: #A67C52; padding: 6px 10px; border-radius: 6px; cursor: pointer;"
+        data-id="<?php echo $p['id_proveedor']; ?>"
+        data-empresa="<?php echo $p['nombre_empresa']; ?>"
+        data-contacto="<?php echo $p['contacto_nombre']; ?>"
+        data-tel="<?php echo $p['telefono']; ?>"
+        data-email="<?php echo $p['email']; ?>">
+        <i class="fas fa-edit"></i>
+    </button>
+
+<!-- ELIMINAR -->
+<form method="POST" style="display:inline;">
+    <input type="hidden" name="id_eliminar_proveedor" value="<?php echo $p['id_proveedor']; ?>">
+
+    <button type="submit"
+        style="background:none; border:1px solid #ddd; color:#A67C52; padding:6px 10px; border-radius:6px; cursor:pointer;"
+        onclick="return confirm('¿Eliminar este proveedor?')">
+
+        <i class="fas fa-trash"></i>
+        </button>
+    </form>
+
+    </td>
+</tr>
+
                     <?php endforeach; else: ?>
                     <tr><td colspan="6" style="padding: 30px; text-align: center; color: #999;">No se encontraron proveedores registrados.</td></tr>
                     <?php endif; ?>

@@ -38,18 +38,26 @@ class ModeloProveedor {
     }
 
     static public function mdlEditarProveedor($tabla, $datos) {
-    $stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre_empresa = :nombre, contacto_nombre = :contacto, telefono = :tel, email = :email WHERE id_proveedor = :id");
+        $stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre_empresa = :nombre, contacto_nombre = :contacto, telefono = :tel, email = :email WHERE id_proveedor = :id");
 
-    $stmt->bindParam(":nombre", $datos["nombre_empresa"], PDO::PARAM_STR);
-    $stmt->bindParam(":contacto", $datos["contacto_nombre"], PDO::PARAM_STR);
-    $stmt->bindParam(":tel", $datos["telefono"], PDO::PARAM_STR);
-    $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
-    $stmt->bindParam(":id", $datos["id_proveedor"], PDO::PARAM_INT);
+        $stmt->bindParam(":nombre", $datos["nombre_empresa"], PDO::PARAM_STR);
+        $stmt->bindParam(":contacto", $datos["contacto_nombre"], PDO::PARAM_STR);
+        $stmt->bindParam(":tel", $datos["telefono"], PDO::PARAM_STR);
+        $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+        $stmt->bindParam(":id", $datos["id_proveedor"], PDO::PARAM_INT);
 
-    if ($stmt->execute()) {
-        return "ok";
-    } else {
-        return "error";
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
     }
-}
+    public static function mdlEliminarProveedor($tabla, $id){
+
+        $stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id_proveedor = :id");
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+        return ($stmt->execute()) ? "ok" : "error";
+    }
 }

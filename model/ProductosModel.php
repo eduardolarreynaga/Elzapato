@@ -154,4 +154,24 @@ class ProductosModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    static public function mdlEliminarProducto($tabla, $id){
+
+    // Nota: Si usas llaves foráneas, asegúrate de borrar primero en 'producto_variante' 
+    // o que tu base de datos tenga el borrado en CASCADA.
+    
+    $stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id_producto = :id");
+
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+
+    if($stmt->execute()){
+        return "ok";
+    }else{
+        return "error";
+    }
+
+    $stmt->close();
+    $stmt = null;
+}
+
 }

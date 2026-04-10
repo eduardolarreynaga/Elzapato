@@ -68,4 +68,10 @@ class ClientesModel {
         }
         $stmt = null;
     }
+    static public function mdlEliminarCliente($tabla, $id){
+         $stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id_cliente = :id");
+         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+             return ($stmt->execute()) ? "ok" : "error";
+}
+
 }

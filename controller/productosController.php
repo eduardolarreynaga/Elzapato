@@ -1,5 +1,6 @@
 <?php
-
+require_once __DIR__ . '/../model/ProductosModel.php';
+$dir = __DIR__ . '/../Assets/img/productos/';
 class ProductosController {
 
     /*=============================================
@@ -119,4 +120,31 @@ class ProductosController {
     static public function ctrMostrarProductosPaginados($item, $valor, $base, $tope) {
         return ProductosModel::mdlMostrarProductosPaginados("productos", "producto_variante", $base, $tope);
     }
+
+        /*=============================================
+    ELIMINAR PRODUCTO (NUEVO)
+    =============================================*/
+    public function ctrEliminarProducto(){
+
+        if(isset($_POST["id_eliminar"])){
+
+            $id = $_POST["id_eliminar"];
+            $tabla = "productos";
+
+            // 1. Opcional: Eliminar la imagen física de la carpeta
+            $dir = __DIR__ . '/../Assets/img/productos/';
+            $archivos = glob($dir . $id . ".*"); // Busca cualquier extensión (.jpg, .png, etc)
+            foreach($archivos as $archivo) {
+                if(file_exists($archivo)){
+                    @unlink($archivo);
+                }
+            }
+
+            // 2. Llamar al modelo para eliminar de la BD
+            $respuesta = ProductosModel::mdlEliminarProducto($tabla, $id);
+
+            return $respuesta;
+        }
+    }
+
 }

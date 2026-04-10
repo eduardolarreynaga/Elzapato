@@ -47,4 +47,15 @@ class ControladorProveedor {
         return $respuesta;
     }
 }
+public function ctrEliminarProveedor(){
+
+    if(isset($_POST["id_eliminar_proveedor"])){
+
+        $id = intval($_POST["id_eliminar_proveedor"]);
+
+     $respuesta = ModeloProveedor::mdlEliminarProveedor("proveedores", $id);
+
+        return $respuesta;
+    }
+}
 }

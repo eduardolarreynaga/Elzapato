@@ -5,7 +5,7 @@ class ClientesController {
     /* =============================================
     1. CREAR CLIENTE
     ============================================= */
-    static public function ctrCrearCliente() {
+    public function ctrCrearCliente() {
         if (isset($_POST["nuevoNombre"])) {
             
             $tabla = "clientes";
@@ -28,7 +28,7 @@ class ClientesController {
     /* =============================================
     2. ACTUALIZAR CLIENTE
     ============================================= */
-    static public function ctrActualizarCliente() {
+    public function ctrActualizarCliente() {
         if (isset($_POST["editarNombre"])) {
             
             $tabla = "clientes";
@@ -66,4 +66,15 @@ class ClientesController {
         $respuesta = ClientesModel::mdlMostrarClientesPaginados($tabla, $item, $valor, $base, $limite);
         return $respuesta;
     }
+   public function ctrEliminarCliente(){
+    if(isset($_POST["id_eliminar_cliente"])){
+
+        $id = intval($_POST["id_eliminar_cliente"]);
+
+        $respuesta = ClientesModel::mdlEliminarCliente("clientes", $id);
+
+        return $respuesta;
+    }
+}
+
 }

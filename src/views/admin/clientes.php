@@ -9,13 +9,22 @@ $controlador = new ClientesController();
 $controlador->ctrCrearCliente();
 $controlador->ctrActualizarCliente();
 
-/* =============================================
-PAGINACIÓN SIMPLE
-============================================= */
+
 $clientesPorPagina = 5;
 $paginaActual = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
 if ($paginaActual < 1) $paginaActual = 1;
 $base = ($paginaActual - 1) * $clientesPorPagina;
+
+// ELIMINAR CLIENTE
+if (isset($_POST["id_eliminar_cliente"])) {
+    $respuesta = $controlador->ctrEliminarCliente();
+
+    if ($respuesta == "ok") {
+       header("Location: clientes.php?pagina=" . $paginaActual);
+exit();
+    }
+}
+
 
 $todosLosClientesFull = ClientesController::ctrMostrarClientes();
 $totalClientes = count($todosLosClientesFull);
@@ -99,10 +108,23 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <td><?= !empty($c['email']) ? $c['email'] : '-' ?></td>
                         <td>Activo</td>
                         <td>
-                            <button class="btn-icon small" onclick="editCliente(<?= htmlspecialchars(json_encode($c)) ?>)">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
+    <!-- EDITAR -->
+    <button class="btn-icon small" onclick="editCliente(<?= htmlspecialchars(json_encode($c)) ?>)">
+        <i class="fas fa-edit"></i>
+    </button>
+
+    <!-- ELIMINAR -->
+    <form method="post" style="display:inline;">
+        <input type="hidden" name="id_eliminar_cliente" value="<?= $c['id_cliente'] ?>">
+
+        <button type="submit" class="btn-icon small"
+            style="color:#7a5c45; border:none; background:none; cursor:pointer;"
+            onclick="return confirm('¿Eliminar este cliente?')">
+
+            <i class="fas fa-trash"></i>
+        </button>
+    </form>
+</td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
