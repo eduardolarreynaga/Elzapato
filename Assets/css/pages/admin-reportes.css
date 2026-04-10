@@ -1,3 +1,135 @@
 #reportesContent .table-card-full {
     grid-column: 1 / -1;
 }
+
+.tablist {
+    position: relative;
+    margin: 0 0 0px 0;
+    padding: 0;
+    list-style: none;
+    display: table;
+    width: 100%;
+}
+
+.tab {
+    position: relative;
+    background-color: var(--primary-light);
+    display: table-cell;
+    text-transform: uppercase;
+    text-align: center;
+    border-left: solid 1px #ddd;
+    border-top: solid 1px #ddd;
+    font-size: 0.85rem;
+}
+
+.tab:last-of-type {
+    border-right: solid 1px #ddd;
+}
+
+.tab a {
+    position: relative;
+    display: block;
+    padding: 15px 10px;
+    color: var(--text-dark);
+    text-decoration: none;
+    z-index: 1;
+    font-weight: 500;
+}
+
+.tab:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: #fff;
+    border-top: solid 5px transparent;
+    transition: top .2s;
+}
+
+.tab-active:after {
+    top: -1px;
+}
+
+/* Colores personalizados para las 7 pestañas */
+/* Adaptación de bordes basada en la paleta del sistema */
+
+/* 1. Stock (Tono oscuro principal) */
+.tab-active:nth-child(1):after { 
+    border-top-color: #AB886D; 
+} 
+
+/* 2. Alertas (Color de acento / Alerta) */
+.tab-active:nth-child(2):after { 
+    border-top-color: #772c24; 
+} 
+
+/* 3. Movimientos (Tono café intermedio) */
+.tab-active:nth-child(3):after { 
+    border-top-color: #D6C0B3; 
+} 
+
+/* 4. Caja (Variación de tono cuero) */
+.tab-active:nth-child(4):after { 
+    border-top-color: #8D6E63; 
+} 
+
+/* 5. Clientes (Tono arena) */
+.tab-active:nth-child(5):after { 
+    border-top-color: #772c24; 
+} 
+
+/* 6. Tickets (Tono oscuro profundo) */
+.tab-active:nth-child(6):after { 
+    border-top-color: #493628; 
+} 
+
+/* 7. Compras (Grisáceo cálido) */
+.tab-active:nth-child(7):after { 
+    border-top-color: #5D5D5D; 
+}
+
+.tabpanel {
+    display: none;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+.tabpanel.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tab {
+        display: none;
+    }
+    .tab-active {
+        display: block;
+        width: 100%;
+        border-right: solid 1px #ddd;
+    }
+    .tab-menu {
+        display: block;
+        position: absolute;
+        top: 50%;
+        right: 15px;
+        margin-top: -11px;
+        width: 20px;
+    }
+    .tab-menu .line {
+        height: 3px;
+        background-color: var(--primary-dark);
+        margin-bottom: 3px;
+        border-radius: 2px;
+    }
+}
