@@ -4,6 +4,16 @@ require_once "conexion.php";
 class ProductosModel {
 
     /*=============================================
+    BUSCAR PRODUCTO POR NOMBRE
+    =============================================*/
+    static public function mdlBuscarProductoPorNombre($nombre) {
+        $stmt = Conexion::conectar()->prepare("SELECT id_producto, nombre_producto FROM productos WHERE nombre_producto = :nombre");
+        $stmt->bindParam(":nombre", $nombre, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /*=============================================
     MOSTRAR PRODUCTOS (VERSIÓN ÚNICA CON PROVEEDOR)
     =============================================*/
     static public function mdlMostrarProductos($tabla1, $tabla2) {

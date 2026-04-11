@@ -14,8 +14,6 @@ require_once $basePath . "/model/MarcasModel.php";
 
 // 1. PROCESAR ACCIONES (CONTROLADOR)
 $controlador = new ProductosController();
-
-// Ejecutar una SOLA función que maneja crear y actualizar
 $controlador->ctrProcesarProducto(); 
 
 if (isset($_POST["id_eliminar_v"])) {
@@ -26,13 +24,13 @@ if (isset($_POST["id_eliminar_v"])) {
     }
 }
 
-// 2. CARGAR DATOS (Después de procesar acciones para ver cambios)
+// 2. CARGAR DATOS
 $productos = ProductosController::ctrMostrarProductos(); 
 $categorias = CategoriasController::ctrMostrarCategorias();
 $marcas = MarcasController::ctrMostrarMarcas();
 $proveedores = ProductosController::ctrMostrarProveedores();
 
-// 3. ESTADÍSTICAS RÁPIDAS
+// 3. ESTADÍSTICAS
 $totalModelos = count($productos);
 $totalStock = 0;
 $bajoStockCount = 0;
@@ -95,13 +93,6 @@ require __DIR__ . '/../layouts/admin-shell-start.php';
     
     .image-box { background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee; text-align: center; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .image-box img { max-width: 100px; max-height: 100px; border-radius: 8px; object-fit: cover; }
-    
-    .sku-auto-hint {
-        font-size: 0.7rem;
-        color: #AB886D;
-        margin-top: 4px;
-        display: block;
-    }
 </style>
 
 <?php
@@ -149,12 +140,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                             $v_stock = (int)$d[3]; $v_sku = $d[4] ?? 'N/A'; 
                             $v_estado = $d[5] ?? 'activo'; $v_id_v = $d[6] ?? '0'; 
 
-                            // LÓGICA DE IMAGEN CORREGIDA
                             $imgDefault = "/ElZapato/Assets/img/zapa.jpeg";
                             $rutaImagen = "/ElZapato/Assets/img/productos/" . $v_id_v . ".jpg";
                             $fullPathServer = $_SERVER['DOCUMENT_ROOT'] . $rutaImagen;
-                            
-                            // Verificar si existe la imagen
                             $img = file_exists($fullPathServer) ? $rutaImagen . "?t=" . time() : $imgDefault;
 
                             $max = 50; 
@@ -172,7 +160,6 @@ require __DIR__ . '/../layouts/admin-header.php';
                     data-v-estado="<?= $v_estado ?>" data-sku="<?= $v_sku ?>" data-img="<?= $img ?>"
                     data-proveedor="<?= htmlspecialchars($p['nombre_empresa'] ?? 'Distribuidor General') ?>"
                     data-id-proveedor="<?= $p['id_proveedor'] ?? '' ?>"
-                    data-codigo="<?= htmlspecialchars($v_sku) ?>"
                     data-descripcion="<?= htmlspecialchars($p['descripcion'] ?? 'Sin descripción.') ?>">
                     
                     <td><img src="<?= $img ?>" width="60" height="60" style="object-fit:cover; border-radius:8px; border: 1px solid #ddd; display: block; margin: 0 auto;"></td>
@@ -231,7 +218,6 @@ require __DIR__ . '/../layouts/admin-header.php';
         <form id="productForm" method="post" enctype="multipart/form-data">
             <h3 id="modalTitle" style="color: #AB886D; border-bottom: 2px solid #f4f1ef; padding-bottom:10px;">Editar Producto</h3>
             
-            <!-- CAMPO OCULTO PARA DIFERENCIAR ACCIÓN -->
             <input type="hidden" name="accion" id="accion" value="">
             <input type="hidden" name="id_producto" id="id_producto">
             <input type="hidden" name="id_variante" id="id_variante">
@@ -260,7 +246,6 @@ require __DIR__ . '/../layouts/admin-header.php';
                 </div>
             </div>
 
-            <!-- CAMPO PROVEEDOR AGREGADO -->
             <div class="form-group">
                 <label>Proveedor</label>
                 <select name="id_proveedor" id="id_proveedor">
@@ -277,11 +262,7 @@ require __DIR__ . '/../layouts/admin-header.php';
             </div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label>SKU (Código de Barras)</label>
-                    <input type="text" name="codigo_barras" id="codigo_barras" placeholder="Déjalo en blanco para auto-generar">
-                    <small class="sku-auto-hint">💡 Si lo dejas vacío, se generará automáticamente un número correlativo</small>
-                </div>
+                <div class="form-group"><label>SKU (Código de Barras) *</label><input type="text" name="codigo_barras" id="codigo_barras" required></div>
                 <div class="form-group"><label>Precio *</label><input type="number" step="0.01" name="precio_venta" id="precio_venta" required></div>
             </div>
 
@@ -320,7 +301,6 @@ require __DIR__ . '/../layouts/admin-header.php';
 </div>
 
 <script>
-// --- BUSCADOR ---
 const searchInput = document.getElementById('searchProduct');
 if(searchInput) {
     searchInput.addEventListener('input', function(e) {
@@ -331,7 +311,6 @@ if(searchInput) {
     });
 }
 
-// --- VER DETALLE ---
 function viewProduct(btn) {
     const d = btn.closest('tr').dataset;
     document.getElementById('v_img').src = d.img;
@@ -349,11 +328,9 @@ function viewProduct(btn) {
 
 function closeViewModal() { document.getElementById('viewModal').style.display = 'none'; }
 
-// --- EDITAR (UPDATE) ---
 function btnEditProduct(btn) {
     const d = btn.closest('tr').dataset;
     
-    // VALIDAR que tenemos el ID de la variante
     if(!d.idV || d.idV === '0') {
         Swal.fire('Error', 'No se pudo identificar la variante a editar', 'error');
         return;
@@ -394,20 +371,17 @@ function closeModal() {
     document.getElementById('newImagePreview').innerHTML = '';
 }
 
-// --- NUEVO PRODUCTO (INSERT) ---
 document.getElementById('btnNuevoProducto').onclick = function() {
     document.getElementById('productForm').reset();
     document.getElementById('accion').value = 'crear';
     document.getElementById('id_producto').value = "";
     document.getElementById('id_variante').value = "";
     document.getElementById('id_proveedor').value = "";
-    document.getElementById('codigo_barras').value = ""; // Limpiar SKU para que se auto-genere
     document.getElementById('modalTitle').innerText = 'Nuevo Producto';
     document.getElementById('currentImage').src = "/ElZapato/Assets/img/zapa.jpeg";
     document.getElementById('productModal').style.display = 'flex';
 };
 
-// Preview de imagen seleccionada
 document.getElementById('imagen_producto').onchange = function(e) {
     const preview = document.getElementById('newImagePreview');
     if (this.files && this.files[0]) {
@@ -417,7 +391,6 @@ document.getElementById('imagen_producto').onchange = function(e) {
     }
 };
 
-// --- ELIMINAR ---
 function deleteVariant(idV) {
     Swal.fire({
         title: '¿Eliminar?',
@@ -439,35 +412,26 @@ function deleteVariant(idV) {
     });
 }
 
-// Mensajes SweetAlert de respuesta del controlador
 <?php if(isset($_GET['res'])): ?>
     <?php if($_GET['res'] == 'duplicado'): ?>
     Swal.fire({ 
         title: '¡Código de Barras Duplicado!', 
-        html: 'El SKU/Código de barras <strong><?= htmlspecialchars($_GET['sku'] ?? '') ?></strong> ya está en uso.<br><br>Por favor, utiliza un código diferente o déjalo en blanco para que se genere automáticamente.',
+        html: 'El SKU <strong><?= htmlspecialchars($_GET['sku'] ?? '') ?></strong> ya está en uso.',
         icon: 'error', 
-        confirmButtonColor: '#772C24',
-        confirmButtonText: 'Entendido'
-    });
-    <?php elseif($_GET['res'] == 'error_sku'): ?>
-    Swal.fire({ 
-        title: '¡Error al generar SKU!', 
-        text: 'No se pudo generar un SKU automáticamente. Por favor, contacta al administrador.', 
-        icon: 'error', 
-        confirmButtonColor: '#772C24' 
+        confirmButtonColor: '#772C24'
     });
     <?php elseif($_GET['res'] == 'error'): ?>
     Swal.fire({ 
         title: '¡Error!', 
-        text: 'Ocurrió un error al procesar la operación. Por favor, intenta de nuevo.', 
+        text: 'Ocurrió un error. Verifica que el SKU no esté duplicado.', 
         icon: 'error', 
         confirmButtonColor: '#772C24' 
     });
     <?php else: ?>
     const msjs = {
-        creado: '✅ Producto registrado correctamente', 
-        actualizado: '✅ Cambios guardados con éxito', 
-        eliminado: '✅ Variante eliminada'
+        creado: 'Producto registrado correctamente', 
+        actualizado: 'Cambios guardados con éxito', 
+        eliminado: 'Variante eliminada'
     };
     Swal.fire({ 
         title: '¡Operación Exitosa!', 
@@ -476,7 +440,6 @@ function deleteVariant(idV) {
         confirmButtonColor: '#AB886D' 
     });
     <?php endif; ?>
-    // Limpiar la URL para evitar que el mensaje salga al recargar
     window.history.replaceState({}, document.title, "productos.php");
 <?php endif; ?>
 </script>

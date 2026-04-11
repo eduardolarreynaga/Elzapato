@@ -17,6 +17,16 @@ CREATE TABLE categorias (
     nombre_categoria VARCHAR(100) NOT NULL
 );
 
+-- TABLA PROVEEDORES
+CREATE TABLE proveedores (
+    id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_empresa VARCHAR(150) NOT NULL,
+    contacto_nombre VARCHAR(100),
+    telefono VARCHAR(20),
+    email VARCHAR(100),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- TABLA PRODUCTOS
 CREATE TABLE productos (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,18 +52,9 @@ CREATE TABLE producto_variante (
     codigo_barras VARCHAR(100) UNIQUE,
     precio_venta DECIMAL(10,2) NOT NULL,
     stock INT DEFAULT 0,
+    estado ENUM('activo','inactivo') DEFAULT 'activo',
 
     FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
-);
-
--- PROVEEDORES
-CREATE TABLE proveedores (
-    id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_empresa VARCHAR(150) NOT NULL,
-    contacto_nombre VARCHAR(100),
-    telefono VARCHAR(20),
-    email VARCHAR(100),
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- COMPRAS
@@ -127,34 +128,66 @@ CREATE TABLE detalle_venta (
     FOREIGN KEY (id_variante) REFERENCES producto_variante(id_variante)
 );
 
--- TRIGGERS
+-- ============================================
+-- TRIGGERS CORREGIDOS
+-- ============================================
+
+-- TRIGGER 1: Actualizar stock después de una venta
 DELIMITER $$
-CREATE TRIGGER `actualizar_stock_venta` AFTER INSERT ON `detalle_venta` FOR EACH ROW BEGIN
+CREATE TRIGGER `actualizar_stock_venta` 
+AFTER INSERT ON `detalle_venta` 
+FOR EACH ROW
+BEGIN
     UPDATE producto_variante 
     SET stock = stock - NEW.cantidad
     WHERE id_variante = NEW.id_variante;
-END
-$$
+END$$
 DELIMITER ;
 
---edicion para logica de productos inactivos
--- 1. Agregar el estado a las variantes
-ALTER TABLE producto_variante 
-ADD COLUMN estado ENUM('activo','inactivo') DEFAULT 'activo' AFTER stock;
-
--- 2. Trigger para inactivar el producto si todas sus variantes son inactivas
+-- TRIGGER 2: Sincronizar estado del producto al actualizar variante
 DELIMITER $$
-
 CREATE TRIGGER `sincronizar_estado_producto` 
 AFTER UPDATE ON `producto_variante`
 FOR EACH ROW
-UPDATE productos 
-SET estado = (
-    SELECT CASE 
-        WHEN COUNT(*) > 0 THEN 'activo'
-        ELSE 'inactivo'
-    END
+BEGIN
+    DECLARE total_activas INT;
+    
+    SELECT COUNT(*) INTO total_activas 
     FROM producto_variante 
-    WHERE id_producto = NEW.id_producto AND estado = 'activo'
-)
-WHERE id_producto = NEW.id_producto;
+    WHERE id_producto = NEW.id_producto AND estado = 'activo';
+    
+    IF total_activas = 0 THEN
+        UPDATE productos SET estado = 'inactivo' WHERE id_producto = NEW.id_producto;
+    ELSE
+        UPDATE productos SET estado = 'activo' WHERE id_producto = NEW.id_producto;
+    END IF;
+END$$
+DELIMITER ;
+
+-- TRIGGER 3: Activar producto al insertar nueva variante
+DELIMITER $$
+CREATE TRIGGER `sincronizar_estado_producto_insert` 
+AFTER INSERT ON `producto_variante`
+FOR EACH ROW
+BEGIN
+    UPDATE productos SET estado = 'activo' WHERE id_producto = NEW.id_producto;
+END$$
+DELIMITER ;
+
+-- TRIGGER 4: Sincronizar estado al eliminar una variante
+DELIMITER $$
+CREATE TRIGGER `sincronizar_estado_producto_delete` 
+AFTER DELETE ON `producto_variante`
+FOR EACH ROW
+BEGIN
+    DECLARE total_activas INT;
+    
+    SELECT COUNT(*) INTO total_activas 
+    FROM producto_variante 
+    WHERE id_producto = OLD.id_producto AND estado = 'activo';
+    
+    IF total_activas = 0 THEN
+        UPDATE productos SET estado = 'inactivo' WHERE id_producto = OLD.id_producto;
+    END IF;
+END$$
+DELIMITER ;
