@@ -123,31 +123,35 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             <section class="catalog-container">
                 <div class="products-grid" id="productsGrid">
                     <?php foreach ($productos as $p): 
-                        // Procesamos las variantes del producto
                         $info = $p['info_variantes'] ?? '';
                         $variantes = ($info != '') ? explode("||", $info) : [];
 
                         foreach ($variantes as $v):
                             $d = explode("|", $v);
                             
-                            // Extraemos los datos según el orden de tu consulta SQL
                             $v_talla  = $d[0] ?? '';
                             $v_color  = $d[1] ?? '';
                             $v_precio = (float)($d[2] ?? 0);
                             $v_stock  = (int)($d[3] ?? 0);
-                            $v_sku    = $d[4] ?? '';
-                            $v_estado = $d[5] ?? 'activo';
                             $v_id_v   = $d[6] ?? '0';
+                            $v_estado = $d[5] ?? 'activo';
 
-                            // Si la variante está inactiva, no la mostramos en el POS
                             if($v_estado !== 'activo') continue;
 
-                            $tagClass = ($v_stock <= 0) ? "stock-agotado" : (($v_stock <= 5) ? "stock-agotandose" : "stock-disponible");
+                            // --- NUEVA LÓGICA DE ETIQUETAS (CONFIGURADA A 10) ---
+                            if ($v_stock <= 0) {
+                                $tagText = "Agotado";
+                                $tagClass = "stock-agotado";
+                            } elseif ($v_stock <= 10) {
+                                $tagText = "Casi agotado";
+                                $tagClass = "stock-agotandose";
+                            } else {
+                                $tagText = "Disponible";
+                                $tagClass = "stock-disponible";
+                            }
                             
-                            // Lógica de imagen por variante (la misma que en productos)
                             $imagenFinal = "/ElZapato/Assets/img/zapa.jpeg"; 
                             $pathImg = "/Assets/img/productos/" . $v_id_v . ".jpg";
-                            
                             if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
                                 $imagenFinal = "/ElZapato" . $pathImg;
                             }
@@ -156,13 +160,15 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                         data-id="<?= $v_id_v ?>" 
                         data-price="<?= $v_precio ?>" 
                         data-stock="<?= $v_stock ?>" 
-                        data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?> (<?= $v_color ?> - <?= $v_talla ?>)">
+                        data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>">
                         
-                        <span class="stock-tag <?= $tagClass ?>"><?= $v_stock ?> unid.</span>
+                        <span class="stock-tag <?= $tagClass ?>">
+                            <?= $tagText ?>: <?= $v_stock ?>
+                        </span>
                         
                         <div class="switch-top">
                             <label class="switch">
-                                <input type="checkbox" onchange="toggleProductoVenta(this, '<?= $v_id_v ?>')">
+                                <input type="checkbox" onchange="toggleProductoVenta(this, '<?= $v_id_v ?>')" <?= ($v_stock <= 0 ? 'disabled' : '') ?>>
                                 <span class="slider round"></span>
                             </label>
                         </div>
@@ -170,12 +176,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                         <div class="product-img" style="background-image: url('<?= $imagenFinal ?>');"></div>
                         
                         <div class="product-info">
-                            <p class="product-name" style="margin-bottom: 2px;"><?= htmlspecialchars($p['nombre_producto']) ?></p>
-                            <p style="font-size: 0.75rem; color: #666; margin-bottom: 5px;">
-                                <i class="fa-solid fa-palette"></i> <?= $v_color ?> | 
-                                <i class="fa-solid fa-ruler"></i> <?= $v_talla ?>
-                            </p>
-                            
+                            <p class="product-name"><?= htmlspecialchars($p['nombre_producto']) ?></p>
                             <span class="product-price">$<?= number_format($v_precio, 2) ?></span>
                             
                             <div class="footer-controls">
@@ -256,7 +257,6 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             }, 3000);
         }
 
-        // --- LÓGICA DE MODALES ---
         function abrirModalDetalle(id, nombre, precio, stock, color, talla) {
             document.getElementById('detNombre').innerText = nombre;
             document.getElementById('detPrecio').innerText = `$${parseFloat(precio).toFixed(2)}`;
@@ -280,20 +280,12 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                 mostrarNotificacion("No hay productos seleccionados.", "warning");
                 return;
             }
-
             const select = document.getElementById('descProductoSelect');
             select.innerHTML = carrito.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-            
             actualizarMaxCantDesc();
-            
             const modal = document.getElementById('modalDescuento');
-            
-            // CAMBIO CLAVE: Usa "flex" en lugar de "block"
             modal.style.display = "flex"; 
-            
-            setTimeout(() => {
-                modal.classList.add('active');
-            }, 10);
+            setTimeout(() => modal.classList.add('active'), 10);
         }
 
         function cerrarModal(id) {
@@ -302,7 +294,6 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             setTimeout(() => modal.style.display = "none", 300);
         }
 
-        // --- LÓGICA DE CARRITO ---
         function cambiarCantidad(btn, valor) {
             const card = btn.closest('.product-card');
             const input = card.querySelector('.qty-input');

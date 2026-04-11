@@ -297,11 +297,10 @@ body {
 .product-card { 
     background: var(--white); 
     border-radius: 12px; 
-    position: relative; 
+    position: relative; /* Importante para posicionar el tag */
     display: flex; 
     flex-direction: column; 
     overflow: hidden; 
-    /* Reducimos la altura a 195px o 200px para que no sobre espacio abajo */
     height: 190px; 
     transition: 0.3s; 
     box-shadow: 0 3px 6px rgba(0,0,0,0.06);
@@ -422,13 +421,22 @@ input:checked + .slider { background-color: var(--success); }
 input:checked + .slider:before { transform: translateX(14px); }
 
 .stock-tag { 
-    position: absolute; top: 8px; left: 8px; padding: 2px 6px; 
-    border-radius: 4px; font-size: 0.5rem; /* Reducido ligeramente de 0.55rem */
-    font-weight: bold; color: white; z-index: 5; 
+    position: absolute; 
+    top: 0; /* Pegado al borde superior */
+    left: 0; /* Pegado al borde izquierdo */
+    padding: 4px 10px; 
+    border-radius: 0 0 10px 0; /* Curva solo en la esquina inferior derecha */
+    font-size: 0.65rem; /* Mucho más grande que el anterior */
+    font-weight: 900; 
+    color: white; 
+    z-index: 15; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    text-transform: uppercase;
 }
+
 .stock-disponible { background: var(--success); }
-.stock-agotandose { background: #f39c12; }
-.stock-agotado { background: var(--nocolor); }
+.stock-agotandose { background: #bc6e32; } /* Café/Naranja para aviso */
+.stock-agotado { background: var(--nocolor); } /* Tu color rojo oscuro */
 
 /* =========================================
    MODALES, TOASTS Y SCROLLBARS

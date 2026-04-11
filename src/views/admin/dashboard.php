@@ -5,7 +5,7 @@ require_auth('admin');
 require_once "../../../controller/productosController.php";
 require_once "../../../model/ProductosModel.php";
 
-// --- DATOS REALES ---
+// --- PROCESAMIENTO DE DATOS REALES ---
 
 // 1. Top Productos (Barras)
 $topVendidos = ProductosController::ctrProductosMasVendidos(); 
@@ -22,9 +22,37 @@ $ventasCategorias = ProductosController::ctrVentasPorCategoria();
 $nombresCats = array_column($ventasCategorias, 'etiqueta');
 $valoresCats = array_column($ventasCategorias, 'valor');
 
-// 4. Stock Bajo
+// 4. Stock Bajo (Filtro configurado en 10 para mayor seguridad)
 $todosLosProductos = ProductosController::ctrMostrarProductos(); 
-$stockBajo = array_filter($todosLosProductos, fn($p) => ($p['stock'] ?? 0) <= 10);
+$stockBajo = [];
+
+foreach ($todosLosProductos as $p) {
+    $info = $p['info_variantes'] ?? '';
+    if ($info != '') {
+        $variantes = explode("||", $info);
+        foreach ($variantes as $v) {
+            $d = explode("|", $v);
+            
+            // Estructura: 0:talla, 1:color, 2:precio, 3:stock
+            $v_talla  = $d[0] ?? 'N/A';
+            $v_color  = $d[1] ?? 'N/A';
+            $v_stock  = (int)($d[3] ?? 0);
+
+            // Filtramos los que tienen 10 o menos unidades
+            if ($v_stock <= 10) {
+                $stockBajo[] = [
+                    "nombre" => $p['nombre_producto'],
+                    "talla"  => $v_talla,
+                    "color"  => $v_color,
+                    "stock"  => $v_stock
+                ];
+            }
+        }
+    }
+}
+
+// Ordenar: Los agotados (0) primero
+usort($stockBajo, fn($a, $b) => $a['stock'] <=> $b['stock']);
 
 $activeMenu = 'dashboard';
 $pageTitle = 'Dashboard';
@@ -62,18 +90,22 @@ require __DIR__ . '/../layouts/admin-header.php';
         </div>
 
         <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 380px;">
-            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;"><i class="fas fa-exclamation-triangle" style="color: #A67C52;"></i> Stock Bajo</h3>
-            <div style="max-height: 300px; overflow-y: auto;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;">
+                <i class="fas fa-exclamation-triangle" style="color: #bc6e32;"></i> Alerta de Inventario (≤ 10)
+            </h3>
+            <div style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                 <?php if(empty($stockBajo)): ?>
-                    <p style="text-align: center; color: #999; padding-top: 50px;">No hay productos con stock bajo.</p>
+                    <p style="text-align: center; color: #999; padding-top: 50px;">Inventario saludable.</p>
                 <?php else: ?>
-                    <?php foreach (array_slice($stockBajo, 0, 6) as $s): ?>
+                    <?php foreach (array_slice($stockBajo, 0, 15) as $s): ?>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1;">
                         <div style="display: flex; flex-direction: column;">
-                            <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($s['nombre_producto']) ?></span>
-                            <small style="color: #888;">Talla: <?= $s['talla'] ?? 'N/A' ?></small>
+                            <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($s['nombre']) ?></span>
+                            <small style="color: #888;">Talla: <?= $s['talla'] ?> | Color: <?= $s['color'] ?></small>
                         </div>
-                        <span style="color: #bc6e32; font-weight: bold; background: #fff5f5; padding: 4px 8px; border-radius: 6px;"><?= $s['stock'] ?> uds</span>
+                        <span style="color: <?= ($s['stock'] <= 5) ? '#e74c3c' : '#bc6e32' ?>; font-weight: bold; background: <?= ($s['stock'] <= 5) ? '#fff0f0' : '#fff5f5' ?>; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;">
+                            <?= $s['stock'] ?> uds
+                        </span>
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -89,7 +121,7 @@ require __DIR__ . '/../layouts/admin-header.php';
         plugins: { legend: { position: 'bottom' } }
     };
 
-    // 1. Rendimiento Ventas
+    // Gráfico de Ventas
     new Chart(document.getElementById('salesChart'), {
         type: 'line',
         data: {
@@ -105,7 +137,7 @@ require __DIR__ . '/../layouts/admin-header.php';
         options: commonOptions
     });
 
-    // 2. Ventas por Categoría
+    // Gráfico de Categorías
     new Chart(document.getElementById('categoryChart'), {
         type: 'doughnut',
         data: {
@@ -118,46 +150,33 @@ require __DIR__ . '/../layouts/admin-header.php';
         options: { ...commonOptions, cutout: '70%' }
     });
 
-    // 3. Más Vendidos
-new Chart(document.getElementById('topProductsChart'), {
-    type: 'bar',
-    data: {
-        labels: <?= json_encode($nombresTop) ?>,
-        datasets: [{
-            label: 'Unidades',
-            data: <?= json_encode($cantidadesTop) ?>,
-            backgroundColor: '#A67C52',
-            borderRadius: 8,
-            // --- ESTO ARREGLA EL ANCHO DE LAS BARRAS ---
-            maxBarThickness: 50, // Evita que la barra sea gigante si hay pocos datos
-            barPercentage: 0.5   // Ajusta el espacio que ocupa la barra en su columna
-        }]
-    },
-    options: { 
-        ...commonOptions, 
-        plugins: { 
-            legend: { display: false } 
+    // Gráfico de Barras
+    new Chart(document.getElementById('topProductsChart'), {
+        type: 'bar',
+        data: {
+            labels: <?= json_encode($nombresTop) ?>,
+            datasets: [{
+                label: 'Unidades',
+                data: <?= json_encode($cantidadesTop) ?>,
+                backgroundColor: '#A67C52',
+                borderRadius: 8,
+                maxBarThickness: 50,
+                barPercentage: 0.5
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true, // Siempre empezar en 0
-                ticks: {
-                    stepSize: 1, // Solo números enteros (1, 2, 3...) ya que vendes unidades
-                    precision: 0
+        options: { 
+            ...commonOptions, 
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0 },
+                    grid: { color: '#f1f1f1', drawBorder: false }
                 },
-                grid: {
-                    drawBorder: false,
-                    color: '#f1f1f1'
-                }
-            },
-            x: {
-                grid: {
-                    display: false // Limpia el fondo para que se vea más moderno
-                }
+                x: { grid: { display: false } }
             }
         }
-    }
-});
+    });
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>

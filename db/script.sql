@@ -145,23 +145,16 @@ ADD COLUMN estado ENUM('activo','inactivo') DEFAULT 'activo' AFTER stock;
 -- 2. Trigger para inactivar el producto si todas sus variantes son inactivas
 DELIMITER $$
 
-CREATE TRIGGER `sincronizar_estado_producto` AFTER UPDATE ON `producto_variante`
+CREATE TRIGGER `sincronizar_estado_producto` 
+AFTER UPDATE ON `producto_variante`
 FOR EACH ROW
-BEGIN
-    DECLARE activas INT;
-    
-    -- Contamos cuántas variantes activas le quedan al producto
-    SELECT COUNT(*) INTO activas 
+UPDATE productos 
+SET estado = (
+    SELECT CASE 
+        WHEN COUNT(*) > 0 THEN 'activo'
+        ELSE 'inactivo'
+    END
     FROM producto_variante 
-    WHERE id_producto = NEW.id_producto AND estado = 'activo';
-    
-    -- Si no quedan variantes activas, inactivamos el producto (El Rey cae)
-    IF activas = 0 THEN
-        UPDATE productos SET estado = 'inactivo' WHERE id_producto = NEW.id_producto;
-    -- Si activamos una variante y el producto estaba inactivo, lo revivimos
-    ELSEIF activas > 0 THEN
-        UPDATE productos SET estado = 'activo' WHERE id_producto = NEW.id_producto;
-    END IF;
-END$$
-
-DELIMITER ;
+    WHERE id_producto = NEW.id_producto AND estado = 'activo'
+)
+WHERE id_producto = NEW.id_producto;
