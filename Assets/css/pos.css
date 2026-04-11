@@ -52,7 +52,7 @@ body {
 }
 
 /* =========================================
-   SIDEBAR
+   SIDEBAR - REORDENADO: TOTALES ARRIBA
    ========================================= */
 .sidebar-resumen { 
     background: var(--white); 
@@ -62,23 +62,75 @@ body {
     flex-direction: column; 
     height: 100%;
     box-sizing: border-box;
-    overflow: hidden; /* Evita que el sidebar genere scroll propio */
+    overflow: hidden;
 }
 
 .sidebar-resumen h2 {
     font-size: 1.2rem;
     margin-top: 0;
+    margin-bottom: 15px;
     color: var(--text-dark);
     border-bottom: 2px solid var(--primary-dark);
     padding-bottom: 10px;
+    flex-shrink: 0;
 }
 
-/* Contenedor central elástico */
+/* TOTALES - AHORA ARRIBA */
+.totals-section { 
+    background: var(--primary-light); 
+    padding: 15px; 
+    border-radius: 12px; 
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.total-row { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 5px; 
+    font-size: 0.9rem;
+    font-weight: 500; 
+}
+
+.total-highlight { 
+    margin-top: 10px; 
+    border-top: 1px solid var(--primary-soft); 
+    padding-top: 10px; 
+}
+
+.total-big { 
+    font-size: 1.7rem; 
+    color: var(--nocolor); 
+    font-weight: 900; 
+}
+
+/* BOTONES - TAMBIÉN ARRIBA */
+.action-buttons-row { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.btn-action { 
+    flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; 
+    cursor: pointer; color: white; display: flex; align-items: center;
+    justify-content: center; gap: 8px; font-size: 0.8rem; transition: 0.3s;
+}
+
+.btn-sell { background: var(--primary-dark); }
+.btn-sell:hover { background: #8e6e56; }
+
+.btn-discount { background: var(--primary-soft); color: var(--text-dark); }
+.btn-discount:hover { background: #c5ab9b; }
+
+/* Contenedor de tablas - AHORA ABAJO (con scroll) */
 .tables-scroll-container { 
-    flex-grow: 1; 
+    flex: 1;
     overflow-y: auto; 
-    margin-bottom: 15px; 
-    padding-right: 5px; 
+    padding-right: 5px;
+    min-height: 0;
 }
 
 .table-section { margin-bottom: 20px; }
@@ -116,7 +168,7 @@ body {
 }
 
 .ticket-table td { 
-    padding: 7px 0; /* Reducido de 10px a 7px */
+    padding: 7px 0;
     border-bottom: 1px solid #f2f2f2; 
     font-size: 0.75rem; 
     white-space: nowrap;
@@ -126,7 +178,7 @@ body {
 
 #listaVenta, #listaDescuentos { 
     display: block; 
-    max-height: 105px; /* Altura exacta para 3 filas aproximadamente */
+    max-height: 105px;
     overflow-y: auto;
     width: 100%;
 }
@@ -165,72 +217,24 @@ body {
 .col-icon-desc { width: 15%; text-align: center; color: var(--primary-dark); font-weight: bold; }
 .col-price-desc { width: 30%; text-align: right; color: var(--success); font-weight: bold; }
 
-/* TOTALES - ANCLADOS AL FONDO */
-.totals-section { 
-    background: var(--primary-light); 
-    padding: 15px; 
-    border-radius: 12px; 
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-    flex-shrink: 0; 
-}
-
-.total-row { 
-    display: flex; 
-    justify-content: space-between; 
-    margin-bottom: 5px; 
-    font-size: 0.9rem;
-    font-weight: 500; 
-}
-
-.total-highlight { 
-    margin-top: 10px; 
-    border-top: 1px solid var(--primary-soft); 
-    padding-top: 10px; 
-}
-
-.total-big { 
-    font-size: 1.7rem; 
-    color: var(--nocolor); 
-    font-weight: 900; 
-}
-
-/* BOTONES SIEMPRE VISIBLES */
-.action-buttons-row { 
-    display: flex; 
-    gap: 10px; 
-    margin-top: 15px; 
-    flex-shrink: 0;
-}
-
-.btn-action { 
-    flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; 
-    cursor: pointer; color: white; display: flex; align-items: center;
-    justify-content: center; gap: 8px; font-size: 0.8rem; transition: 0.3s;
-}
-
-.btn-sell { background: var(--primary-dark); }
-.btn-sell:hover { background: #8e6e56; }
-
-.btn-discount { background: var(--primary-soft); color: var(--text-dark); }
-.btn-discount:hover { background: #c5ab9b; }
-
 /* =========================================
-   ÁREA DE CATÁLOGO (DISEÑO ORIGINAL RECUPERADO)
+   ÁREA DE CATÁLOGO (DISEÑO ORIGINAL CON SCROLL)
    ========================================= */
 .filter-bar { 
     background: var(--white); 
     padding: 0 20px; 
     display: flex; 
     align-items: center; 
-    gap: 20px; /* Aumentamos un poco el espacio entre el buscador y los selectores */
+    gap: 20px;
     border-bottom: 1px solid var(--primary-soft); 
     height: 70px;
-    width: 100%; /* Asegura que use todo el ancho */
+    width: 100%;
     box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .search-container { 
-    flex: 3; /* El buscador será 3 veces más grande que un combo individual */
+    flex: 3;
     position: relative; 
     display: flex; 
     align-items: center; 
@@ -244,15 +248,9 @@ body {
 }
 
 .select-group {
-    flex: 2; /* Este contenedor ocupará el espacio restante para los selects */
+    flex: 2;
     display: flex;
     gap: 15px;
-}
-
-.catalog-container { 
-    padding: 10px; /* Reducido de 20px a 10px para ganar espacio */
-    overflow-y: auto; 
-    background: #f0f2f5; 
 }
 
 .search-container input, 
@@ -262,12 +260,12 @@ body {
     border-radius: 8px; 
     border: 1px solid var(--primary-soft); 
     outline: none; 
-    box-sizing: border-box; /* Evita que el padding los ensanche de más */
+    box-sizing: border-box;
     font-size: 0.9rem;
 }
 
 .search-container input {
-    padding-left: 45px; /* Espacio para el icono de lupa */
+    padding-left: 45px;
 }
 
 .select-container select:focus {
@@ -275,29 +273,48 @@ body {
 }
 
 .select-container {
-    flex: 1; /* Hace que cada selector (Categorías y Marcas) mida lo mismo y crezca */
+    flex: 1;
 }
 
 .catalog-container { 
     padding: 15px; 
-    overflow-y: auto; 
-    /* Cambiamos el gris por tu color personalizado */
-    background-color: #D6C0B3; 
-    /* Sutil sombra interna para dar profundidad */
+    overflow-y: auto;
+    background-color: #D6C0B3;
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
-    height: 100%;
+    height: calc(100vh - 130px);
+    flex: 1;
+}
+
+/* SCROLL PERSONALIZADO PARA EL CATÁLOGO */
+.catalog-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.catalog-container::-webkit-scrollbar-track {
+    background: #E4E0E1;
+    border-radius: 10px;
+}
+
+.catalog-container::-webkit-scrollbar-thumb {
+    background: #AB886D;
+    border-radius: 10px;
+}
+
+.catalog-container::-webkit-scrollbar-thumb:hover {
+    background: #8e6e56;
 }
 
 .products-grid { 
     display: grid; 
     grid-template-columns: repeat(6, 1fr); 
-    gap: 12px; /* Un poco más de espacio entre cartas para que respiren sobre el color café */
+    gap: 12px;
+    padding-bottom: 10px;
 }
 
 .product-card { 
     background: var(--white); 
     border-radius: 12px; 
-    position: relative; /* Importante para posicionar el tag */
+    position: relative;
     display: flex; 
     flex-direction: column; 
     overflow: hidden; 
@@ -308,14 +325,13 @@ body {
 
 .product-card:hover { border-color: var(--primary-dark); transform: translateY(-3px); }
 
-/* --- CAMBIO SOLICITADO AQUÍ --- */
 .product-img { 
-    height: 90px; /* Altura optimizada */
-    background-size: cover; /* Esto hará que la foto cubra todo el recuadro */
+    height: 90px;
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center; 
     background-color: #f9f9f9;
-    margin-top: 0; /* Eliminamos margen superior */
+    margin-top: 0;
 }
 
 .product-info { 
@@ -324,8 +340,8 @@ body {
     flex-direction: column; 
     flex-grow: 1; 
     justify-content: flex-start; 
-    align-items: center; /* Centra horizontalmente el nombre y el precio */
-    text-align: center;  /* Centra el texto del nombre */
+    align-items: center;
+    text-align: center;
     gap: 2px; 
 }
 
@@ -334,7 +350,7 @@ body {
     font-weight: 700; 
     height: auto; 
     max-height: 28px; 
-    width: 100%; /* Asegura que el centrado funcione en todo el ancho */
+    width: 100%;
     overflow: hidden; 
     margin: 4px 0 2px 0; 
     text-transform: uppercase; 
@@ -347,7 +363,7 @@ body {
     font-weight: 900; 
     font-size: 0.95rem;
     margin-bottom: 6px;
-    display: block; /* Ocupa su propia línea para centrarse bien */
+    display: block;
 }
 
 .footer-controls { 
@@ -356,31 +372,31 @@ body {
     justify-content: center; 
     gap: 8px; 
     margin-top: auto; 
-    padding-bottom: 8px; /* Un poco de margen al final de la carta */
+    padding-bottom: 8px;
     width: 100%;
 }
 
 .btn-qty { 
     background: var(--primary-dark); border: none; color: white; 
-    width: 20px; height: 20px; /* Reducido de 22px */
+    width: 20px; height: 20px;
     border-radius: 4px; cursor: pointer; 
     font-size: 0.8rem;
 }
 
 .qty-input { 
-    width: 28px; /* Ajustado para que el número no se vea apretado */
-    text-align: center; /* Centra el texto horizontalmente */
+    width: 28px;
+    text-align: center;
     border: 1px solid var(--primary-soft); 
     border-radius: 4px; 
     font-size: 0.8rem; 
     background: white;
-    padding: 0; /* Eliminamos paddings laterales para que no desvíen el número */
-    height: 20px; /* Igualamos la altura a la de los botones +- */
+    padding: 0;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     outline: none;
-    -moz-appearance: textfield; /* Quita flechas en Firefox */
+    -moz-appearance: textfield;
 }
 
 .qty-input::-webkit-outer-spin-button,
@@ -393,7 +409,6 @@ body {
     display: flex;
     align-items: center;
     gap: 3px;
-    /* Empuja este bloque hacia el centro desde la izquierda */
     margin-left: auto; 
 }
 
@@ -407,11 +422,10 @@ body {
     justify-content: center; 
     cursor: pointer; 
     font-size: 0.8rem;
-    /* Empuja este botón hacia el centro desde la derecha */
     margin-right: auto; 
 }
 
-/* SWITCHES Y TAGS (DISEÑO ORIGINAL RECUPERADO) */
+/* SWITCHES Y TAGS */
 .switch-top { position: absolute; top: 8px; right: 8px; z-index: 10; }
 .switch { position: relative; display: inline-block; width: 28px; height: 14px; }
 .switch input { opacity: 0; width: 0; height: 0; }
@@ -422,11 +436,11 @@ input:checked + .slider:before { transform: translateX(14px); }
 
 .stock-tag { 
     position: absolute; 
-    top: 0; /* Pegado al borde superior */
-    left: 0; /* Pegado al borde izquierdo */
+    top: 0;
+    left: 0;
     padding: 4px 10px; 
-    border-radius: 0 0 10px 0; /* Curva solo en la esquina inferior derecha */
-    font-size: 0.65rem; /* Mucho más grande que el anterior */
+    border-radius: 0 0 10px 0;
+    font-size: 0.65rem;
     font-weight: 900; 
     color: white; 
     z-index: 15; 
@@ -435,8 +449,8 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 
 .stock-disponible { background: var(--success); }
-.stock-agotandose { background: #bc6e32; } /* Café/Naranja para aviso */
-.stock-agotado { background: var(--nocolor); } /* Tu color rojo oscuro */
+.stock-agotandose { background: #bc6e32; }
+.stock-agotado { background: var(--nocolor); }
 
 /* =========================================
    MODALES, TOASTS Y SCROLLBARS
@@ -492,7 +506,7 @@ input:checked + .slider:before { transform: translateX(14px); }
 #detImg {
     width: 140px;
     height: 140px;
-    background-size: contain; /* Para el detalle, contain está bien */
+    background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     background-color: #fff;
