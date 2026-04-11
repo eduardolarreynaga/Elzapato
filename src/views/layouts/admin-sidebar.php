@@ -15,13 +15,13 @@ $activeMenu = $activeMenu ?? '';
     <nav class="sidebar-nav">
         <ul>
             <li>
-                <a href="/ElZapato/index.php"><i class="fas fa-home"></i><span>Pagina principal</span></a>
+                <a href="/ElZapato/src/views/layouts/menu-general.php"><i class="fas fa-home"></i><span>Pagina principal</span></a>
             </li>
             <li class="<?= $activeMenu === 'dashboard' ? 'active' : '' ?>">
                 <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
             </li>
             <li class="<?= $activeMenu === 'productos' ? 'active' : '' ?>">
-                <a href="productos.php"><i class="fas fa-box"></i><span>Productos</span></a>
+                <a href="productos.php"><i class="fas fa-boxes"></i><span>Inventario</span></a>
             </li>
             <li class="<?= $activeMenu === 'ventas' ? 'active' : '' ?>">
                 <a href="ventas.php"><i class="fas fa-shopping-cart"></i><span>Ventas</span></a>
@@ -39,9 +39,6 @@ $activeMenu = $activeMenu ?? '';
                 <a href="reportes.php"><i class="fas fa-chart-line"></i><span>Reportes</span></a>
             </li>
             <li class="separator logout-separator"></li>
-            <li class="logout-item">
-                <a href="/ElZapato/src/views/public/principal.php"><i class="fas fa-sign-out-alt"></i><span>Salir</span></a>
-            </li>
         </ul>
     </nav>
 

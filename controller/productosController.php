@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/../model/ProductosModel.php';
-$dir = __DIR__ . '/../Assets/img/productos/';
+
 class ProductosController {
 
     /*=============================================
-    CREAR PRODUCTO (CON LOGICA DE IMAGEN INCLUIDA)
+    CREAR PRODUCTO (MODIFICADO)
     =============================================*/
     public function ctrCrearProducto() {
         if (isset($_POST["nombre_producto"]) && empty($_POST["id_producto"])) {
@@ -17,12 +17,10 @@ class ProductosController {
                 "estado" => "activo"
             );
 
-            // 1. Registramos el producto y obtenemos el ID real
             $idNuevoProducto = ProductosModel::mdlRegistrarProducto("productos", $datos);
 
             if ($idNuevoProducto != "error" && is_numeric($idNuevoProducto)) {
 
-                // 2. Registramos la variante (Precio y Stock)
                 $datosVariante = array(
                     "id_producto" => $idNuevoProducto,
                     "precio" => $_POST["precio_venta"],
@@ -30,121 +28,101 @@ class ProductosController {
                 );
                 ProductosModel::mdlRegistrarVariante($datosVariante);
 
-                // 3. PROCESAR IMAGEN (NUEVO)
                 if (isset($_FILES['imagen_producto']) && $_FILES['imagen_producto']['error'] == 0) {
-                    $dir = __DIR__ . '/../Assets/img/productos/'; // Ajusta la ruta según tu carpeta
+                    $dir = __DIR__ . '/../../Assets/img/productos/'; 
                     if (!file_exists($dir)) { mkdir($dir, 0777, true); }
 
                     $ext = pathinfo($_FILES['imagen_producto']['name'], PATHINFO_EXTENSION);
                     $nombre_archivo = $idNuevoProducto . "." . $ext;
 
-                    // Limpiar versiones anteriores si existieran
                     $viejos = glob($dir . $idNuevoProducto . ".*");
                     foreach($viejos as $v) { @unlink($v); }
 
                     move_uploaded_file($_FILES['imagen_producto']['tmp_name'], $dir . $nombre_archivo);
                 }
                 
-                // 4. Redirigir SOLO después de procesar todo
-                echo '<script>window.location = "productos";</script>';
+                // Redirigir a la página 1 después de crear
+                echo '<script>window.location = "productos.php?pagina=1";</script>';
             }
         }
     }
 
     /*=============================================
-    ACTUALIZAR PRODUCTO (CON LOGICA DE IMAGEN)
+    ACTUALIZAR PRODUCTO (MODIFICADO)
     =============================================*/
-    public function ctrActualizarProducto() {
-        if (isset($_POST["nombre_producto"]) && !empty($_POST["id_producto"])) {
-            
-            $id = $_POST["id_producto"];
-            $datos = array(
-                "id_producto" => $id,
-                "nombre" => $_POST["nombre_producto"],
-                "id_categoria" => $_POST["id_categoria"],
-                "id_marca" => $_POST["id_marca"],
-                "descripcion" => $_POST["descripcion"] ?? "",
-                "estado" => $_POST["estado"]
-            );
+    static public function ctrActualizarProducto() {
+    if (isset($_POST["id_producto"]) && !empty($_POST["id_producto"])) {
+        
+        $tabla = "productos";
+        $datos = array(
+            "id_producto"     => $_POST["id_producto"],
+            "id_variante"     => $_POST["id_variante"], // <-- AGREGAR ESTA LÍNEA
+            "nombre_producto" => $_POST["nombre_producto"],
+            "id_categoria"    => $_POST["id_categoria"],
+            "id_marca"        => $_POST["id_marca"],
+            "talla"           => $_POST["talla"],
+            "color"           => $_POST["color"],
+            "precio_venta"    => $_POST["precio_venta"],
+            "stock"           => $_POST["stock"],
+            "estado_v"        => $_POST["estado_v"]
+        );
 
-            $respuesta = ProductosModel::mdlActualizarProducto("productos", $datos);
+        $respuesta = ProductosModel::mdlActualizarProducto($tabla, $datos);
 
-            if ($respuesta == "ok") {
-                $datosVariante = array(
-                    "id_producto" => $id,
-                    "precio" => $_POST["precio_venta"],
-                    "stock" => $_POST["stock"]
-                );
-                ProductosModel::mdlActualizarVariante($datosVariante);
-
-                // PROCESAR IMAGEN EN EDICIÓN
-                if (isset($_FILES['imagen_producto']) && $_FILES['imagen_producto']['error'] == 0) {
-                    $dir = __DIR__ . '/../Assets/img/productos/';
-                    $ext = pathinfo($_FILES['imagen_producto']['name'], PATHINFO_EXTENSION);
-                    $nombre_archivo = $id . "." . $ext;
-
-                    $viejos = glob($dir . $id . ".*");
-                    foreach($viejos as $v) { @unlink($v); }
-
-                    move_uploaded_file($_FILES['imagen_producto']['tmp_name'], $dir . $nombre_archivo);
-                }
-
-                echo '<script>window.location = "productos";</script>';
-            }
+        if ($respuesta == "ok") {
+            echo '<script>
+                window.location = "productos.php";
+            </script>';
         }
     }
+}
+
+    /*=============================================
+    MOSTRAR PRODUCTOS PAGINADOS (CRÍTICO)
+    =============================================*/
+    static public function ctrMostrarProductosPaginados($item, $valor, $base, $tope) {
+        
+        // Forzamos que los valores sean enteros para que el LIMIT de SQL no falle
+        $inicio = (int)$base;
+        $cantidad = (int)$tope;
+
+        return ProductosModel::mdlMostrarProductosPaginados("productos", "producto_variante", $inicio, $cantidad);
+    }
+
+    /*=============================================
+    ESTADISTICAS (DASHBOARD)
+    =============================================*/
 
     static public function ctrProductosMasVendidos() {
         $tabla = "productos";
-        // Llama al modelo que ya tienes definido
-        $respuesta = ProductosModel::mdlProductosMasVendidos($tabla);
-        return $respuesta;
+        return ProductosModel::mdlProductosMasVendidos($tabla);
     }
 
     static public function ctrVentasSemana() {
-        // Llama al modelo para las ventas de los últimos 7 días
-        $respuesta = ProductosModel::mdlVentasSemana();
-        return $respuesta;
+        return ProductosModel::mdlVentasSemana();
     }
 
     static public function ctrVentasPorCategoria() {
-        // Llama al modelo para la gráfica de dona
-        $respuesta = ProductosModel::mdlVentasPorCategoria();
-        return $respuesta;
+        return ProductosModel::mdlVentasPorCategoria();
     }
     
     static public function ctrMostrarProductos() {
         return ProductosModel::mdlMostrarProductos("productos", "producto_variante");
     }
 
-    static public function ctrMostrarProductosPaginados($item, $valor, $base, $tope) {
-        return ProductosModel::mdlMostrarProductosPaginados("productos", "producto_variante", $base, $tope);
-    }
-
-        /*=============================================
-    ELIMINAR PRODUCTO (NUEVO)
+    /*=============================================
+    ELIMINAR PRODUCTO
     =============================================*/
     public function ctrEliminarProducto(){
-
         if(isset($_POST["id_eliminar"])){
-
             $id = $_POST["id_eliminar"];
             $tabla = "productos";
-
-            // 1. Opcional: Eliminar la imagen física de la carpeta
-            $dir = __DIR__ . '/../Assets/img/productos/';
-            $archivos = glob($dir . $id . ".*"); // Busca cualquier extensión (.jpg, .png, etc)
+            $dir = __DIR__ . '/../../Assets/img/productos/';
+            $archivos = glob($dir . $id . ".*");
             foreach($archivos as $archivo) {
-                if(file_exists($archivo)){
-                    @unlink($archivo);
-                }
+                if(file_exists($archivo)){ @unlink($archivo); }
             }
-
-            // 2. Llamar al modelo para eliminar de la BD
-            $respuesta = ProductosModel::mdlEliminarProducto($tabla, $id);
-
-            return $respuesta;
+            return ProductosModel::mdlEliminarProducto($tabla, $id);
         }
     }
-
 }

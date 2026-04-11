@@ -7,25 +7,25 @@ class ProductosModel {
     MOSTRAR PRODUCTOS (CORREGIDO CON MARCAS)
     =============================================*/
     static public function mdlMostrarProductos($tabla1, $tabla2) {
-        
-        $stmt = Conexion::conectar()->prepare("
-            SELECT 
-                p.*, 
-                c.nombre_categoria, 
-                m.nombre_marca, -- Traemos el nombre real de la marca
-                IFNULL(v.precio_venta, 0) as precio_venta, 
-                IFNULL(v.stock, 0) as stock 
-            FROM $tabla1 p
-            LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
-            LEFT JOIN marcas m ON p.id_marca = m.id_marca -- Conectamos con la tabla marcas
-            LEFT JOIN $tabla2 v ON p.id_producto = v.id_producto
-            GROUP BY p.id_producto
-            ORDER BY p.id_producto DESC
-        ");
+    $stmt = Conexion::conectar()->prepare("SELECT 
+            p.id_producto, 
+            p.nombre_producto, 
+            p.id_categoria, 
+            p.id_marca, 
+            p.estado as estado_producto,
+            c.nombre_categoria,
+            m.nombre_marca,
+            /* Agregamos v.id_variante al final del CONCAT (es el séptimo dato) */
+            GROUP_CONCAT(CONCAT(v.talla, '|', v.color, '|', v.precio_venta, '|', v.stock, '|', v.codigo_barras, '|', v.estado, '|', v.id_variante) SEPARATOR '||') as info_variantes
+        FROM $tabla1 p
+        LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
+        LEFT JOIN marcas m ON p.id_marca = m.id_marca
+        LEFT JOIN $tabla2 v ON p.id_producto = v.id_producto
+        GROUP BY p.id_producto");
 
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 
     /*=============================================
@@ -72,17 +72,39 @@ class ProductosModel {
     ACTUALIZAR PRODUCTO (TABLA PRINCIPAL)
     =============================================*/
     static public function mdlActualizarProducto($tabla, $datos) {
-        $stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre_producto = :nombre, descripcion = :descripcion, id_marca = :id_marca, id_categoria = :id_categoria, estado = :estado WHERE id_producto = :id_producto");
-        
-        $stmt->bindParam(":id_producto", $datos["id_producto"], PDO::PARAM_INT);
-        $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
-        $stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
-        $stmt->bindParam(":id_marca", $datos["id_marca"], PDO::PARAM_INT);
-        $stmt->bindParam(":id_categoria", $datos["id_categoria"], PDO::PARAM_INT);
-        $stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
+    $db = Conexion::conectar();
+    
+    // 1. Actualizar datos generales del Producto (Nombre, marca, categoría)
+    $stmt1 = $db->prepare("UPDATE productos SET 
+                nombre_producto = :nombre, 
+                id_categoria = :id_cat, 
+                id_marca = :id_mar 
+                WHERE id_producto = :id_p");
+    
+    $stmt1->bindParam(":nombre", $datos["nombre_producto"], PDO::PARAM_STR);
+    $stmt1->bindParam(":id_cat", $datos["id_categoria"], PDO::PARAM_INT);
+    $stmt1->bindParam(":id_mar", $datos["id_marca"], PDO::PARAM_INT);
+    $stmt1->bindParam(":id_p",   $datos["id_producto"], PDO::PARAM_INT);
+    $stmt1->execute();
 
-        return $stmt->execute() ? "ok" : $stmt->errorInfo();
-    }
+    // 2. Actualizar SOLO LA VARIANTE seleccionada
+    $stmt2 = $db->prepare("UPDATE producto_variante SET 
+                talla = :talla, 
+                color = :color, 
+                precio_venta = :precio, 
+                stock = :stock,
+                estado = :estado
+                WHERE id_variante = :id_v"); // <--- AQUÍ ESTÁ EL CAMBIO CRUCIAL
+
+    $stmt2->bindParam(":talla",  $datos["talla"], PDO::PARAM_STR);
+    $stmt2->bindParam(":color",  $datos["color"], PDO::PARAM_STR);
+    $stmt2->bindParam(":precio", $datos["precio_venta"], PDO::PARAM_STR);
+    $stmt2->bindParam(":stock",  $datos["stock"], PDO::PARAM_INT);
+    $stmt2->bindParam(":estado", $datos["estado_v"], PDO::PARAM_STR);
+    $stmt2->bindParam(":id_v",    $datos["id_variante"], PDO::PARAM_INT);
+
+    return $stmt2->execute() ? "ok" : "error";
+}
 
     /*=============================================
     ACTUALIZAR VARIANTE (TABLA producto_variante)
@@ -97,17 +119,37 @@ class ProductosModel {
         return $stmt->execute() ? "ok" : $stmt->errorInfo();
     }
 
-    static public function mdlMostrarProductosPaginados($tabla1, $tabla2, $base, $tope) {
-        $stmt = Conexion::conectar()->prepare("
-            SELECT p.*, c.nombre_categoria, m.nombre_marca, IFNULL(v.precio_venta, 0) as precio_venta, IFNULL(v.stock, 0) as stock 
-            FROM $tabla1 p
-            LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
-            LEFT JOIN marcas m ON p.id_marca = m.id_marca
-            LEFT JOIN $tabla2 v ON p.id_producto = v.id_producto
-            GROUP BY p.id_producto
-            ORDER BY p.id_producto DESC
-            LIMIT $base, $tope
-        ");
+   static public function mdlMostrarProductosPaginados($tabla1, $tabla2, $base, $tope) {
+        
+        $sql = "SELECT 
+                    p.*, 
+                    c.nombre_categoria, 
+                    m.nombre_marca, 
+                    SUM(v.stock) as stock, 
+                    GROUP_CONCAT(
+                        CONCAT(
+                            IFNULL(v.talla, 'N/A'), '|', 
+                            IFNULL(v.color, 'N/A'), '|', 
+                            IFNULL(v.precio_venta, 0), '|', 
+                            IFNULL(v.stock, 0), '|', 
+                            IFNULL(v.codigo_barras, 'S/C')
+                        ) SEPARATOR '||'
+                    ) as info_variantes
+                FROM $tabla1 p
+                LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
+                LEFT JOIN marcas m ON p.id_marca = m.id_marca
+                LEFT JOIN $tabla2 v ON p.id_producto = v.id_producto
+                GROUP BY p.id_producto
+                ORDER BY p.id_producto DESC
+                LIMIT :base, :tope"; // Usamos marcadores con nombre
+
+        $stmt = Conexion::conectar()->prepare($sql);
+
+        // ESTO ES LO QUE HACE QUE FUNCIONE:
+        // Forzamos que sean enteros (PARAM_INT)
+        $stmt->bindValue(":base", (int)$base, PDO::PARAM_INT);
+        $stmt->bindValue(":tope", (int)$tope, PDO::PARAM_INT);
+
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

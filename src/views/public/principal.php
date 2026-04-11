@@ -1,25 +1,4 @@
-<?php
-session_start();
-// Si viene el rol por la URL, lo guardamos en la sesión (compatibilidad)
-$incomingRole = $_GET['login_success'] ?? $_GET['set_role'] ?? null;
 
-if ($incomingRole !== null) {
-    $role = strtolower(trim((string) $incomingRole));
-
-    if (in_array($role, ['admin', 'seller'], true)) {
-        $_SESSION['user_role'] = $role;
-        $_SESSION['rol'] = $role;
-
-        if (!isset($_SESSION['usuario'])) {
-            $_SESSION['usuario'] = $role;
-        }
-
-        if (!isset($_SESSION['id_usuario'])) {
-            $_SESSION['id_usuario'] = $role === 'admin' ? 1 : 2;
-        }
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

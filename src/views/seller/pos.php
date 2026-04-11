@@ -1,16 +1,10 @@
 <?php
 require_once __DIR__ . '/../../config/auth.php';
+if (!is_authenticated()) { header("Location: /ElZapato/src/views/public/login.php"); exit(); }
 
-if (!is_authenticated()) {
-    redirect_to('index.php');
-}
+$rolActual = $_SESSION['rol'] ?? '';
+if (!in_array($rolActual, ['cajero', 'admin'], true)) { header("Location: /ElZapato/src/views/layouts/menu-general.php"); exit(); }
 
-$currentRole = get_current_user_role();
-if (!in_array($currentRole, ['seller', 'admin'], true)) {
-    redirect_to('index.php');
-}
-
-// 1. CARGAR DATOS DE LA BASE DE DATOS
 require_once "../../../controller/productosController.php";
 require_once "../../../model/ProductosModel.php";
 require_once "../../../controller/categoriasController.php";
@@ -18,317 +12,411 @@ require_once "../../../model/CategoriasModel.php";
 
 $productos = ProductosController::ctrMostrarProductos();
 $categorias = CategoriasController::ctrMostrarCategorias();
+$nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS - Zapatería El Zapato</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/ElZapato/Assets/css/styles.css?v=20260323">
-    
-    <style>
-        :root {
-            --primary-light: #E4E0E1;   /* Fondo muy claro */
-            --primary-soft: #D6C0B3;    /* Tono suave intermedio */
-            --primary-dark: #AB886D;    /* Tono oscuro para detalles y éxito */
-            --text-dark: #000000;       /* Negro solo para texto */
-            --font-family: "Roboto", sans-serif;
-            --nocolor: #772c24;         /* Rojo del sistema para deudas/alertas */
-        }
-
-        /* Estilos base de la interfaz */
-        .menu-items ul { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important; gap: 10px !important; }
-        .menu-items li.product-item {
-            position: relative !important; display: flex !important; flex-direction: column !important;
-            justify-content: flex-end !important; overflow: hidden !important; padding: 0 !important;
-            min-height: 91px !important; background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.05)), url('/ElZapato/Assets/img/zapa.jpeg') center/cover no-repeat !important;
-            cursor: pointer; transition: transform 0.1s;
-        }
-        .menu-items li.product-item:active { transform: scale(0.95); }
-        .menu-items li.product-item::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 29px; background: rgba(255, 255, 255, 0.72); z-index: 1; }
-        .menu-items li.product-item .item { position: absolute; left: 8px; bottom: 6px; z-index: 2; margin: 0 !important; max-width: calc(100% - 60px); font-size: 0.78rem; font-weight: 700; color: var(--text-dark) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .menu-items li.product-item .price { position: absolute; right: 8px; bottom: 6px; z-index: 2; margin: 0 !important; font-size: 0.76rem; font-weight: 700; color: var(--text-dark) !important; }
-
-        /* --- ESTILOS DE LOS MODALES --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); display: none; 
-            justify-content: center; align-items: center; z-index: 9999;
-            backdrop-filter: blur(3px);
-            /* Transición suave para el fondo también */
-            transition: all 0.5s ease;
-        }
-        .modal-content {
-            background: #fff; padding: 25px; border-radius: 12px; width: 90%;
-            max-width: 420px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
-            border: 2px solid var(--primary-soft);
-            
-            /* --- NUEVA ANIMACIÓN MÁS DESPACIO Y AMIGABLE --- */
-            /* Aumentamos duración a 0.6s y usamos cubic-bezier para desaceleración suave */
-            animation: fadeInFriendly 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
-        }
-        
-        /* Definición de la animación amigable: entra suavemente desde abajo */
-        @keyframes fadeInFriendly { 
-            from { 
-                opacity: 0; 
-                transform: translateY(40px) scale(0.95); /* Empieza más abajo y pequeña */
-            } 
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); /* Sube suavemente a su posición */
-            } 
-        }
-        
-        .modal-header { border-bottom: 2px solid var(--primary-light); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { margin: 0; font-size: 1.4rem; color: var(--primary-dark); font-weight: 700; }
-        
-        .modal-body { display: flex; flex-direction: column; gap: 15px; }
-        
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-weight: 700; font-size: 0.9rem; color: var(--primary-dark); }
-        .form-group input { 
-            padding: 12px; border: 1px solid var(--primary-soft); border-radius: 8px; 
-            font-size: 1.2rem; outline: none; background: var(--primary-light); color: var(--text-dark);
-        }
-        .form-group input:focus { border-color: var(--primary-dark); background: #fff; }
-
-        .total-destacado { 
-            background: var(--primary-dark); color: #fff; padding: 20px; 
-            text-align: center; border-radius: 8px; font-size: 2.2rem; font-weight: 700; 
-        }
-        .vuelto-box { 
-            background: var(--primary-light); color: var(--text-dark); padding: 15px; 
-            text-align: center; border-radius: 8px; border: 2px solid var(--primary-soft); 
-            font-size: 1.6rem; font-weight: 700; transition: all 0.3s ease;
-        }
-        .btn-confirmar { 
-            background: var(--primary-dark); color: white; border: none; padding: 15px; 
-            border-radius: 8px; font-size: 1.1rem; font-weight: 700; 
-            cursor: pointer; transition: opacity 0.2s;
-        }
-        .btn-confirmar:hover { opacity: 0.9; }
-        .close-modal { cursor: pointer; font-size: 1.8rem; color: var(--nocolor); font-weight: bold; }
-    </style>
+    <title>POS - El Zapato</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/pos.css?v=<?php echo time(); ?>">
 </head>
-<body class="keyboard-hidden">
-    <div class="register">
-        <div class="left">
-            <div class="order-window">
-                <table id="ticketTable">
-                    <thead>
-                        <tr>
-                            <th>Cant.</th>
-                            <th>Producto</th>
-                            <th>Precio</th>
-                            <th>Subtotal</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+<body>
 
-            <div class="order-total">
-                <span id="totalDisplay">Total: $0.00</span>
-            </div>
-
-            <div class="buttons">
-                <button class="action-btn"><i class="fa fa-plus"></i></button>
-                <button class="num-btn">1</button><button class="num-btn">2</button><button class="num-btn">3</button>
-                <button class="action-btn"><i class="fa fa-minus"></i></button>
-                <button class="num-btn">4</button><button class="num-btn">5</button><button class="num-btn">6</button>
-                <button class="action-btn" onclick="resetVenta()"><i class="fa fa-times"></i> Reiniciar</button>
-                <button class="num-btn">7</button><button class="num-btn">8</button><button class="num-btn">9</button>
-                <button class="action-btn exit-btn"><i class="fas fa-ban"></i> Anular</button>
-                <button class="num-btn">0</button><button class="action-btn">.00</button><button class="action-btn"><i class="fa fa-equals"></i></button>
-            </div>
-
-            <div class="left-keys">
-                <ul>
-                    <li onclick="window.location.href='/ElZapato/index.php'"><i class="fas fa-sign-out-alt"></i><span>Salir</span></li>
-                    <li class="keyboard-toggle active" data-toggle-keyboard><i class="fas fa-keyboard"></i></li>
-                    <li onclick="window.print()"><i class="fas fa-print"></i><span>Imprimir</span></li>
-                </ul>
-            </div>
+    <nav class="top-nav">
+        <div class="user-info">
+            <i class="fa-solid fa-circle-user"></i>
+            <span><strong><?= htmlspecialchars($nombreUsuario) ?></strong> (<?= strtoupper($rolActual) ?>)</span>
         </div>
-
-        <div class="right">
-            <div class="categories">
-                <ul id="categoryFilters">
-                    <li><a href="#" class="active" data-filter="all">Todos</a></li>
-                    <?php foreach ($categorias as $cat): ?>
-                        <li><a href="#" data-filter="<?= $cat['id_categoria'] ?>"><?= htmlspecialchars($cat['nombre_categoria']) ?></a></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-
-            <div class="menu-items">
-                <ul id="productsGrid">
-                    <?php foreach ($productos as $p): 
-                        $id = $p['id_producto'];
-                        $imagenPath = '/ElZapato/Assets/img/zapa.jpeg';
-                        $formatos = ['jpg', 'jpeg', 'png', 'webp'];
-                        foreach ($formatos as $ext) {
-                            $archivoFisico = __DIR__ . "/../../../Assets/img/productos/" . $id . "." . $ext;
-                            if (file_exists($archivoFisico)) {
-                                $imagenPath = "/ElZapato/Assets/img/productos/" . $id . "." . $ext;
-                                break;
-                            }
-                        }
-                    ?>
-                    <li class="product-item" data-id="<?= $id ?>" data-category="<?= $p['id_categoria'] ?>" data-price="<?= $p['precio_venta'] ?>"
-                        style="background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.05)), url('<?= $imagenPath ?>?v=<?= time() ?>') center/cover no-repeat !important;">
-                        <span class="item"><?= htmlspecialchars($p['nombre_producto']) ?></span>
-                        <span class="price">$<?= number_format($p['precio_venta'], 2) ?></span>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-
-            <div class="payment-keys">
-                <ul>
-                    <li class="payment-method" data-method="efectivo"><i class="fas fa-money-bill-alt fa-2x"></i><span>Efectivo</span></li>
-                    <li class="payment-method" data-method="tarjeta"><i class="fas fa-credit-card fa-2x"></i><span>Tarjeta</span></li>
-                    <li class="payment-method" data-method="empleado"><i class="fas fa-user fa-2x"></i><span>Empleado</span></li>
-                </ul>
-            </div>
+        <div class="brand-logo">SISTEMA DE VENTAS EL ZAPATO</div>
+        <div class="nav-icons">
+            <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/ElZapato/src/views/layouts/menu-general.php'"></i>
+            <i class="fa-solid fa-gear"></i>
+            <i class="fa-solid fa-power-off" title="Salir" onclick="window.location.href='/ElZapato/Logout/salir.php'"></i>
         </div>
-    </div>
+    </nav>
 
-    <div id="modalEfectivo" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-money-bill-wave"></i> Cobro en Efectivo</h2>
-                <span class="close-modal" onclick="cerrarModales()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="total-destacado">
-                    <small style="font-size: 0.8rem; display: block; opacity: 0.8; margin-bottom: 5px;">TOTAL A PAGAR:</small>
-                    <span id="efectivoTotal">$0.00</span>
-                </div>
-                <div class="form-group">
-                    <label>Efectivo Recibido</label>
-                    <input type="number" id="montoRecibido" placeholder="0.00" step="0.01" min="0">
-                </div>
-                <div class="vuelto-box" id="vueltoContenedor">
-                    <small id="vueltoEtiqueta" style="font-size: 0.8rem; display: block; opacity: 0.8; margin-bottom: 5px;">CAMBIO:</small>
-                    <span id="vueltoResultado">$0.00</span>
-                </div>
-                <button class="btn-confirmar">REGISTRAR VENTA</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalTarjeta" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-credit-card"></i> Pago con Tarjeta</h2>
-                <span class="close-modal" onclick="cerrarModales()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="total-destacado" style="font-size: 1.6rem; padding: 15px;">
-                    Monto a Cobrar: <span id="tarjetaTotal">$0.00</span>
-                </div>
-                <div class="form-group"><label>Nombre del Titular</label><input type="text" placeholder="Como aparece en la tarjeta"></div>
-                <div class="form-group"><label>Número de Tarjeta</label><input type="text" placeholder="0000 0000 0000 0000"></div>
-                <button class="btn-confirmar">PROCESAR PAGO</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="/ElZapato/Assets/js/script.js?v=999" defer></script>
-    <script>
-        function cerrarModales() {
-            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-        }
-
-        // Abrir modales
-        document.querySelectorAll('.payment-method').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const metodo = this.getAttribute('data-method');
-                const totalTexto = document.getElementById('totalDisplay').innerText.replace('Total: $', '').replace(',', '');
-                const totalVenta = parseFloat(totalTexto) || 0;
-
-                if (metodo === 'efectivo') {
-                    document.getElementById('efectivoTotal').innerText = '$' + totalVenta.toFixed(2);
-                    document.getElementById('montoRecibido').value = '';
-                    resetVueltoUI();
-                    document.getElementById('modalEfectivo').style.display = 'flex';
-                    document.getElementById('montoRecibido').focus();
-                } else if (metodo === 'tarjeta') {
-                    document.getElementById('tarjetaTotal').innerText = '$' + totalVenta.toFixed(2);
-                    document.getElementById('modalTarjeta').style.display = 'flex';
-                }
-            });
-        });
-
-        // Reiniciar visual del cuadro de cambio
-        function resetVueltoUI() {
-            const res = document.getElementById('vueltoResultado');
-            const eti = document.getElementById('vueltoEtiqueta');
-            const cont = document.getElementById('vueltoContenedor');
-            res.innerText = "$0.00";
-            res.style.color = "var(--text-dark)";
-            eti.innerText = "CAMBIO:";
-            cont.style.borderColor = "var(--primary-soft)";
-            cont.style.background = "var(--primary-light)";
-        }
-
-        // Lógica de cálculo en tiempo real con colores del sistema
-        document.getElementById('montoRecibido').addEventListener('input', function() {
-            // BLOQUEO DE NEGATIVOS: Si escriben menos de 0, forzamos a 0
-            if (this.value < 0) { this.value = 0; }
-
-            const totalApagar = parseFloat(document.getElementById('efectivoTotal').innerText.replace('$', '')) || 0;
-            const recibido = parseFloat(this.value) || 0;
+    <div class="main-layout">
+        <aside class="sidebar-resumen">
+            <h2>Resumen de venta</h2>
             
-            const res = document.getElementById('vueltoResultado');
-            const eti = document.getElementById('vueltoEtiqueta');
-            const cont = document.getElementById('vueltoContenedor');
+            <div class="tables-scroll-container">
+                <div class="table-section">
+                    <p class="table-title">Detalle de Venta</p>
+                    <table class="ticket-table">
+                        <thead>
+                            <tr>
+                                <th class="col-cant">Cant.</th>
+                                <th class="col-prod">Producto</th>
+                                <th class="col-subt">Subt.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaVenta"></tbody>
+                    </table>
+                </div>
 
-            const diferencia = recibido - totalApagar;
+                <div class="table-section discount-section">
+                    <p class="table-title">Ahorro Aplicado</p>
+                    <table class="ticket-table">
+                        <thead>
+                            <tr>
+                                <th class="col-prod-desc">Producto</th>
+                                <th class="col-icon-desc">Cant.</th>
+                                <th class="col-price-desc">Ahorro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaDescuentos"></tbody>
+                    </table>
+                </div>
+            </div>
 
-            if (this.value === "" || recibido === 0) {
-                resetVueltoUI();
-            } else if (diferencia < 0) {
-                // ESTADO: DEBE (Usamos --nocolor del sistema)
-                eti.innerText = "DEBE:";
-                res.innerText = "-$" + Math.abs(diferencia).toFixed(2);
-                res.style.color = "var(--nocolor)";
-                cont.style.borderColor = "var(--nocolor)";
-                cont.style.background = "#F9EBEB"; // Fondo suave rojizo
-            } else {
-                // ESTADO: CAMBIO (Usamos --primary-dark del sistema)
-                eti.innerText = "CAMBIO:";
-                res.innerText = "$" + diferencia.toFixed(2);
-                res.style.color = "var(--primary-dark)"; 
-                cont.style.borderColor = "var(--primary-dark)"; 
-                cont.style.background = "var(--primary-light)";
+            <div class="totals-section">
+                <div class="total-row"><span>Subtotal:</span><span id="subTotal">$0.00</span></div>
+                <div class="total-row"><span>Descuento:</span><span id="descuentoMonto" style="color:var(--nocolor)">-$0.00</span></div>
+                <div class="total-row total-highlight">
+                    <span class="total-big">Total:</span>
+                    <span class="total-big" id="totalDisplay">$0.00</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons-row">
+                <button class="btn-action btn-discount" onclick="abrirModalDescuento()">
+                    <i class="fa-solid fa-tag"></i> Descuento
+                </button>
+                <button class="btn-action btn-sell">
+                    <i class="fa-solid fa-cart-shopping"></i> Vender
+                </button>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <section class="filter-bar">
+                <div class="search-container">
+                    <i class="fa fa-search"></i>
+                    <input type="text" id="productSearch" placeholder="¿Qué buscas hoy?">
+                </div>
+                
+                <div class="select-group">
+                    <div class="select-container">
+                        <select id="categoryFilter">
+                            <option value="all">Categorías</option>
+                            <?php foreach ($categorias as $cat): ?>
+                                <option value="<?= $cat['id_categoria'] ?>"><?= htmlspecialchars($cat['nombre_categoria']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="select-container">
+                        <select id="brandFilter">
+                            <option value="all">Marcas</option>
+                            <option value="nike">Nike</option>
+                            <option value="adidas">Adidas</option>
+                            <option value="puma">Puma</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="catalog-container">
+                <div class="products-grid" id="productsGrid">
+                    <?php foreach ($productos as $p): 
+                        // Procesamos las variantes del producto
+                        $info = $p['info_variantes'] ?? '';
+                        $variantes = ($info != '') ? explode("||", $info) : [];
+
+                        foreach ($variantes as $v):
+                            $d = explode("|", $v);
+                            
+                            // Extraemos los datos según el orden de tu consulta SQL
+                            $v_talla  = $d[0] ?? '';
+                            $v_color  = $d[1] ?? '';
+                            $v_precio = (float)($d[2] ?? 0);
+                            $v_stock  = (int)($d[3] ?? 0);
+                            $v_sku    = $d[4] ?? '';
+                            $v_estado = $d[5] ?? 'activo';
+                            $v_id_v   = $d[6] ?? '0';
+
+                            // Si la variante está inactiva, no la mostramos en el POS
+                            if($v_estado !== 'activo') continue;
+
+                            $tagClass = ($v_stock <= 0) ? "stock-agotado" : (($v_stock <= 5) ? "stock-agotandose" : "stock-disponible");
+                            
+                            // Lógica de imagen por variante (la misma que en productos)
+                            $imagenFinal = "/ElZapato/Assets/img/zapa.jpeg"; 
+                            $pathImg = "/Assets/img/productos/" . $v_id_v . ".jpg";
+                            
+                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
+                                $imagenFinal = "/ElZapato" . $pathImg;
+                            }
+                    ?>
+                    <div class="product-card" 
+                        data-id="<?= $v_id_v ?>" 
+                        data-price="<?= $v_precio ?>" 
+                        data-stock="<?= $v_stock ?>" 
+                        data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?> (<?= $v_color ?> - <?= $v_talla ?>)">
+                        
+                        <span class="stock-tag <?= $tagClass ?>"><?= $v_stock ?> unid.</span>
+                        
+                        <div class="switch-top">
+                            <label class="switch">
+                                <input type="checkbox" onchange="toggleProductoVenta(this, '<?= $v_id_v ?>')">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="product-img" style="background-image: url('<?= $imagenFinal ?>');"></div>
+                        
+                        <div class="product-info">
+                            <p class="product-name" style="margin-bottom: 2px;"><?= htmlspecialchars($p['nombre_producto']) ?></p>
+                            <p style="font-size: 0.75rem; color: #666; margin-bottom: 5px;">
+                                <i class="fa-solid fa-palette"></i> <?= $v_color ?> | 
+                                <i class="fa-solid fa-ruler"></i> <?= $v_talla ?>
+                            </p>
+                            
+                            <span class="product-price">$<?= number_format($v_precio, 2) ?></span>
+                            
+                            <div class="footer-controls">
+                                <div class="quantity-controls">
+                                    <button class="btn-qty" onclick="cambiarCantidad(this, -1)">-</button>
+                                    <input type="number" class="qty-input" value="0" readonly>
+                                    <button class="btn-qty" onclick="cambiarCantidad(this, 1)">+</button>
+                                </div>
+                                <div class="view-details-inline" onclick="abrirModalDetalle('<?= $v_id_v ?>', '<?= htmlspecialchars($p['nombre_producto']) ?>', '<?= $v_precio ?>', '<?= $v_stock ?>', '<?= $v_color ?>', '<?= $v_talla ?>')">
+                                    <i class="fa-solid fa-eye"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; endforeach; ?>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modalDescuento" class="modal">
+        <div class="modal-content" style="width: 350px;">
+            <span class="close-modal" onclick="cerrarModal('modalDescuento')">&times;</span>
+            <h3 style="margin-bottom:20px; color:var(--primary-dark)">Aplicar Descuento</h3>
+            <div class="form-group">
+                <label><i class="fa-solid fa-box"></i> 1. Seleccionar Producto:</label>
+                <select id="descProductoSelect" class="input-modal" onchange="actualizarMaxCantDesc()"></select>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-layer-group"></i> 2. ¿A cuántos aplica?:</label>
+                <input type="number" id="descCantAplicar" class="input-modal" value="1" min="1">
+                <small id="maxCantDescInfo" style="font-size: 0.7rem; color: #888;"></small>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-percent"></i> 3. Porcentaje de ahorro:</label>
+                <input type="number" id="descPorcentajeInput" class="input-modal" placeholder="Ej: 10" min="1" max="100">
+            </div>
+            <button class="btn-action btn-sell" style="width:100%; margin-top:10px;" onclick="confirmarDescuento()">
+                GUARDAR DESCUENTO
+            </button>
+        </div>
+    </div>
+
+    <div id="modalDetalle" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <span class="close-modal" onclick="cerrarModal('modalDetalle')">&times;</span>
+            <h3 id="detNombre" style="color:var(--primary-dark); margin-bottom:15px; text-transform:uppercase; font-size:1.1rem;"></h3>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div id="detImg" style="width: 150px; height: 150px; background-size: contain; background-repeat: no-repeat; background-position: center; border: 1px solid var(--primary-light); border-radius: 8px; background-color: #fff;"></div>
+                <div style="flex: 1;">
+                    <p style="margin: 5px 0;"><strong>Color:</strong> <span id="detColor"></span></p>
+                    <p style="margin: 5px 0;"><strong>Talla:</strong> <span id="detTalla"></span></p>
+                    <p style="margin: 5px 0;"><strong>Precio:</strong> <span id="detPrecio" style="color:var(--nocolor); font-weight:bold;"></span></p>
+                    <p style="margin: 5px 0;"><strong>Stock:</strong> <span id="detStock"></span> unidades</p>
+                    <p style="margin: 5px 0; font-size: 0.75rem; color: #888;">ID Variante: <span id="detId"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        let carrito = [];
+        let descuentosAplicados = []; 
+
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast show toast-${tipo}`;
+            let icono = tipo === 'warning' ? 'fa-triangle-exclamation' : (tipo === 'success' ? 'fa-circle-check' : 'fa-circle-info');
+            toast.innerHTML = `<i class="fa-solid ${icono}"></i> <span>${mensaje}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = "translateX(120%)";
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- LÓGICA DE MODALES ---
+        function abrirModalDetalle(id, nombre, precio, stock, color, talla) {
+            document.getElementById('detNombre').innerText = nombre;
+            document.getElementById('detPrecio').innerText = `$${parseFloat(precio).toFixed(2)}`;
+            document.getElementById('detStock').innerText = stock;
+            document.getElementById('detId').innerText = id;
+            document.getElementById('detColor').innerText = color;
+            document.getElementById('detTalla').innerText = talla;
+
+            const card = document.querySelector(`.product-card[data-id="${id}"]`);
+            const imgDiv = card.querySelector('.product-img');
+            const imgUrl = window.getComputedStyle(imgDiv).backgroundImage;
+            document.getElementById('detImg').style.backgroundImage = imgUrl;
+
+            const modal = document.getElementById('modalDetalle');
+            modal.style.display = "flex"; 
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function abrirModalDescuento() {
+            if (carrito.length === 0) {
+                mostrarNotificacion("No hay productos seleccionados.", "warning");
+                return;
             }
-        });
 
-        // Cerrar al hacer clic fuera del modal
-        window.onclick = function(event) {
-            if (event.target.className === 'modal-overlay') { cerrarModales(); }
-        };
+            const select = document.getElementById('descProductoSelect');
+            select.innerHTML = carrito.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+            
+            actualizarMaxCantDesc();
+            
+            const modal = document.getElementById('modalDescuento');
+            
+            // CAMBIO CLAVE: Usa "flex" en lugar de "block"
+            modal.style.display = "flex"; 
+            
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
 
-        // Filtrado de categorías original
-        document.querySelectorAll('#categoryFilters a').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('#categoryFilters a').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                const filter = link.getAttribute('data-filter');
-                document.querySelectorAll('.product-item').forEach(item => {
-                    item.style.display = (filter === 'all' || item.getAttribute('data-category') === filter) ? 'flex' : 'none';
+        function cerrarModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = "none", 300);
+        }
+
+        // --- LÓGICA DE CARRITO ---
+        function cambiarCantidad(btn, valor) {
+            const card = btn.closest('.product-card');
+            const input = card.querySelector('.qty-input');
+            const stockMax = parseInt(card.dataset.stock);
+            let actual = parseInt(input.value);
+            
+            if (valor > 0 && actual >= stockMax) {
+                mostrarNotificacion("Stock insuficiente.", "warning"); return;
+            }
+            input.value = Math.max(0, actual + valor);
+            if(card.querySelector('input[type="checkbox"]').checked) {
+                actualizarItemCarrito(card.dataset.id, parseInt(input.value));
+            }
+        }
+
+        function toggleProductoVenta(checkbox, id) {
+            const card = checkbox.closest('.product-card');
+            const cantidad = parseInt(card.querySelector('.qty-input').value);
+            const nombre = card.dataset.nombre;
+
+            if (checkbox.checked) {
+                if (cantidad <= 0) {
+                    mostrarNotificacion("Indique una cantidad.", "warning");
+                    checkbox.checked = false; return;
+                }
+                carrito.push({ 
+                    id, nombre, cantidad, 
+                    precio: parseFloat(card.dataset.price), 
+                    subtotal: cantidad * parseFloat(card.dataset.price) 
                 });
+                mostrarNotificacion(`${nombre} agregado`, "success");
+            } else {
+                carrito = carrito.filter(p => p.id !== id);
+                descuentosAplicados = descuentosAplicados.filter(d => d.id !== id);
+                mostrarNotificacion(`${nombre} quitado`, "info");
+            }
+            actualizarTablaResumen();
+        }
+
+        function actualizarItemCarrito(id, nuevaCant) {
+            const index = carrito.findIndex(p => p.id === id);
+            if (index !== -1) {
+                if(nuevaCant <= 0) {
+                    carrito.splice(index, 1);
+                    descuentosAplicados = descuentosAplicados.filter(d => d.id !== id);
+                    document.querySelector(`.product-card[data-id="${id}"] input[type="checkbox"]`).checked = false;
+                } else {
+                    carrito[index].cantidad = nuevaCant;
+                    carrito[index].subtotal = nuevaCant * carrito[index].precio;
+                    
+                    let dIndex = descuentosAplicados.findIndex(d => d.id === id);
+                    if(dIndex !== -1) {
+                        if(descuentosAplicados[dIndex].cantAplicada > nuevaCant) {
+                            descuentosAplicados[dIndex].cantAplicada = nuevaCant;
+                        }
+                        descuentosAplicados[dIndex].ahorroTotal = (carrito[index].precio * descuentosAplicados[dIndex].cantAplicada) * (descuentosAplicados[dIndex].porcentaje / 100);
+                    }
+                }
+                actualizarTablaResumen();
+            }
+        }
+
+        function actualizarTablaResumen() {
+            const tVenta = document.getElementById('listaVenta');
+            const tDesc = document.getElementById('listaDescuentos');
+            tVenta.innerHTML = ""; tDesc.innerHTML = "";
+            let subtotalGlobal = 0;
+            let descuentoGlobal = 0;
+
+            carrito.forEach(p => {
+                subtotalGlobal += p.subtotal;
+                tVenta.innerHTML += `<tr><td class="col-cant">${p.cantidad}</td><td class="col-prod">${p.nombre}</td><td class="col-subt">$${p.subtotal.toFixed(2)}</td></tr>`;
             });
-        });
+
+            descuentosAplicados.forEach(d => {
+                descuentoGlobal += d.ahorroTotal;
+                tDesc.innerHTML += `<tr><td class="col-prod-desc">${d.nombre}</td><td class="col-icon-desc">${d.cantAplicada}</td><td class="col-price-desc">-$${d.ahorroTotal.toFixed(2)}</td></tr>`;
+            });
+
+            document.getElementById('subTotal').innerText = `$${subtotalGlobal.toFixed(2)}`;
+            document.getElementById('descuentoMonto').innerText = `-$${descuentoGlobal.toFixed(2)}`;
+            document.getElementById('totalDisplay').innerText = `$${(subtotalGlobal - descuentoGlobal).toFixed(2)}`;
+        }
+
+        function actualizarMaxCantDesc() {
+            const id = document.getElementById('descProductoSelect').value;
+            const producto = carrito.find(p => p.id === id);
+            if(producto) {
+                document.getElementById('descCantAplicar').max = producto.cantidad;
+                document.getElementById('maxCantDescInfo').innerText = `Máximo: ${producto.cantidad} unidades.`;
+            }
+        }
+
+        function confirmarDescuento() {
+            const id = document.getElementById('descProductoSelect').value;
+            const cantDesc = parseInt(document.getElementById('descCantAplicar').value);
+            const porcentaje = parseFloat(document.getElementById('descPorcentajeInput').value);
+            const producto = carrito.find(p => p.id === id);
+
+            if (!porcentaje || porcentaje <= 0 || porcentaje > 100) {
+                mostrarNotificacion("Porcentaje inválido.", "warning"); return;
+            }
+            if (cantDesc <= 0 || cantDesc > producto.cantidad) {
+                mostrarNotificacion("Cantidad no válida.", "warning"); return;
+            }
+
+            const ahorro = (producto.precio * cantDesc) * (porcentaje / 100);
+            descuentosAplicados = descuentosAplicados.filter(d => d.id !== id);
+            descuentosAplicados.push({ id, nombre: producto.nombre, ahorroTotal: ahorro, porcentaje, cantAplicada: cantDesc });
+
+            cerrarModal('modalDescuento');
+            mostrarNotificacion("Descuento aplicado", "success");
+            actualizarTablaResumen();
+        }
     </script>
 </body>
 </html>
