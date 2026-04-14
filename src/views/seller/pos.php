@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/../../config/auth.php';
-if (!is_authenticated()) { header("Location: /ElZapato/src/views/public/login.php"); exit(); }
+if (!is_authenticated()) { header("Location: /Elzapato/src/views/public/login.php"); exit(); }
 
 $rolActual = $_SESSION['rol'] ?? '';
-if (!in_array($rolActual, ['cajero', 'admin'], true)) { header("Location: /ElZapato/src/views/layouts/menu-general.php"); exit(); }
+if (!in_array($rolActual, ['cajero', 'admin'], true)) { header("Location: /Elzapato/src/views/layouts/menu-general.php"); exit(); }
 
 require_once "../../../controller/productosController.php";
 require_once "../../../model/ProductosModel.php";
@@ -18,11 +18,11 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>POS - El Zapato</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/ElZapato/Assets/css/pos.css?v=<?php echo time(); ?>">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/Elzapato/Assets/css/pos.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -33,19 +33,35 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </div>
         <div class="brand-logo">SISTEMA DE VENTAS EL ZAPATO</div>
         <div class="nav-icons">
-            <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/ElZapato/src/views/layouts/menu-general.php'"></i>
-            <i class="fa-solid fa-gear"></i>
-            <i class="fa-solid fa-power-off" title="Salir" onclick="window.location.href='/ElZapato/Logout/salir.php'"></i>
+            <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/Elzapato/src/views/layouts/menu-general.php'"></i>            
+            <div class="notification-container">
+                <i class="fa-solid fa-bell" id="bellIcon" onclick="toggleNotifications()"></i>
+                <span class="badge" id="notificationBadge">0</span>
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="dropdown-header">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Últimas Ventas
+                    </div>
+                    <div class="dropdown-body" id="recentSalesList">
+                        <div class="loading-text">
+                            <i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
     <div class="main-layout">
         <aside class="sidebar-resumen">
-            <h2>Resumen de venta</h2>
+            <h2>
+                <i class="fa-solid fa-receipt"></i> Resumen de venta
+            </h2>
             
             <div class="tables-scroll-container">
                 <div class="table-section">
-                    <p class="table-title">Detalle de Venta</p>
+                    <p class="table-title">
+                        <i class="fa-solid fa-cart-shopping"></i> Detalle de Venta
+                    </p>
                     <table class="ticket-table">
                         <thead>
                             <tr>
@@ -54,12 +70,20 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                                 <th class="col-subt">Subt.</th>
                             </tr>
                         </thead>
-                        <tbody id="listaVenta"></tbody>
+                        <tbody id="listaVenta">
+                            <tr class="empty-row">
+                                <td colspan="3" style="text-align: center; color: #999;">
+                                    No hay productos seleccionados
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
 
                 <div class="table-section discount-section">
-                    <p class="table-title">Ahorro Aplicado</p>
+                    <p class="table-title">
+                        <i class="fa-solid fa-tag"></i> Ahorro Aplicado
+                    </p>
                     <table class="ticket-table">
                         <thead>
                             <tr>
@@ -68,16 +92,30 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                                 <th class="col-price-desc">Ahorro</th>
                             </tr>
                         </thead>
-                        <tbody id="listaDescuentos"></tbody>
+                        <tbody id="listaDescuentos">
+                            <tr class="empty-row">
+                                <td colspan="3" style="text-align: center; color: #999;">
+                                    Sin descuentos aplicados
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
             <div class="totals-section">
-                <div class="total-row"><span>Subtotal:</span><span id="subTotal">$0.00</span></div>
-                <div class="total-row"><span>Descuento:</span><span id="descuentoMonto" style="color:var(--nocolor)">-$0.00</span></div>
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span id="subTotal">$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Descuento:</span>
+                    <span id="descuentoMonto" style="color:var(--nocolor)">-$0.00</span>
+                </div>
                 <div class="total-row total-highlight">
-                    <span class="total-big">Total:</span>
+                    <span class="total-big">
+                        <i class="fa-solid fa-calculator"></i> Total:
+                    </span>
                     <span class="total-big" id="totalDisplay">$0.00</span>
                 </div>
             </div>
@@ -86,7 +124,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                 <button class="btn-action btn-discount" onclick="abrirModalDescuento()">
                     <i class="fa-solid fa-tag"></i> Descuento
                 </button>
-                <button class="btn-action btn-sell">
+                <button class="btn-action btn-sell" onclick="realizarVenta()">
                     <i class="fa-solid fa-cart-shopping"></i> Vender
                 </button>
             </div>
@@ -96,13 +134,13 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             <section class="filter-bar">
                 <div class="search-container">
                     <i class="fa fa-search"></i>
-                    <input type="text" id="productSearch" placeholder="¿Qué buscas hoy?">
+                    <input type="text" id="productSearch" placeholder="Buscar por nombre, categoría o marca...">
                 </div>
                 
                 <div class="select-group">
                     <div class="select-container">
                         <select id="categoryFilter">
-                            <option value="all">Categorías</option>
+                            <option value="all">Todas las categorías</option>
                             <?php foreach ($categorias as $cat): ?>
                                 <option value="<?= $cat['id_categoria'] ?>"><?= htmlspecialchars($cat['nombre_categoria']) ?></option>
                             <?php endforeach; ?>
@@ -111,10 +149,13 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 
                     <div class="select-container">
                         <select id="brandFilter">
-                            <option value="all">Marcas</option>
+                            <option value="all">Todas las marcas</option>
                             <option value="nike">Nike</option>
                             <option value="adidas">Adidas</option>
                             <option value="puma">Puma</option>
+                            <option value="reebok">Reebok</option>
+                            <option value="converse">Converse</option>
+                            <option value="vans">Vans</option>
                         </select>
                     </div>
                 </div>
@@ -138,32 +179,33 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 
                             if($v_estado !== 'activo') continue;
 
-                            // --- NUEVA LÓGICA DE ETIQUETAS (CONFIGURADA A 10) ---
                             if ($v_stock <= 0) {
                                 $tagText = "Agotado";
                                 $tagClass = "stock-agotado";
                             } elseif ($v_stock <= 10) {
-                                $tagText = "Casi agotado";
+                                $tagText = "¡Últimas unidades!";
                                 $tagClass = "stock-agotandose";
                             } else {
                                 $tagText = "Disponible";
                                 $tagClass = "stock-disponible";
                             }
                             
-                            $imagenFinal = "/ElZapato/Assets/img/zapa.jpeg"; 
+                            $imagenFinal = "/Elzapato/Assets/img/zapa.jpeg"; 
                             $pathImg = "/Assets/img/productos/" . $v_id_v . ".jpg";
-                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
-                                $imagenFinal = "/ElZapato" . $pathImg;
+                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/Elzapato" . $pathImg)) {
+                                $imagenFinal = "/Elzapato" . $pathImg;
                             }
                     ?>
                     <div class="product-card" 
                         data-id="<?= $v_id_v ?>" 
                         data-price="<?= $v_precio ?>" 
                         data-stock="<?= $v_stock ?>" 
-                        data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>">
+                        data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>"
+                        data-categoria="<?= $p['id_categoria'] ?? '' ?>"
+                        data-marca="<?= strtolower($p['marca'] ?? '') ?>">
                         
                         <span class="stock-tag <?= $tagClass ?>">
-                            <?= $tagText ?>: <?= $v_stock ?>
+                            <?= $tagText ?> (<?= $v_stock ?>)
                         </span>
                         
                         <div class="switch-top">
@@ -185,7 +227,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                                     <input type="number" class="qty-input" value="0" readonly>
                                     <button class="btn-qty" onclick="cambiarCantidad(this, 1)">+</button>
                                 </div>
-                                <div class="view-details-inline" onclick="abrirModalDetalle('<?= $v_id_v ?>', '<?= htmlspecialchars($p['nombre_producto']) ?>', '<?= $v_precio ?>', '<?= $v_stock ?>', '<?= $v_color ?>', '<?= $v_talla ?>')">
+                                <div class="view-details-inline" onclick="abrirModalDetalle('<?= $v_id_v ?>', '<?= htmlspecialchars($p['nombre_producto']) ?>', '<?= $v_precio ?>', '<?= $v_stock ?>', '<?= htmlspecialchars($v_color) ?>', '<?= $v_talla ?>')">
                                     <i class="fa-solid fa-eye"></i>
                                 </div>
                             </div>
@@ -197,217 +239,129 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </main>
     </div>
 
+    <!-- Modal de Descuento -->
     <div id="modalDescuento" class="modal">
         <div class="modal-content" style="width: 350px;">
             <span class="close-modal" onclick="cerrarModal('modalDescuento')">&times;</span>
-            <h3 style="margin-bottom:20px; color:var(--primary-dark)">Aplicar Descuento</h3>
+            <h3 style="margin-bottom:20px; color:var(--primary-dark)">
+                <i class="fa-solid fa-percent"></i> Aplicar Descuento
+            </h3>
             <div class="form-group">
                 <label><i class="fa-solid fa-box"></i> 1. Seleccionar Producto:</label>
-                <select id="descProductoSelect" class="input-modal" onchange="actualizarMaxCantDesc()"></select>
+                <select id="descProductoSelect" class="input-modal" onchange="actualizarMaxCantDesc()">
+                    <option value="">Cargando productos...</option>
+                </select>
             </div>
             <div class="form-group">
                 <label><i class="fa-solid fa-layer-group"></i> 2. ¿A cuántos aplica?:</label>
                 <input type="number" id="descCantAplicar" class="input-modal" value="1" min="1">
-                <small id="maxCantDescInfo" style="font-size: 0.7rem; color: #888;"></small>
+                <small id="maxCantDescInfo" style="font-size: 0.7rem; color: #888; display: block; margin-top: 5px;"></small>
             </div>
             <div class="form-group">
                 <label><i class="fa-solid fa-percent"></i> 3. Porcentaje de ahorro:</label>
                 <input type="number" id="descPorcentajeInput" class="input-modal" placeholder="Ej: 10" min="1" max="100">
             </div>
             <button class="btn-action btn-sell" style="width:100%; margin-top:10px;" onclick="confirmarDescuento()">
-                GUARDAR DESCUENTO
+                <i class="fa-solid fa-check"></i> GUARDAR DESCUENTO
             </button>
         </div>
     </div>
 
+    <!-- Modal de Detalle de Producto -->
     <div id="modalDetalle" class="modal">
-        <div class="modal-content" style="width: 400px;">
+        <div class="modal-content" style="width: 450px;">
             <span class="close-modal" onclick="cerrarModal('modalDetalle')">&times;</span>
             <h3 id="detNombre" style="color:var(--primary-dark); margin-bottom:15px; text-transform:uppercase; font-size:1.1rem;"></h3>
-            <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
                 <div id="detImg" style="width: 150px; height: 150px; background-size: contain; background-repeat: no-repeat; background-position: center; border: 1px solid var(--primary-light); border-radius: 8px; background-color: #fff;"></div>
                 <div style="flex: 1;">
-                    <p style="margin: 5px 0;"><strong>Color:</strong> <span id="detColor"></span></p>
-                    <p style="margin: 5px 0;"><strong>Talla:</strong> <span id="detTalla"></span></p>
-                    <p style="margin: 5px 0;"><strong>Precio:</strong> <span id="detPrecio" style="color:var(--nocolor); font-weight:bold;"></span></p>
-                    <p style="margin: 5px 0;"><strong>Stock:</strong> <span id="detStock"></span> unidades</p>
-                    <p style="margin: 5px 0; font-size: 0.75rem; color: #888;">ID Variante: <span id="detId"></span></p>
+                    <p style="margin: 8px 0;">
+                        <strong><i class="fa-solid fa-palette"></i> Color:</strong> 
+                        <span id="detColor"></span>
+                    </p>
+                    <p style="margin: 8px 0;">
+                        <strong><i class="fa-solid fa-ruler"></i> Talla:</strong> 
+                        <span id="detTalla"></span>
+                    </p>
+                    <p style="margin: 8px 0;">
+                        <strong><i class="fa-solid fa-dollar-sign"></i> Precio:</strong> 
+                        <span id="detPrecio" style="color:var(--nocolor); font-weight:bold;"></span>
+                    </p>
+                    <p style="margin: 8px 0;">
+                        <strong><i class="fa-solid fa-boxes"></i> Stock:</strong> 
+                        <span id="detStock"></span> unidades
+                    </p>
+                    <p style="margin: 8px 0; font-size: 0.7rem; color: #888;">
+                        <strong>ID Variante:</strong> 
+                        <span id="detId"></span>
+                    </p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pago -->
+    <div id="modalPago" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <span class="close-modal" onclick="cerrarModal('modalPago')">&times;</span>
+            <h3 style="margin-bottom:20px; color:var(--primary-dark)">
+                <i class="fa-solid fa-cash-register"></i> Finalizar Venta
+            </h3>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-receipt"></i> Subtotal:</label>
+                <div style="font-size: 1.2rem; text-align: right; padding: 5px; background: #f5f5f5; border-radius: 8px;" id="modalSubtotal">
+                    $0.00
+                </div>
+            </div>
+            
+            <div class="form-group" id="descuentosResumenContainer" style="display: none;">
+                <label><i class="fa-solid fa-tag"></i> Descuentos Aplicados:</label>
+                <div id="descuentosResumen" style="font-size: 0.9rem; text-align: right; padding: 5px; background: #fff3e0; border-radius: 8px; color: var(--success);">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-calculator"></i> Total a Pagar:</label>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--nocolor); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="modalTotalPago">
+                    $0.00
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-money-bill"></i> Dinero Recibido:</label>
+                <input type="number" id="dineroRecibido" class="input-modal" step="0.01" min="0" placeholder="Ingrese el monto recibido" style="font-size: 1.2rem; text-align: right;">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-coins"></i> Cambio:</label>
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success); text-align: center; padding: 10px; background: #e8f5e9; border-radius: 8px;" id="cambioDisplay">
+                    $0.00
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-credit-card"></i> Método de Pago:</label>
+                <select id="metodoPago" class="input-modal">
+                    <option value="1">Efectivo</option>
+                    <option value="2">Tarjeta</option>
+                    <option value="3">Transferencia</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-action btn-discount" onclick="cerrarModal('modalPago')" style="flex: 1;">
+                    <i class="fa-solid fa-times"></i> Cancelar
+                </button>
+                <button class="btn-action btn-sell" onclick="confirmarPago()" style="flex: 1;">
+                    <i class="fa-solid fa-check"></i> Cobrar
+                </button>
             </div>
         </div>
     </div>
 
     <div id="toast-container"></div>
 
-    <script>
-        let carrito = [];
-        let descuentosAplicados = []; 
-
-        function mostrarNotificacion(mensaje, tipo = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast show toast-${tipo}`;
-            let icono = tipo === 'warning' ? 'fa-triangle-exclamation' : (tipo === 'success' ? 'fa-circle-check' : 'fa-circle-info');
-            toast.innerHTML = `<i class="fa-solid ${icono}"></i> <span>${mensaje}</span>`;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.transform = "translateX(120%)";
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        function abrirModalDetalle(id, nombre, precio, stock, color, talla) {
-            document.getElementById('detNombre').innerText = nombre;
-            document.getElementById('detPrecio').innerText = `$${parseFloat(precio).toFixed(2)}`;
-            document.getElementById('detStock').innerText = stock;
-            document.getElementById('detId').innerText = id;
-            document.getElementById('detColor').innerText = color;
-            document.getElementById('detTalla').innerText = talla;
-
-            const card = document.querySelector(`.product-card[data-id="${id}"]`);
-            const imgDiv = card.querySelector('.product-img');
-            const imgUrl = window.getComputedStyle(imgDiv).backgroundImage;
-            document.getElementById('detImg').style.backgroundImage = imgUrl;
-
-            const modal = document.getElementById('modalDetalle');
-            modal.style.display = "flex"; 
-            setTimeout(() => modal.classList.add('active'), 10);
-        }
-
-        function abrirModalDescuento() {
-            if (carrito.length === 0) {
-                mostrarNotificacion("No hay productos seleccionados.", "warning");
-                return;
-            }
-            const select = document.getElementById('descProductoSelect');
-            select.innerHTML = carrito.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-            actualizarMaxCantDesc();
-            const modal = document.getElementById('modalDescuento');
-            modal.style.display = "flex"; 
-            setTimeout(() => modal.classList.add('active'), 10);
-        }
-
-        function cerrarModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.remove('active');
-            setTimeout(() => modal.style.display = "none", 300);
-        }
-
-        function cambiarCantidad(btn, valor) {
-            const card = btn.closest('.product-card');
-            const input = card.querySelector('.qty-input');
-            const stockMax = parseInt(card.dataset.stock);
-            let actual = parseInt(input.value);
-            
-            if (valor > 0 && actual >= stockMax) {
-                mostrarNotificacion("Stock insuficiente.", "warning"); return;
-            }
-            input.value = Math.max(0, actual + valor);
-            if(card.querySelector('input[type="checkbox"]').checked) {
-                actualizarItemCarrito(card.dataset.id, parseInt(input.value));
-            }
-        }
-
-        function toggleProductoVenta(checkbox, id) {
-            const card = checkbox.closest('.product-card');
-            const cantidad = parseInt(card.querySelector('.qty-input').value);
-            const nombre = card.dataset.nombre;
-
-            if (checkbox.checked) {
-                if (cantidad <= 0) {
-                    mostrarNotificacion("Indique una cantidad.", "warning");
-                    checkbox.checked = false; return;
-                }
-                carrito.push({ 
-                    id, nombre, cantidad, 
-                    precio: parseFloat(card.dataset.price), 
-                    subtotal: cantidad * parseFloat(card.dataset.price) 
-                });
-                mostrarNotificacion(`${nombre} agregado`, "success");
-            } else {
-                carrito = carrito.filter(p => p.id !== id);
-                descuentosAplicados = descuentosAplicados.filter(d => d.id !== id);
-                mostrarNotificacion(`${nombre} quitado`, "info");
-            }
-            actualizarTablaResumen();
-        }
-
-        function actualizarItemCarrito(id, nuevaCant) {
-            const index = carrito.findIndex(p => p.id === id);
-            if (index !== -1) {
-                if(nuevaCant <= 0) {
-                    carrito.splice(index, 1);
-                    descuentosAplicados = descuentosAplicados.filter(d => d.id !== id);
-                    document.querySelector(`.product-card[data-id="${id}"] input[type="checkbox"]`).checked = false;
-                } else {
-                    carrito[index].cantidad = nuevaCant;
-                    carrito[index].subtotal = nuevaCant * carrito[index].precio;
-                    
-                    let dIndex = descuentosAplicados.findIndex(d => d.id === id);
-                    if(dIndex !== -1) {
-                        if(descuentosAplicados[dIndex].cantAplicada > nuevaCant) {
-                            descuentosAplicados[dIndex].cantAplicada = nuevaCant;
-                        }
-                        descuentosAplicados[dIndex].ahorroTotal = (carrito[index].precio * descuentosAplicados[dIndex].cantAplicada) * (descuentosAplicados[dIndex].porcentaje / 100);
-                    }
-                }
-                actualizarTablaResumen();
-            }
-        }
-
-        function actualizarTablaResumen() {
-            const tVenta = document.getElementById('listaVenta');
-            const tDesc = document.getElementById('listaDescuentos');
-            tVenta.innerHTML = ""; tDesc.innerHTML = "";
-            let subtotalGlobal = 0;
-            let descuentoGlobal = 0;
-
-            carrito.forEach(p => {
-                subtotalGlobal += p.subtotal;
-                tVenta.innerHTML += `<tr><td class="col-cant">${p.cantidad}</td><td class="col-prod">${p.nombre}</td><td class="col-subt">$${p.subtotal.toFixed(2)}</td></tr>`;
-            });
-
-            descuentosAplicados.forEach(d => {
-                descuentoGlobal += d.ahorroTotal;
-                tDesc.innerHTML += `<tr><td class="col-prod-desc">${d.nombre}</td><td class="col-icon-desc">${d.cantAplicada}</td><td class="col-price-desc">-$${d.ahorroTotal.toFixed(2)}</td></tr>`;
-            });
-
-            document.getElementById('subTotal').innerText = `$${subtotalGlobal.toFixed(2)}`;
-            document.getElementById('descuentoMonto').innerText = `-$${descuentoGlobal.toFixed(2)}`;
-            document.getElementById('totalDisplay').innerText = `$${(subtotalGlobal - descuentoGlobal).toFixed(2)}`;
-        }
-
-        function actualizarMaxCantDesc() {
-            const id = document.getElementById('descProductoSelect').value;
-            const producto = carrito.find(p => p.id === id);
-            if(producto) {
-                document.getElementById('descCantAplicar').max = producto.cantidad;
-                document.getElementById('maxCantDescInfo').innerText = `Máximo: ${producto.cantidad} unidades.`;
-            }
-        }
-
-        function confirmarDescuento() {
-            const id = document.getElementById('descProductoSelect').value;
-            const cantDesc = parseInt(document.getElementById('descCantAplicar').value);
-            const porcentaje = parseFloat(document.getElementById('descPorcentajeInput').value);
-            const producto = carrito.find(p => p.id === id);
-
-            if (!porcentaje || porcentaje <= 0 || porcentaje > 100) {
-                mostrarNotificacion("Porcentaje inválido.", "warning"); return;
-            }
-            if (cantDesc <= 0 || cantDesc > producto.cantidad) {
-                mostrarNotificacion("Cantidad no válida.", "warning"); return;
-            }
-
-            const ahorro = (producto.precio * cantDesc) * (porcentaje / 100);
-            descuentosAplicados = descuentosAplicados.filter(d => d.id !== id);
-            descuentosAplicados.push({ id, nombre: producto.nombre, ahorroTotal: ahorro, porcentaje, cantAplicada: cantDesc });
-
-            cerrarModal('modalDescuento');
-            mostrarNotificacion("Descuento aplicado", "success");
-            actualizarTablaResumen();
-        }
-    </script>
+    <script src="/Elzapato/Assets/js/pos.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
