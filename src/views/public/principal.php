@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,62 +13,166 @@
 
     <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
 
-    <section class="hero">
-        <h1>Bienvenido a ElZapato</h1>
-        <p>Calzado de calidad para cada paso de tu vida</p>
-    </section>
+    <main class="landing-page">
 
-    <section class="promo-container">
-        <div class="card">
-            <i class="fas fa-shoe-prints"></i>
-            <h3>Variedad de Calzado</h3>
-            <p>Encuentra estilos casuales, deportivos y formales para toda ocasión.</p>
-        </div>
-        <div class="card">
-            <i class="fas fa-ruler-combined"></i>
-            <h3>Tallas Disponibles</h3>
-            <p>Contamos con diferentes tallas y modelos para brindar una mejor opción al cliente.</p>
-        </div>
-        <div class="card">
-            <i class="fas fa-store"></i>
-            <h3>Atención en Tienda</h3>
-            <p>Brindamos atención directa y apoyo en la elección del calzado ideal.</p>
-        </div>
-    </section>
+        <section class="hero">
+            <div class="hero-overlay"></div>
+            <div class="hero-particles"></div>
 
-    <section class="featured-section">
-        <h2 class="section-title">Productos Destacados</h2>
-        
-        <div class="product-grid">
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772" alt="Zapato">
-                <h4>Casual Sport Brown</h4>
-                <p class="price">$45.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77" alt="Zapato">
-                <h4>Classic White Sneakers</h4>
-                <p class="price">$38.99</p>
-            </div>
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a" alt="Zapato">
-                <h4>Neon Running Shoes</h4>
-                <p class="price">$55.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5" alt="Zapato">
-                <h4>Formal Business Black</h4>
-                <p class="price">$60.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519" alt="Zapato">
-                <h4>Urban Street Gray</h4>
-                <p class="price">$49.99</p>
-            </div>
-        </div>
-    </section>
+            <div class="hero-content">
+                <span class="hero-badge">Estilo • Calidad • Comodidad</span>
+                <h1>Bienvenido a <span>ElZapato</span></h1>
+                <p>
+                    Descubre una experiencia moderna en calzado con modelos elegantes,
+                    deportivos y casuales pensados para cada paso de tu vida.
+                </p>
 
-    <footer style="background: var(--texto-negro); color: var(--bg-claro); text-align: center; padding: 20px; margin-top: 50px;">
+                <div class="hero-actions">
+                    <a href="#productos" class="btn-primary">
+                        <i class="fas fa-shoe-prints"></i>
+                        Ver productos
+                    </a>
+                    <a href="#beneficios" class="btn-secondary">
+                        <i class="fas fa-store"></i>
+                        Conocer más
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-floating-card">
+                <div class="floating-icon">
+                    <i class="fas fa-shoe-prints"></i>
+                </div>
+                <h3>Diseño con identidad</h3>
+                <p>Calzado para todos los estilos con una imagen elegante, moderna y funcional.</p>
+            </div>
+
+            <div class="hero-shoe hero-shoe-1">
+                <i class="fas fa-shoe-prints"></i>
+            </div>
+
+            <div class="hero-shape hero-shape-1"></div>
+            <div class="hero-shape hero-shape-2"></div>
+            <div class="hero-line"></div>
+        </section>
+
+        <section class="promo-section" id="beneficios">
+            <div class="section-heading">
+                <span>Nuestros beneficios</span>
+                <h2>¿Por qué elegir ElZapato?</h2>
+                <p>Una tienda pensada para ofrecer variedad, comodidad y atención de calidad.</p>
+            </div>
+
+            <div class="promo-container">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-shoe-prints"></i>
+                    </div>
+                    <h3>Variedad de Calzado</h3>
+                    <p>Encuentra estilos casuales, deportivos y formales para toda ocasión.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-ruler-combined"></i>
+                    </div>
+                    <h3>Tallas Disponibles</h3>
+                    <p>Contamos con diferentes tallas y modelos para brindar una mejor opción al cliente.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h3>Atención en Tienda</h3>
+                    <p>Brindamos atención directa y apoyo en la elección del calzado ideal.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured-section" id="productos">
+            <div class="section-heading left">
+                <span>Colección destacada</span>
+                <h2 class="section-title">Productos Destacados</h2>
+                <p>Una selección especial con modelos modernos, elegantes y funcionales.</p>
+            </div>
+            
+            <div class="product-grid">
+                <div class="product-item">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772" alt="Zapato">
+                    </div>
+                    <div class="product-info">
+                        <h4>Casual Sport Brown</h4>
+                        <p class="product-desc">Diseño casual con acabado moderno y elegante.</p>
+                        <p class="price">$45.00</p>
+                    </div>
+                </div>
+
+                <div class="product-item">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77" alt="Zapato">
+                    </div>
+                    <div class="product-info">
+                        <h4>Classic White Sneakers</h4>
+                        <p class="product-desc">Estilo limpio, cómodo y perfecto para diario.</p>
+                        <p class="price">$38.99</p>
+                    </div>
+                </div>
+
+                <div class="product-item">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a" alt="Zapato">
+                    </div>
+                    <div class="product-info">
+                        <h4>Neon Running Shoes</h4>
+                        <p class="product-desc">Ideal para un look deportivo con personalidad.</p>
+                        <p class="price">$55.00</p>
+                    </div>
+                </div>
+
+                <div class="product-item">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5" alt="Zapato">
+                    </div>
+                    <div class="product-info">
+                        <h4>Formal Business Black</h4>
+                        <p class="product-desc">Elegancia formal para ambientes profesionales.</p>
+                        <p class="price">$60.00</p>
+                    </div>
+                </div>
+
+                <div class="product-item">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519" alt="Zapato">
+                    </div>
+                    <div class="product-info">
+                        <h4>Urban Street Gray</h4>
+                        <p class="product-desc">Una propuesta urbana con imagen auténtica.</p>
+                        <p class="price">$49.99</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="cta-content">
+                <span class="cta-mini">ElZapato</span>
+                <h2>Camina con estilo, seguridad y personalidad</h2>
+                <p>
+                    Nuestra colección está pensada para ofrecer una experiencia visual atractiva
+                    y una mejor presentación del catálogo de productos.
+                </p>
+                <a href="#productos" class="btn-primary dark">
+                    <i class="fas fa-arrow-right"></i>
+                    Explorar catálogo
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="main-footer">
         <p>&copy; 2026 ElZapato - Sistema de Gestión Escolar UNICAES</p>
     </footer>
 
