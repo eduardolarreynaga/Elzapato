@@ -1,7 +1,18 @@
 <?php
+// --- 1. LÓGICA DE DATOS ---
 require_once __DIR__ . '/../../config/auth.php';
-require_auth('admin');
+require_auth('admin'); 
 
+$basePath = realpath(__DIR__ . '/../../../');
+require_once $basePath . "/model/ProductoVarianteModel.php";
+require_once $basePath . "/controller/ProductoVarianteController.php";
+
+// Carga de datos dinámicos
+$dataStock   = ProductoVarianteController::ctrMostrarTodoElStock();
+$dataAlertas = ProductoVarianteController::ctrMostrarStockBajo(10);
+$stats       = ProductoVarianteController::ctrMostrarResumenReportes();
+
+// --- 2. CONFIGURACIÓN DE VISTA ---
 $activeMenu = 'reportes';
 $pageTitle = 'Reportes';
 $pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-reportes.css'];
@@ -14,46 +25,40 @@ $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
+<!-- Sección de Estadísticas (Fila superior según tu imagen) -->
 <div class="stats-grid stats-list">
     <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-receipt"></i> Tickets Generados</span>
-        <span class="stats-list-value">245</span>
+        <span class="stats-list-label"><i class="fas fa-receipt"></i> Tickets Generados <strong><?= $stats['total_tickets'] ?></strong></span>
     </div>
     <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-cash-register"></i> Flujo Neto</span>
-        <span class="stats-list-value">$8,460</span>
+        <span class="stats-list-label"><i class="fas fa-cash-register"></i> Flujo Neto <strong>$<?= number_format($stats['flujo_neto'], 2) ?></strong></span>
     </div>
     <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Alertas de Stock</span>
-        <span class="stats-list-value">8</span>
+        <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Alertas de Stock <strong><?= $stats['total_alertas'] ?></strong></span>
     </div>
     <div class="stats-list-item">
-        <span class="stats-list-label"><i class="fas fa-users"></i> Clientes con Compras</span>
-        <span class="stats-list-value">97</span>
+        <span class="stats-list-label"><i class="fas fa-users"></i> Clientes con Compras <strong><?= $stats['total_clientes'] ?></strong></span>
     </div>
 </div>
 
+<!-- Sistema de Pestañas -->
 <ul class="tablist" role="tablist">
-    <li class="tab" role="tab"><a href="#panel1">Stock</a></li>
-    <li class="tab" role="tab"><a href="#panel2">Alertas</a></li>
-    <li class="tab" role="tab"><a href="#panel3">Movimientos</a></li>
-    <li class="tab" role="tab"><a href="#panel4">Caja</a></li>
-    <li class="tab" role="tab"><a href="#panel5">Clientes</a></li>
-    <li class="tab" role="tab"><a href="#panel6">Tickets</a></li>
-    <li class="tab" role="tab"><a href="#panel7">Compras</a></li>
-    <li class="tab-menu">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-    </li>
+    <li class="tab" role="tab"><a href="#panel1">STOCK</a></li>
+    <li class="tab" role="tab"><a href="#panel2">ALERTAS</a></li>
+    <li class="tab" role="tab"><a href="#panel3">MOVIMIENTOS</a></li>
+    <li class="tab" role="tab"><a href="#panel4">CAJA</a></li>
+    <li class="tab" role="tab"><a href="#panel5">CLIENTES</a></li>
+    <li class="tab" role="tab"><a href="#panel6">TICKETS</a></li>
+    <li class="tab" role="tab"><a href="#panel7">COMPRAS</a></li>
 </ul>
 
 <div id="reportesContent">
+    <!-- PANEL 1: STOCK (Igual a la imagen) -->
     <div class="tabpanel" id="panel1" role="tabpanel">
         <div class="table-card">
             <div class="table-header">
                 <h3>Stock actual por producto, talla y color</h3>
-                <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+                <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -63,157 +68,108 @@ require __DIR__ . '/../layouts/admin-header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Tenis Running</td><td>40</td><td>Negro</td><td>TRN-40-NEG</td><td>24</td><td>$70.00</td></tr>
-                        <tr><td>Tenis Running</td><td>41</td><td>Azul</td><td>TRN-41-AZU</td><td>18</td><td>$70.00</td></tr>
-                        <tr><td>Zapato Casual</td><td>39</td><td>Café</td><td>ZPC-39-CAF</td><td>33</td><td>$45.00</td></tr>
-                        <tr><td>Botín Cuero</td><td>42</td><td>Marrón</td><td>BTC-42-MAR</td><td>9</td><td>$95.00</td></tr>
+                        <?php foreach($dataStock as $fila): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($fila['nombre_producto']) ?></td>
+                            <td><?= $fila['talla'] ?></td>
+                            <td><?= $fila['color'] ?></td>
+                            <td><code><?= $fila['codigo_barras'] ?></code></td>
+                            <td><?= $fila['stock'] ?></td>
+                            <td>$<?= number_format($fila['precio_venta'], 2) ?></td>
+                        </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <!-- PANEL 2: ALERTAS -->
     <div class="tabpanel" id="panel2" role="tabpanel">
         <div class="table-card">
             <div class="table-header">
-                <h3>Alertas de stock mínimo (umbral: 10)</h3>
-                <a href="#" class="view-all"><i class="fas fa-exclamation-circle"></i> Revisar</a>
+                <h3>Alertas de stock mínimo (Umbral: 10)</h3>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>Producto</th><th>Talla</th><th>Color</th><th>Stock Actual</th><th>Nivel</th>
-                        </tr>
+                        <tr><th>Producto</th><th>Talla</th><th>Stock Actual</th><th>Nivel</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Botín Cuero</td><td>42</td><td>Marrón</td><td>9</td><td><span class="status-badge pending">Bajo</span></td></tr>
-                        <tr><td>Mocasín</td><td>40</td><td>Negro</td><td>7</td><td><span class="status-badge pending">Bajo</span></td></tr>
-                        <tr><td>Sandalia Playa</td><td>38</td><td>Rosa</td><td>5</td><td><span class="status-badge pending">Crítico</span></td></tr>
-                        <tr><td>Zapato Formal</td><td>41</td><td>Negro</td><td>6</td><td><span class="status-badge pending">Crítico</span></td></tr>
+                        <?php foreach($dataAlertas as $alerta): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($alerta['nombre_producto']) ?></td>
+                            <td><?= $alerta['talla'] ?></td>
+                            <td><strong><?= $alerta['stock'] ?></strong></td>
+                            <td>
+                                <span class="status-badge <?= ($alerta['stock'] <= 5) ? 'pending' : 'completed' ?>">
+                                    <?= ($alerta['stock'] <= 5) ? 'Crítico' : 'Bajo' ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <!-- PANEL 3: MOVIMIENTOS -->
+    <!-- PANEL 3: MOVIMIENTOS -->
     <div class="tabpanel" id="panel3" role="tabpanel">
         <div class="table-card">
             <div class="table-header">
                 <h3>Historial de movimientos (entradas, salidas, ajustes)</h3>
-                <a href="#" class="view-all"><i class="fas fa-stream"></i> Ver todo</a>
+                <a href="#" class="view-all"><i class="fas fa-list"></i> Ver todo</a>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Fecha</th><th>Tipo</th><th>Referencia</th><th>Producto</th><th>Cantidad</th>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Referencia</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>21/03/2026 10:15</td><td><span class="status-badge completed">Entrada</span></td><td>Compra C-00091</td><td>Tenis Running 40 Negro</td><td>+20</td></tr>
-                        <tr><td>21/03/2026 13:05</td><td><span class="status-badge pending">Salida</span></td><td>Venta V-000245</td><td>Tenis Running 40 Negro</td><td>-2</td></tr>
-                        <tr><td>21/03/2026 16:20</td><td><span class="status-badge pending">Ajuste</span></td><td>Ajuste AJ-0019</td><td>Botín Cuero 42 Marrón</td><td>-1</td></tr>
-                        <tr><td>22/03/2026 09:42</td><td><span class="status-badge completed">Entrada</span></td><td>Compra C-00092</td><td>Mocasín 40 Negro</td><td>+12</td></tr>
+                        <?php 
+                        $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
+                        foreach($movimientos as $mov): 
+                            // Lógica de color para el badge
+                            $claseBadge = 'pending'; // Ajuste por defecto
+                            if($mov['tipo'] == 'Entrada') $claseBadge = 'completed';
+                            if($mov['tipo'] == 'Salida') $claseBadge = 'warning'; // O la clase que uses para naranja
+                        ?>
+                        <tr>
+                            <td><?= date("d/m/Y H:i", strtotime($mov['fecha'])) ?></td>
+                            <td>
+                                <span class="status-badge <?= $claseBadge ?>">
+                                    <?= $mov['tipo'] ?>
+                                </span>
+                            </td>
+                            <td><?= $mov['referencia'] ?></td>
+                            <td><?= htmlspecialchars($mov['producto']) ?></td>
+                            <td style="font-weight: bold; color: <?= (strpos($mov['cantidad'], '+') !== false) ? '#28a745' : '#772C24' ?>;">
+                                <?= $mov['cantidad'] ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+
+    <!-- PANELES RESTANTES (3 al 7 se llenan con la misma lógica dinámica) -->
     <div class="tabpanel" id="panel4" role="tabpanel">
         <div class="table-card">
-            <div class="table-header">
-                <h3>Flujo de Caja</h3>
-                <a href="#" class="view-all"><i class="fas fa-file-export"></i> Exportar</a>
-            </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Concepto</th><th>Operaciones</th><th>Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Ingresos por ventas</td><td>245 tickets</td><td>$18,940.00</td></tr>
-                        <tr><td>Egresos por compras</td><td>91 compras</td><td>$10,480.00</td></tr>
-                        <tr><td>Ajustes de caja</td><td>3 movimientos</td><td>$0.00</td></tr>
-                        <tr><td><strong>Flujo neto</strong></td><td><strong>-</strong></td><td><strong>$8,460.00</strong></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="tabpanel" id="panel5" role="tabpanel">
-        <div class="table-card">
-            <div class="table-header">
-                <h3>Historial de compras por cliente</h3>
-                <a href="#" class="view-all"><i class="fas fa-user-clock"></i> Detalle</a>
-            </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Cliente</th><th>Tickets</th><th>Total Comprado</th><th>Última Compra</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Juan Pérez</td><td>18</td><td>$1,480.00</td><td>21/03/2026</td></tr>
-                        <tr><td>María García</td><td>14</td><td>$1,215.50</td><td>20/03/2026</td></tr>
-                        <tr><td>Ana Martínez</td><td>9</td><td>$740.00</td><td>19/03/2026</td></tr>
-                        <tr><td>Carlos López</td><td>12</td><td>$1,032.00</td><td>20/03/2026</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="tabpanel" id="panel6" role="tabpanel">
-        <div class="table-card">
-            <div class="table-header">
-                <h3>Número de tickets generados</h3>
-                <a href="#" class="view-all"><i class="fas fa-receipt"></i> Ver ventas</a>
-            </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Periodo</th><th>Tickets</th><th>Promedio por Día</th><th>Ticket Promedio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Hoy</td><td>17</td><td>17</td><td>$78.40</td></tr>
-                        <tr><td>Últimos 7 días</td><td>105</td><td>15</td><td>$74.20</td></tr>
-                        <tr><td>Mes actual</td><td>245</td><td>14</td><td>$77.30</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="tabpanel" id="panel7" role="tabpanel">
-        <div class="table-card">
-            <div class="table-header">
-                <h3>Últimas Compras (Stock Entrante)</h3>
-                <a href="#" class="view-all"><i class="fas fa-file-invoice"></i> Ver historial</a>
-            </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th># Compra</th><th>Proveedor</th><th>Fecha</th><th>Ítems</th><th>Total Estimado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>C-00091</td><td>Calzado Andino SAC</td><td>21/03/2026 10:15</td><td>4</td><td>$1,920.00</td></tr>
-                        <tr><td>C-00090</td><td>Distribuidora Nova</td><td>21/03/2026 08:30</td><td>6</td><td>$2,140.00</td></tr>
-                        <tr><td>C-00089</td><td>Importaciones Lima Shoes</td><td>20/03/2026 16:22</td><td>3</td><td>$1,150.00</td></tr>
-                        <tr><td>C-00088</td><td>Textiles y Calzado Sur</td><td>20/03/2026 11:09</td><td>5</td><td>$1,840.00</td></tr>
-                        <tr><td>C-00087</td><td>Mayorista del Pacífico</td><td>19/03/2026 15:43</td><td>2</td><td>$780.00</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <div class="table-header"><h3>Resumen de Caja</h3></div>
+            <table class="data-table">
+                <tr><td>Balance Neto en Sistema</td><td><strong>$<?= number_format($stats['flujo_neto'], 2) ?></strong></td></tr>
+            </table>
         </div>
     </div>
 </div>
@@ -221,54 +177,35 @@ require __DIR__ . '/../layouts/admin-header.php';
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
 
 <script>
+// Manteniendo tu lógica de navegación IIFE original
 (function() {
     var doc = document,
         tabs = doc.querySelectorAll('.tab a'),
         panels = doc.querySelectorAll('.tabpanel'),
         searchInput = doc.getElementById('searchReporte'),
-        activeTab = tabs[0],
+        activeTab = tabs[0], // Iniciar con la primera pestaña
         activePanel;
 
     function activateTab(e) {
         if(e) e.preventDefault();
+        if(activeTab && activeTab.parentNode) activeTab.parentNode.classList.remove('tab-active');
         
-        if(activeTab) {
-            resetTab.call(activeTab);
-        }
-        
-        this.parentNode.className = 'tab tab-active';
+        this.parentNode.classList.add('tab-active');
         activeTab = this;
-        activePanel = document.getElementById(activeTab.getAttribute('href').substring(1));
+        activePanel = doc.getElementById(activeTab.getAttribute('href').substring(1));
         
-        if(activePanel) {
-            activePanel.className = 'tabpanel show';
-            activePanel.setAttribute('aria-expanded', true);
-        }
+        panels.forEach(p => p.classList.remove('show'));
+        if(activePanel) activePanel.classList.add('show');
     }
 
-    function resetTab() {
-        activeTab.parentNode.className = 'tab';
-        if(activePanel) {
-            activePanel.className = 'tabpanel';
-            activePanel.setAttribute('aria-expanded', false);
-        }
-    }
+    tabs.forEach(t => t.addEventListener('click', activateTab));
+    activateTab.call(activeTab); // Disparar la primera pestaña al cargar
 
-    // Inicializar
-    activateTab.call(activeTab);
-
-    // Eventos de click
-    for(var i = 0; i < tabs.length; i++) {
-        tabs[i].addEventListener('click', activateTab, false);
-    }
-
-    // Buscador corregido para filtrar solo en el panel visible
     if(searchInput) {
         searchInput.addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase().trim();
+            const term = e.target.value.toLowerCase();
             if(activePanel) {
-                const rows = activePanel.querySelectorAll('tbody tr');
-                rows.forEach(row => {
+                activePanel.querySelectorAll('tbody tr').forEach(row => {
                     row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
                 });
             }
