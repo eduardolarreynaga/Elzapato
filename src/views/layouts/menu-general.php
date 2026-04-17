@@ -1,16 +1,13 @@
 <?php
-// 1. Incluir auth.php para manejar la sesión
 require_once __DIR__ . '/../../config/auth.php';
 
-// 2. Seguridad: Si no hay sesión iniciada, redirigir al login
 if (!is_authenticated()) {
     header("Location: /ElZapato/src/views/public/login.php");
     exit();
 }
 
-// 3. Capturar datos de la sesión
 $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
-$rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no hay rol
+$rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -18,7 +15,7 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ElZapato - Panel</title>
-    <link rel="stylesheet" href="/ElZapato/Assets/css/layout/menu-general.css?v=20260417b">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/layout/menu-general.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -28,13 +25,16 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
             <span class="dot"></span> ElZapato
         </div>
         <div class="user-section">
-            <div class="user-info">
-                <i class="fa-solid fa-circle-user"></i>
-                <div class="user-text">
-                    <span class="username"><?php echo htmlspecialchars($nombreUsuario); ?></span>
-                    <span class="role"><?php echo strtoupper(htmlspecialchars($rolUsuario)); ?></span>
+            <div onclick="abrirModalPerfil()" class="user-info-clickable">
+                <div class="user-info">
+                    <i class="fa-solid fa-circle-user"></i>
+                    <div class="user-text">
+                        <span class="username"><?php echo htmlspecialchars($nombreUsuario); ?></span>
+                        <span class="role"><?php echo strtoupper(htmlspecialchars($rolUsuario)); ?></span>
+                    </div>
                 </div>
             </div>
+            
             <a href="javascript:void(0)" onclick="confirmarSalida()" class="btn-exit">
                 <i class="fa-solid fa-right-from-bracket"></i> Salir
             </a>
@@ -48,7 +48,6 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
         </header>
 
         <div class="grid-container">
-            
             <a href="/ElZapato/src/views/seller/pos.php" class="card">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <h3>PUNTO DE VENTA</h3>
@@ -62,49 +61,41 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
             </a>
 
             <?php if (strtolower($rolUsuario) === 'admin'): ?>
-
                 <a href="/ElZapato/src/views/admin/ventas.php" class="card">
                     <i class="fa-solid fa-tag"></i>
                     <h3>VENTAS</h3>
                     <p>Historial de ventas</p>
                 </a>
-
                 <a href="/ElZapato/src/views/admin/productos.php" class="card">
                     <i class="fa-solid fa-box-archive"></i>
                     <h3>INVENTARIO</h3>
                     <p>Productos y stock</p>
                 </a>
-
                 <a href="/ElZapato/src/views/admin/dashboard.php" class="card">
                     <i class="fa-solid fa-chart-pie"></i>
                     <h3>ESTADÍSTICAS</h3>
                     <p>Reportes y análisis</p>
                 </a>
-
                 <a href="/ElZapato/src/views/admin/empleados.php" class="card">
                     <i class="fa-solid fa-users"></i>
                     <h3>EMPLEADOS</h3>
                     <p>Gestión de empleados</p>
                 </a>
-
                 <a href="/ElZapato/src/views/admin/configuracion.php" class="card">
                     <i class="fa-solid fa-gear"></i>
                     <h3>AJUSTES</h3>
                     <p>Configuración</p>
                 </a>
-
                 <a href="/ElZapato/src/views/admin/proveedores.php" class="card">
                     <i class="fa-solid fa-truck-moving"></i>
                     <h3>PROVEEDORES</h3>
                     <p>Gestión de suministros</p>
                 </a>
-
             <?php endif; ?>
-
         </div>
     </div>
 
-   <div id="modalLogout" class="modal-overlay">
+    <div id="modalLogout" class="modal-overlay">
         <div class="modal-exit-card">
             <div class="modal-icon">
                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -118,25 +109,36 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
         </div>
     </div>
 
+    <div id="modalPerfil" class="modal-overlay">
+        <div class="modal-perfil-container">
+            <button class="modal-close-btn" onclick="cerrarModalPerfil()">&times;</button>
+            <iframe src="/ElZapato/src/views/seller/perfil.php" frameborder="0"></iframe>
+        </div>
+    </div>
+
     <script>
+        // Funciones Logout
         function confirmarSalida() {
             document.getElementById('modalLogout').classList.add('active');
         }
 
-        function cerrarModalLogout() {
-            document.getElementById('modalLogout').classList.remove('active');
+        // Funciones Perfil
+        function abrirModalPerfil() {
+            document.getElementById('modalPerfil').classList.add('active');
+            document.body.style.overflow = 'hidden'; // Bloquea scroll fondo
+        }
+        function cerrarModalPerfil() {
+            document.getElementById('modalPerfil').classList.remove('active');
+            document.body.style.overflow = 'auto'; // Libera scroll
         }
 
-        // Cerrar si hacen clic fuera de la tarjeta
+        // Cerrar al hacer clic fuera
         window.onclick = function(event) {
-            let modal = document.getElementById('modalLogout');
-            if (event.target == modal) {
+            if (event.target.classList.contains('modal-overlay')) {
                 cerrarModalLogout();
+                cerrarModalPerfil();
             }
         }
     </script>
-</body>
-</html>
-
 </body>
 </html>

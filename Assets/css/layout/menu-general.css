@@ -20,8 +20,8 @@ body {
     background-size: cover, 100% 100%;
     background-repeat: no-repeat, no-repeat;
     background-position: center center, center center;
-    background-attachment: scroll, scroll;
-    color: #E4E0E1; /* Texto claro del sistema */
+    background-attachment: fixed; /* Mejorado para que el fondo no se desplace */
+    color: #E4E0E1; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -57,7 +57,7 @@ body {
 .brand .dot {
     height: 8px;
     width: 8px;
-    background-color: #772c24; /* Color de acento del sistema */
+    background-color: #772c24; 
     border-radius: 50%;
     display: inline-block;
     margin-right: 10px;
@@ -70,14 +70,30 @@ body {
     gap: 20px;
 }
 
+/* Estilo para el contenedor del perfil clickable */
+.user-info-clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.user-info-clickable:hover {
+    transform: scale(1.02);
+}
+
 .user-info {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(214, 192, 179, 0.1); /* primary-soft suave */
+    background: rgba(214, 192, 179, 0.1);
     padding: 5px 15px;
     border-radius: 30px;
     border: 1px solid rgba(171, 136, 109, 0.3);
+    transition: all 0.3s ease;
+}
+
+.user-info-clickable:hover .user-info {
+    background: rgba(214, 192, 179, 0.25);
+    border-color: #D6C0B3;
 }
 
 .user-text {
@@ -118,7 +134,6 @@ body {
     width: 100%;
     max-width: 1000px;
     text-align: center;
-    /* Aseguramos que el contenedor hijo esté centrado */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -140,9 +155,9 @@ body {
 }
 
 .grid-container {
-    display: flex;          /* Cambiamos de grid a flex */
-    flex-wrap: wrap;        /* Permite que bajen a la siguiente fila */
-    justify-content: center; /* ¡ESTA ES LA CLAVE! Centra las tarjetas */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 20px;
     width: 100%;
 }
@@ -156,9 +171,8 @@ body {
     cursor: pointer;
     border: 1px solid rgba(214, 192, 179, 0.1);
     color: #E4E0E1;
-    /* Definimos un ancho base para que parezcan grid */
     width: calc(25% - 20px); 
-    min-width: 220px;       /* Evita que se hagan demasiado pequeñas */
+    min-width: 220px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -174,7 +188,7 @@ body {
     font-size: 1.8rem;
     margin-bottom: 15px;
     display: block;
-    color: #D6C0B3; /* Iconos en tono café suave */
+    color: #D6C0B3;
 }
 
 .card h3 {
@@ -190,7 +204,7 @@ body {
     opacity: 0.6;
 }
 
-/* --- MODAL DE LOGOUT PERSONALIZADO --- */
+/* --- MODALES GENERALES (Overlay) --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -213,8 +227,9 @@ body {
     visibility: visible;
 }
 
+/* --- MODAL DE LOGOUT --- */
 .modal-exit-card {
-    background: #E4E0E1; /* Fondo claro para contraste */
+    background: #E4E0E1;
     padding: 40px;
     border-radius: 20px;
     width: 90%;
@@ -232,7 +247,7 @@ body {
 .modal-icon {
     width: 70px;
     height: 70px;
-    background: #772c24; /* Borgoña oficial */
+    background: #772c24;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -249,13 +264,55 @@ body {
     margin-bottom: 10px;
 }
 
-.modal-exit-card p {
-    color: #4D3B2E;
-    font-size: 0.9rem;
-    margin-bottom: 30px;
-    line-height: 1.4;
+/* --- MODAL DE PERFIL (CONTENEDOR IFRAME) --- */
+.modal-perfil-container {
+    width: 95%;
+    max-width: 850px;
+    height: 90vh;
+    background: white;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    transform: translateY(30px);
+    transition: all 0.3s ease;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
+.modal-overlay.active .modal-perfil-container {
+    transform: translateY(0);
+}
+
+.modal-perfil-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: rgba(119, 44, 36, 0.9);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.modal-close-btn:hover {
+    background: #000;
+    transform: rotate(90deg);
+}
+
+/* --- BOTONES DEL MODAL LOGOUT --- */
 .modal-actions {
     display: flex;
     gap: 15px;
@@ -293,6 +350,14 @@ body {
 /* --- RESPONSIVIDAD --- */
 @media (max-width: 900px) {
     .card { width: calc(50% - 20px); }
+}
+
+@media (max-width: 600px) {
+    .modal-perfil-container {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+    }
 }
 
 @media (max-width: 500px) {

@@ -235,7 +235,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                             <div class="footer-controls">
                                 <div class="quantity-controls">
                                     <button class="btn-qty" onclick="cambiarCantidad(this, -1)">-</button>
-                                    <input type="number" class="qty-input" value="1" readonly>
+                                    <input type="number" class="qty-input" value="0" readonly>
                                     <button class="btn-qty" onclick="cambiarCantidad(this, 1)">+</button>
                                 </div>
                                 <div class="view-details-inline" onclick="abrirModalDetalle('<?= $v_id_v ?>', '<?= htmlspecialchars($p['nombre_producto']) ?>', '<?= $v_precio ?>', '<?= $v_stock ?>', '<?= htmlspecialchars($v_color) ?>', '<?= $v_talla ?>')">
