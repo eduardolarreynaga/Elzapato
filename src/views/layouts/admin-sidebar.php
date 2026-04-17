@@ -1,5 +1,8 @@
 <?php
 $activeMenu = $activeMenu ?? '';
+
+$userName = $_SESSION['usuario'] ?? 'Invitado';
+$userRole = $_SESSION['rol'] ?? 'Sin Rol';
 ?>
 <aside class="sidebar">
     <div class="sidebar-header">
@@ -38,16 +41,20 @@ $activeMenu = $activeMenu ?? '';
             <li class="<?= $activeMenu === 'reportes' ? 'active' : '' ?>">
                 <a href="reportes.php"><i class="fas fa-chart-line"></i><span>Reportes</span></a>
             </li>
-            <li class="separator logout-separator"></li>
+            <li class="<?= $activeMenu === 'configuracion' ? 'active' : '' ?>">
+                <a href="configuracion.php"><i class="fas fa-cog"></i><span>Configuracion</span></a>
+            </li>
         </ul>
     </nav>
 
     <div class="sidebar-footer">
-        <div class="user-info">
-            <i class="fas fa-user-circle"></i>
-            <div>
-                <span class="user-name">Admin</span>
-                <span class="user-role">Administrador</span>
+        <div class="user-info-container">
+            <div class="user-info">
+                <i class="fas <?= $userRole === 'admin' ? 'fa-user-shield' : 'fa-user' ?>"></i>
+                <div>
+                    <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
+                    <span class="user-role"><?php echo ucfirst(htmlspecialchars($userRole)); ?></span>
+                </div>
             </div>
         </div>
     </div>

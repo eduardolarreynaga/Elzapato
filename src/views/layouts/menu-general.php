@@ -87,7 +87,7 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
                     <p>Gestión de empleados</p>
                 </a>
 
-                <a href="/ElZapato/Vistas/configuracion.php" class="card">
+                <a href="/ElZapato/src/views/admin/configuracion.php" class="card">
                     <i class="fa-solid fa-gear"></i>
                     <h3>AJUSTES</h3>
                     <p>Configuración</p>
