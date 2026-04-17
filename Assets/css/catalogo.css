@@ -442,6 +442,181 @@ body {
     margin: 0;
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
+.catalog-modal {
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 9999;
+        display: flex;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .5s ease;
+}
+
+.catalog-modal.is-open {
+        opacity: 1;
+        pointer-events: auto;
+}
+
+.catalog-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity .4s ease;
+}
+
+.catalog-modal.is-open .catalog-modal-backdrop {
+    opacity: 1;
+}
+
+.catalog-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(920px, 96vw);
+    background: #fff;
+    border: 1px solid rgba(171, 136, 109, 0.2);
+    border-radius: 28px;
+    box-shadow: var(--shadow-deep);
+    display: grid;
+    grid-template-columns: 1.1fr .9fr;
+    overflow: hidden;
+    transform: scale(0.85) translateY(40px);
+    opacity: 0;
+    transition: transform .5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .5s ease;
+}
+
+.catalog-modal.is-open .catalog-modal-dialog {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.catalog-modal-close {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.68);
+    color: #fff;
+    z-index: 3;
+}
+
+.catalog-modal-media {
+    background: linear-gradient(145deg, rgba(214, 192, 179, 0.42), rgba(228, 224, 225, 0.24));
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.catalog-modal-zoom-wrap {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 420px;
+    border: 1px solid rgba(171, 136, 109, 0.22);
+    background: rgba(255, 255, 255, 0.92);
+    cursor: zoom-in;
+}
+
+.catalog-modal-zoom-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    transform-origin: center center;
+    transition: transform .2s ease;
+}
+
+.catalog-zoom-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.zoom-btn {
+    border: 1px solid rgba(171, 136, 109, 0.2);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--color-dark);
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    min-width: 86px;
+}
+
+.zoom-btn:hover {
+    background: var(--color-dark);
+    color: #fff;
+}
+
+.catalog-modal-body {
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.catalog-modal-kicker {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.catalog-modal-body h3 {
+    margin: 0 0 20px;
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+}
+
+.catalog-modal-body {
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+}
+
+.catalog-modal-price-badge {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    background: #fff;
+    color: var(--color-dark);
+    border: 2px solid var(--color-dark);
+    padding: 8px 10px;
+    border-radius: 14px;
+    font-size: 1.4rem;
+    font-weight: 900;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.catalog-modal-specs {
+    display: grid;
+    gap: 12px;
+}
+
+.catalog-modal-specs p {
+    margin: 0;
+    background: rgba(214, 192, 179, 0.2);
+    border: 1px solid rgba(171, 136, 109, 0.2);
+    padding: 14px 16px;
+    border-radius: 14px;
+    line-height: 1.4;
+}
+
 .reveal-up,
 .reveal-scale {
     opacity: 0;
@@ -511,6 +686,27 @@ body {
 
     .showcase-panel {
         min-height: 380px;
+    }
+
+    .catalog-modal-dialog {
+        grid-template-columns: 1fr;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .catalog-modal-zoom-wrap {
+        min-height: 300px;
+    }
+
+    .catalog-modal-body {
+        padding: 24px 18px 26px;
+    }
+
+    .catalog-modal-price-badge {
+        bottom: 16px;
+        right: 16px;
+        padding: 12px 18px;
+        font-size: 1.4rem;
     }
 }
 

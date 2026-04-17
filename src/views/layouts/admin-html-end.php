@@ -28,6 +28,22 @@
             }
         });
     }
+
+    document.addEventListener('click', function(event) {
+        const target = event.target;
+        if (!target || !target.classList) return;
+
+        const isModalOverlay = target.classList.contains('modal') || target.classList.contains('modal-overlay');
+        if (!isModalOverlay) return;
+
+        if (target.classList.contains('active')) {
+            target.classList.remove('active');
+        }
+
+        if (target.style && (target.style.display === 'flex' || target.style.display === 'block')) {
+            target.style.display = 'none';
+        }
+    });
 </script>
 </body>
 </html>

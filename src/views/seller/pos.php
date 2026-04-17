@@ -195,12 +195,19 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                             if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
                                 $imagenFinal = "/ElZapato" . $pathImg;
                             }
+
+                            $tallaTexto = trim((string)$v_talla);
+                            $tallaEtiqueta = ($tallaTexto !== '')
+                                ? (preg_match('/^t/i', $tallaTexto) ? strtoupper($tallaTexto) : ('T' . strtoupper($tallaTexto)))
+                                : '';
                     ?>
                     <div class="product-card" 
                         data-id="<?= $v_id_v ?>" 
                         data-price="<?= $v_precio ?>" 
                         data-stock="<?= $v_stock ?>" 
                         data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>"
+                        data-talla="<?= htmlspecialchars($v_talla) ?>"
+                        data-color="<?= htmlspecialchars($v_color) ?>"
                         data-categoria="<?= $p['id_categoria'] ?? '' ?>"
                         data-marca="<?= strtolower($p['marca'] ?? '') ?>">
                         
@@ -215,7 +222,11 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                             </label>
                         </div>
 
-                        <div class="product-img" style="background-image: url('<?= $imagenFinal ?>');"></div>
+                        <div class="product-img" style="background-image: url('<?= $imagenFinal ?>');">
+                            <?php if ($tallaEtiqueta !== ''): ?>
+                                <span class="talla-badge"><?= htmlspecialchars($tallaEtiqueta) ?></span>
+                            <?php endif; ?>
+                        </div>
                         
                         <div class="product-info">
                             <p class="product-name"><?= htmlspecialchars($p['nombre_producto']) ?></p>
@@ -224,7 +235,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                             <div class="footer-controls">
                                 <div class="quantity-controls">
                                     <button class="btn-qty" onclick="cambiarCantidad(this, -1)">-</button>
-                                    <input type="number" class="qty-input" value="0" readonly>
+                                    <input type="number" class="qty-input" value="1" readonly>
                                     <button class="btn-qty" onclick="cambiarCantidad(this, 1)">+</button>
                                 </div>
                                 <div class="view-details-inline" onclick="abrirModalDetalle('<?= $v_id_v ?>', '<?= htmlspecialchars($p['nombre_producto']) ?>', '<?= $v_precio ?>', '<?= $v_stock ?>', '<?= htmlspecialchars($v_color) ?>', '<?= $v_talla ?>')">

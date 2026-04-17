@@ -370,6 +370,16 @@ document.addEventListener('click', function(event) {
     }
 });
 
+document.addEventListener('click', function(event) {
+    var target = event.target;
+    if (!target || !target.classList || !target.classList.contains('modal')) return;
+
+    target.classList.remove('active');
+    setTimeout(function() {
+        target.style.display = 'none';
+    }, 300);
+});
+
 // ==================== MODALES ====================
 function abrirModalDetalle(id, nombre, precio, stock, color, talla) {
     var modal = document.getElementById('modalDetalle');
@@ -426,6 +436,22 @@ function cerrarModal(id) {
     setTimeout(function() { modal.style.display = 'none'; }, 300);
 }
 
+function formatearNombreTicket(nombreBase, talla, color) {
+    var nombre = (nombreBase || '').toString().trim();
+    var tallaRaw = (talla || '').toString().trim();
+    var colorRaw = (color || '').toString().trim();
+
+    var tallaFmt = '';
+    if (tallaRaw) {
+        tallaFmt = /^t/i.test(tallaRaw) ? tallaRaw.toUpperCase() : ('T' + tallaRaw).toUpperCase();
+    }
+
+    var colorInicial = colorRaw ? colorRaw.charAt(0).toUpperCase() : '';
+    var sufijo = [tallaFmt, colorInicial].filter(Boolean).join('-');
+
+    return sufijo ? (nombre + ' - ' + sufijo) : nombre;
+}
+
 // ==================== CANTIDADES ====================
 function cambiarCantidad(btn, valor) {
     var card = btn.closest('.product-card');
@@ -455,7 +481,8 @@ function toggleProductoVenta(checkbox, id) {
     if (!card) return;
     
     var cantidad = parseInt(card.querySelector('.qty-input').value);
-    var nombre = card.dataset.nombre;
+    var nombreBase = card.dataset.nombre;
+    var nombre = formatearNombreTicket(nombreBase, card.dataset.talla, card.dataset.color);
 
     if (checkbox.checked) {
         if (cantidad <= 0) {
