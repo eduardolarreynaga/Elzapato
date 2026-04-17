@@ -13,7 +13,7 @@
             <li><a href="/ElZapato/src/views/public/principal.php" class="nav-link">Inicio</a></li>
             <li><a href="/ElZapato/src/views/public/contactos.php" class="nav-link">Contactos</a></li>
             <li><a href="/ElZapato/src/views/public/nosotros.php" class="nav-link">Nosotros</a></li>
-            <li><a href="/ElZapato/src/views/public/catalogo.php" class="nav-link">Catalogo</a></li>
+            <li><a href="/ElZapato/src/views/public/catalogo.php" class="nav-link">Catálogo</a></li>
         </ul>
     </nav>
 

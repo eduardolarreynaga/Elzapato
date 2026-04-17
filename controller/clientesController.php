@@ -77,4 +77,40 @@ class ClientesController {
     }
 }
 
+    /* =============================================
+    5. ENVIAR EMAIL A CLIENTE
+    ============================================= */
+    public function ctrEnviarCorreoCliente() {
+        if (!isset($_POST["enviar_email_cliente"])) {
+            return "error";
+        }
+
+        $correo = trim($_POST["email_cliente"] ?? "");
+        $nombre = trim($_POST["nombre_cliente"] ?? "Cliente");
+
+        if ($correo === "") {
+            return "sin_email";
+        }
+
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            return "email_invalido";
+        }
+
+        $asunto = "ElZapato - Contacto para " . $nombre;
+        $mensaje = "<html><body>";
+        $mensaje .= "<p>Hola <strong>" . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . "</strong>,</p>";
+        $mensaje .= "<p>Este es un mensaje enviado desde el panel de clientes de ElZapato.</p>";
+        $mensaje .= "<p>Saludos,<br>Equipo ElZapato</p>";
+        $mensaje .= "</body></html>";
+
+        $headers  = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: ElZapato <elzapato@mail.com>\r\n";
+        $headers .= "Reply-To: elzapato@mail.com\r\n";
+
+        $enviado = @mail($correo, $asunto, $mensaje, $headers);
+
+        return $enviado ? "ok" : "error_envio";
+    }
+
 }

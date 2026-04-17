@@ -163,7 +163,7 @@
                     Nuestra colección está pensada para ofrecer una experiencia visual atractiva
                     y una mejor presentación del catálogo de productos.
                 </p>
-                <a href="#productos" class="btn-primary dark">
+                <a href="catalogo.php" class="btn-primary dark">
                     <i class="fas fa-arrow-right"></i>
                     Explorar catálogo
                 </a>

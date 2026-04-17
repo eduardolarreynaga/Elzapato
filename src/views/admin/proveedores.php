@@ -48,7 +48,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="proveedores-page" style="padding: 20px;">
+<div class="proveedores-page" style="padding: 1px;">
 
     <div class="stats-grid stats-list" style="margin-bottom: 25px;">
         <div class="stats-list-item">

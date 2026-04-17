@@ -104,29 +104,67 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="productos-page">
-    <div class="stats-container">
+    <!-- <div class="stats-container">
         <div class="stat-card"><h4>Modelos Totales</h4><p><?= $totalModelos ?></p></div>
         <div class="stat-card" style="border-left-color: #4D3B2E;"><h4>Stock Global</h4><p><?= $totalStock ?></p></div>
         <div class="stat-card" style="border-left-color: #772C24;"><h4>Alertas Stock</h4><p style="color: #772C24;"><?= $bajoStockCount ?></p></div>
+    </div> -->
+    <!-- Resumen de productos -->
+    <div class="stats-grid stats-list" aria-label="Resumen de productos">
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
+            <span class="stats-list-value">156</span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
+            <span class="stats-list-value">142</span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
+            <span class="stats-list-value">8</span>
+        </div>
+        <div class="stats-list-item">
+            <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
+            <span class="stats-list-value">$45.8k</span>
+        </div>
     </div>
 
     <div class="actions-bar" style="margin-bottom: 15px;">
         <button class="btn-primary" id="btnNuevoProducto" style="background:#AB886D; border:none; padding:12px 24px; border-radius:8px; color:white; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;">
             <i class="fas fa-plus"></i> Nuevo Producto
         </button>
+                            <div class="filters">
+                        <select class="filter-select" id="filterCategory">
+                            <option value="">Categoría</option>
+                            <option value="deportivo">Deportivo</option>
+                            <option value="casual">Casual</option>
+                            <option value="formal">Formal</option>
+                            <option value="botas">Botas</option>
+                            <option value="sandalias">Sandalias</option>
+                        </select>
+                        <select class="filter-select" id="filterStatus">
+                            <option value="">Estado</option>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                            <option value="bajo_stock">Stock Bajo</option>
+                        </select>
+                        <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
     </div>
 
     <div class="table-scroll">
         <table class="products-table" id="tablaProductos">
             <thead>
                 <tr>
-                    <th>Imagen</th>
+                    <th style="text-align: center;">Imagen</th>
                     <th>Producto / SKU</th>
                     <th>Marca</th>
                     <th>Precio</th>
                     <th>Stock Actual</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th style="text-align: center;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -302,14 +340,52 @@ require __DIR__ . '/../layouts/admin-header.php';
 
 <script>
 const searchInput = document.getElementById('searchProduct');
-if(searchInput) {
-    searchInput.addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('#tablaProductos tbody tr').forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
-        });
+const filterCategory = document.getElementById('filterCategory');
+const filterStatus = document.getElementById('filterStatus');
+const resetFiltersBtn = document.getElementById('btnResetProductoFiltros');
+
+function normalizeText(value) {
+    return (value || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+function applyProductFilters() {
+    const term = normalizeText(searchInput?.value || '');
+    const category = normalizeText(filterCategory?.value || '');
+    const status = normalizeText(filterStatus?.value || '');
+
+    document.querySelectorAll('#tablaProductos tbody tr').forEach(row => {
+        const rowText = normalizeText(row.innerText);
+        const rowCategory = normalizeText(row.dataset.categoriaNom || '');
+        const rowStatus = normalizeText(row.dataset.vEstado || '');
+        const rowStock = parseInt(row.dataset.stock || '0', 10);
+
+        const passSearch = !term || rowText.includes(term);
+        const passCategory = !category || rowCategory.includes(category);
+
+        let passStatus = true;
+        if (status === 'activo' || status === 'inactivo') {
+            passStatus = rowStatus === status;
+        } else if (status === 'bajo_stock') {
+            passStatus = rowStock <= 10;
+        }
+
+        row.style.display = (passSearch && passCategory && passStatus) ? '' : 'none';
     });
 }
+
+searchInput?.addEventListener('input', applyProductFilters);
+filterCategory?.addEventListener('change', applyProductFilters);
+filterStatus?.addEventListener('change', applyProductFilters);
+resetFiltersBtn?.addEventListener('click', function () {
+    if (filterCategory) filterCategory.value = '';
+    if (filterStatus) filterStatus.value = '';
+    if (searchInput) searchInput.value = '';
+    applyProductFilters();
+});
 
 function viewProduct(btn) {
     const d = btn.closest('tr').dataset;
@@ -442,6 +518,27 @@ function deleteVariant(idV) {
     <?php endif; ?>
     window.history.replaceState({}, document.title, "productos.php");
 <?php endif; ?>
+        // Menú contextual
+        let currentProduct = null;
+        
+        function showMenu(productId) {
+            currentProduct = productId;
+            const menu = document.getElementById('contextMenu');
+            menu.classList.add('active');
+            
+            // Cerrar al hacer clic fuera
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!menu.contains(e.target) && !e.target.closest('.btn-icon')) {
+                        menu.classList.remove('active');
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 100);
+        }
+
+
+
 </script>
 
 <?php 

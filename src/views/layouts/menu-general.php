@@ -18,7 +18,7 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero'; // Por defecto cajero si no h
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ElZapato - Panel</title>
-    <link rel="stylesheet" href="/ElZapato/Assets/css/layout/menu-general.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/layout/menu-general.css?v=20260417b">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>

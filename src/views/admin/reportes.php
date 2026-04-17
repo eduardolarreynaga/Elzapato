@@ -53,7 +53,10 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Stock actual por producto, talla y color</h3>
-                <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+                <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                    <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+                    <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -77,7 +80,7 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Alertas de stock mínimo (umbral: 10)</h3>
-                <a href="#" class="view-all"><i class="fas fa-exclamation-circle"></i> Revisar</a>
+                <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -101,7 +104,7 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Historial de movimientos (entradas, salidas, ajustes)</h3>
-                <a href="#" class="view-all"><i class="fas fa-stream"></i> Ver todo</a>
+                <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -125,7 +128,10 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Flujo de Caja</h3>
-                <a href="#" class="view-all"><i class="fas fa-file-export"></i> Exportar</a>
+                <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                    <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+                    <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -149,7 +155,7 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Historial de compras por cliente</h3>
-                <a href="#" class="view-all"><i class="fas fa-user-clock"></i> Detalle</a>
+                <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -173,7 +179,10 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Número de tickets generados</h3>
-                <a href="#" class="view-all"><i class="fas fa-receipt"></i> Ver ventas</a>
+                <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                    <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+                    <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -196,7 +205,10 @@ require __DIR__ . '/../layouts/admin-header.php';
         <div class="table-card">
             <div class="table-header">
                 <h3>Últimas Compras (Stock Entrante)</h3>
-                <a href="#" class="view-all"><i class="fas fa-file-invoice"></i> Ver historial</a>
+                <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                    <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+                    <a href="#" class="view-all" onclick="window.print(); return false;"><i class="fas fa-file-export"></i> Exportar</a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="data-table">

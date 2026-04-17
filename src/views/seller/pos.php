@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/../../config/auth.php';
-if (!is_authenticated()) { header("Location: /Elzapato/src/views/public/login.php"); exit(); }
+if (!is_authenticated()) { header("Location: /ElZapato/src/views/public/login.php"); exit(); }
 
 $rolActual = $_SESSION['rol'] ?? '';
-if (!in_array($rolActual, ['cajero', 'admin'], true)) { header("Location: /Elzapato/src/views/layouts/menu-general.php"); exit(); }
+if (!in_array($rolActual, ['cajero', 'admin'], true)) { header("Location: /ElZapato/src/views/layouts/menu-general.php"); exit(); }
 
 require_once "../../../controller/productosController.php";
 require_once "../../../model/ProductosModel.php";
@@ -22,7 +22,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
     <title>POS - El Zapato</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/Elzapato/Assets/css/pos.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/pos.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -33,7 +33,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </div>
         <div class="brand-logo">SISTEMA DE VENTAS EL ZAPATO</div>
         <div class="nav-icons">
-            <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/Elzapato/src/views/layouts/menu-general.php'"></i>            
+            <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/ElZapato/src/views/layouts/menu-general.php'"></i>            
             <div class="notification-container">
                 <i class="fa-solid fa-bell" id="bellIcon" onclick="toggleNotifications()"></i>
                 <span class="badge" id="notificationBadge">0</span>
@@ -190,10 +190,10 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                                 $tagClass = "stock-disponible";
                             }
                             
-                            $imagenFinal = "/Elzapato/Assets/img/zapa.jpeg"; 
+                            $imagenFinal = "/ElZapato/Assets/img/zapa.jpeg"; 
                             $pathImg = "/Assets/img/productos/" . $v_id_v . ".jpg";
-                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/Elzapato" . $pathImg)) {
-                                $imagenFinal = "/Elzapato" . $pathImg;
+                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
+                                $imagenFinal = "/ElZapato" . $pathImg;
                             }
                     ?>
                     <div class="product-card" 
@@ -362,6 +362,6 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 
     <div id="toast-container"></div>
 
-    <script src="/Elzapato/Assets/js/pos.js?v=<?php echo time(); ?>"></script>
+    <script src="/ElZapato/Assets/js/pos.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

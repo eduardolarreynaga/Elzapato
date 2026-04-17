@@ -3,8 +3,9 @@ require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
 // 1. CARGAR CONTROLADORES Y MODELOS
-require_once "../../../controller/ventasController.php"; 
-require_once "../../../model/VentasModel.php";
+$basePath = realpath(__DIR__ . '/../../../');
+require_once $basePath . "/controller/ventasController.php";
+require_once $basePath . "/model/VentasModel.php";
 
 // 2. OBTENER TODAS LAS VENTAS DE LA BD
 $ventas = VentasController::ctrMostrarVentas();

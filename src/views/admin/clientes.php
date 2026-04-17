@@ -2,8 +2,10 @@
 require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
-require_once "../../../controller/clientesController.php";
-require_once "../../../model/ClientesModel.php";
+// 1. CARGAR CONTROLADORES Y MODELOS
+$basePath = realpath(__DIR__ . '/../../../');
+require_once $basePath . "/controller/clientesController.php";
+require_once $basePath . "/model/ClientesModel.php";
 
 $controlador = new ClientesController();
 $controlador->ctrCrearCliente();
@@ -23,6 +25,13 @@ if (isset($_POST["id_eliminar_cliente"])) {
        header("Location: clientes.php?pagina=" . $paginaActual);
 exit();
     }
+}
+
+// ENVIAR EMAIL AL CLIENTE
+if (isset($_POST["enviar_email_cliente"])) {
+    $resultadoCorreo = $controlador->ctrEnviarCorreoCliente();
+    header("Location: clientes.php?pagina=" . $paginaActual . "&mail=" . $resultadoCorreo);
+    exit();
 }
 
 
@@ -46,6 +55,8 @@ $searchInputId = 'searchCliente';
 $searchPlaceholder = 'Buscar cliente...';
 $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
+
+$mailStatus = $_GET['mail'] ?? '';
 ?>
 
 <div class="clientes-page">
@@ -113,6 +124,22 @@ require __DIR__ . '/../layouts/admin-header.php';
         <i class="fas fa-edit"></i>
     </button>
 
+    <!-- ENVIAR EMAIL -->
+    <?php if (!empty($c['email'])): ?>
+    <form method="post" style="display:inline;">
+        <input type="hidden" name="enviar_email_cliente" value="1">
+        <input type="hidden" name="email_cliente" value="<?= htmlspecialchars($c['email']) ?>">
+        <input type="hidden" name="nombre_cliente" value="<?= htmlspecialchars($c['nombre']) ?>">
+        <button type="submit" class="btn-icon small" title="Enviar email" style="color:#7a5c45; border:none; background:none; cursor:pointer;">
+            <i class="fas fa-envelope"></i>
+        </button>
+    </form>
+    <?php else: ?>
+    <button type="button" class="btn-icon small" title="Cliente sin email" style="opacity:0.45; color:#7a5c45; border:none; background:none; cursor:not-allowed;" disabled>
+        <i class="fas fa-envelope"></i>
+    </button>
+    <?php endif; ?>
+
     <!-- ELIMINAR -->
     <form method="post" style="display:inline;">
         <input type="hidden" name="id_eliminar_cliente" value="<?= $c['id_cliente'] ?>">
@@ -161,7 +188,57 @@ require __DIR__ . '/../layouts/admin-header.php';
     </div>
 </div>
 
+<div id="emailToast" style="position: fixed; right: 20px; bottom: 20px; min-width: 280px; max-width: 360px; padding: 12px 14px; border-radius: 10px; color: #fff; font-size: 0.9rem; box-shadow: 0 10px 25px rgba(0,0,0,.18); display: none; z-index: 99999; opacity: 0; transform: translateY(8px); transition: opacity .25s ease, transform .25s ease;"></div>
+
 <script>
+const mailStatus = <?= json_encode($mailStatus, JSON_UNESCAPED_UNICODE) ?>;
+
+function showEmailToast(message, type = 'info') {
+    const toast = document.getElementById('emailToast');
+    if (!toast) return;
+
+    const palette = {
+        success: '#E4E0E1',
+        warning: '#AB886D',
+        error: '#772c24',
+        info: '#4a5568'
+    };
+
+    toast.textContent = message;
+    toast.style.background = palette[type] || palette.info;
+    toast.style.display = 'block';
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    clearTimeout(window.__emailToastTimer);
+    window.__emailToastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 250);
+    }, 3200);
+}
+
+if (mailStatus) {
+    if (mailStatus === 'ok') {
+        showEmailToast('Correo enviado correctamente al cliente.', 'success');
+    } else if (mailStatus === 'sin_email') {
+        showEmailToast('El cliente no tiene correo registrado.', 'warning');
+    } else if (mailStatus === 'email_invalido') {
+        showEmailToast('El correo del cliente no es válido.', 'warning');
+    } else {
+        showEmailToast('No se pudo enviar el correo. Revisa la configuración SMTP del servidor.', 'error');
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('mail');
+    window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ''));
+}
+
 // BUSCADOR EN TIEMPO REAL
 document.getElementById('searchCliente')?.addEventListener('keyup', function() {
     const term = this.value.toLowerCase();
@@ -215,3 +292,4 @@ function closeClienteModal() { document.getElementById('clienteModal').style.dis
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
+<?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
