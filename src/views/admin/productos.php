@@ -43,7 +43,7 @@ if($productos){
             $d = explode("|", $v);
             $cant = (int)($d[3] ?? 0);
             $totalStock += $cant;
-            if($cant <= 10) $bajoStockCount++;
+            if($cant <= 10 && $cant > 0) $bajoStockCount++;
         }
     }
 }
@@ -80,6 +80,7 @@ require __DIR__ . '/../layouts/admin-shell-start.php';
     .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: #AB886D; }
     input:checked + .slider:before { transform: translateX(22px); }
+    input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
 
     .fila-inactiva { opacity: 0.5; background-color: #f2f2f2 !important; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
@@ -93,6 +94,10 @@ require __DIR__ . '/../layouts/admin-shell-start.php';
     
     .image-box { background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee; text-align: center; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .image-box img { max-width: 100px; max-height: 100px; border-radius: 8px; object-fit: cover; }
+    
+    .stock-cero { background-color: #772C24 !important; color: white !important; }
+    .warning-text { color: #bc6e32; font-weight: bold; }
+    .info-tooltip { cursor: help; border-bottom: 1px dashed #999; }
 </style>
 
 <?php
@@ -104,28 +109,22 @@ require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="productos-page">
-    <!-- <div class="stats-container">
-        <div class="stat-card"><h4>Modelos Totales</h4><p><?= $totalModelos ?></p></div>
-        <div class="stat-card" style="border-left-color: #4D3B2E;"><h4>Stock Global</h4><p><?= $totalStock ?></p></div>
-        <div class="stat-card" style="border-left-color: #772C24;"><h4>Alertas Stock</h4><p style="color: #772C24;"><?= $bajoStockCount ?></p></div>
-    </div> -->
-    <!-- Resumen de productos -->
     <div class="stats-grid stats-list" aria-label="Resumen de productos">
         <div class="stats-list-item">
-            <span class="stats-list-label"><i class="fas fa-boxes"></i> Total</span>
-            <span class="stats-list-value">156</span>
+            <span class="stats-list-label"><i class="fas fa-boxes"></i> Total Variantes</span>
+            <span class="stats-list-value" id="totalVariantes">0</span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
-            <span class="stats-list-value">142</span>
+            <span class="stats-list-value" id="totalActivos">0</span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
-            <span class="stats-list-value">8</span>
+            <span class="stats-list-value" id="totalBajoStock"><?= $bajoStockCount ?></span>
         </div>
         <div class="stats-list-item">
-            <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Valor</span>
-            <span class="stats-list-value">$45.8k</span>
+            <span class="stats-list-label"><i class="fas fa-ban"></i> Inactivos</span>
+            <span class="stats-list-value" id="totalInactivos">0</span>
         </div>
     </div>
 
@@ -133,25 +132,24 @@ require __DIR__ . '/../layouts/admin-header.php';
         <button class="btn-primary" id="btnNuevoProducto" style="background:#AB886D; border:none; padding:12px 24px; border-radius:8px; color:white; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;">
             <i class="fas fa-plus"></i> Nuevo Producto
         </button>
-                            <div class="filters">
-                        <select class="filter-select" id="filterCategory">
-                            <option value="">Categoría</option>
-                            <option value="deportivo">Deportivo</option>
-                            <option value="casual">Casual</option>
-                            <option value="formal">Formal</option>
-                            <option value="botas">Botas</option>
-                            <option value="sandalias">Sandalias</option>
-                        </select>
-                        <select class="filter-select" id="filterStatus">
-                            <option value="">Estado</option>
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                            <option value="bajo_stock">Stock Bajo</option>
-                        </select>
-                        <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                    </div>
+        <div class="filters">
+            <select class="filter-select" id="filterCategory">
+                <option value="">Categoría</option>
+                <?php foreach($categorias as $cat): ?>
+                    <option value="<?= strtolower($cat['nombre_categoria']) ?>"><?= htmlspecialchars($cat['nombre_categoria']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <select class="filter-select" id="filterStatus">
+                <option value="">Estado</option>
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+                <option value="bajo_stock">Stock Bajo (≤10)</option>
+                <option value="stock_cero">Stock Cero</option>
+            </select>
+            <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
+                <i class="fas fa-times"></i> Limpiar
+            </button>
+        </div>
     </div>
 
     <div class="table-scroll">
@@ -169,6 +167,10 @@ require __DIR__ . '/../layouts/admin-header.php';
             </thead>
             <tbody>
                 <?php 
+                $totalVariantes = 0;
+                $totalActivos = 0;
+                $totalInactivos = 0;
+                
                 if($productos): 
                     foreach ($productos as $p): 
                         $variantes = ($p['info_variantes'] != '') ? explode("||", $p['info_variantes']) : [];
@@ -176,7 +178,16 @@ require __DIR__ . '/../layouts/admin-header.php';
                             $d = explode("|", $v);
                             $v_talla = $d[0]; $v_color = $d[1]; $v_precio = $d[2]; 
                             $v_stock = (int)$d[3]; $v_sku = $d[4] ?? 'N/A'; 
-                            $v_estado = $d[5] ?? 'activo'; $v_id_v = $d[6] ?? '0'; 
+                            $v_estado = $d[5] ?? 'activo'; $v_id_v = $d[6] ?? '0';
+                            
+                            // Actualizar estado si el stock es 0
+                            if($v_stock <= 0 && $v_estado == 'activo') {
+                                $v_estado = 'inactivo';
+                            }
+                            
+                            $totalVariantes++;
+                            if($v_estado == 'activo') $totalActivos++;
+                            if($v_estado == 'inactivo') $totalInactivos++;
 
                             $imgDefault = "/ElZapato/Assets/img/zapa.jpeg";
                             $rutaImagen = "/ElZapato/Assets/img/productos/" . $v_id_v . ".jpg";
@@ -185,7 +196,15 @@ require __DIR__ . '/../layouts/admin-header.php';
 
                             $max = 50; 
                             $perc = min(($v_stock / $max) * 100, 100);
-                            $bColor = ($v_stock <= 5) ? "bg-danger" : (($v_stock <= 15) ? "bg-warning" : "bg-success");
+                            if($v_stock <= 0) {
+                                $bColor = "stock-cero";
+                            } elseif($v_stock <= 5) {
+                                $bColor = "bg-danger";
+                            } elseif($v_stock <= 15) {
+                                $bColor = "bg-warning";
+                            } else {
+                                $bColor = "bg-success";
+                            }
                 ?>
                 <tr class="<?= ($v_estado == 'inactivo') ? 'fila-inactiva' : '' ?>" 
                     data-id-p="<?= $p['id_producto'] ?>" data-id-v="<?= $v_id_v ?>"
@@ -201,34 +220,46 @@ require __DIR__ . '/../layouts/admin-header.php';
                     data-descripcion="<?= htmlspecialchars($p['descripcion'] ?? 'Sin descripción.') ?>">
                     
                     <td><img src="<?= $img ?>" width="60" height="60" style="object-fit:cover; border-radius:8px; border: 1px solid #ddd; display: block; margin: 0 auto;"></td>
-                    <td style="padding-left: 15px;"><strong><?= $p['nombre_producto'] ?></strong><br><small style="color:#AB886D; font-weight: bold;"><?= $v_sku ?></small></td>
-                    <td><?= $p['nombre_marca'] ?></td>
+                    <td style="padding-left: 15px;">
+                        <strong><?= htmlspecialchars($p['nombre_producto']) ?></strong>
+                        <br><small style="color:#AB886D; font-weight: bold;"><?= $v_sku ?></small>
+                    </td>
+                    <td><?= htmlspecialchars($p['nombre_marca']) ?></td>
                     <td><strong style="color: #4D3B2E;">$<?= number_format($v_precio, 2) ?></strong></td>
                     <td>
                         <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:bold;">
                             <span>Cant: <?= $v_stock ?></span>
                         </div>
-                        <div class="progress-bg"><div class="progress-bar <?= $bColor ?>" style="width: <?= $perc ?>%;"></div></div>
-                    </td>
+                        <div class="progress-bg">
+                            <div class="progress-bar <?= $bColor ?>" style="width: <?= $perc ?>%;"></div>
+                        </div>
+                     </td>
                     <td>
                         <span style="font-size:0.65rem; font-weight:bold; color:white; background:<?= ($v_estado == 'activo') ? '#AB886D' : '#772C24' ?>; padding:4px 10px; border-radius:20px; text-transform:uppercase;">
                             <?= $v_estado ?>
                         </span>
-                    </td>
+                     </td>
                     <td>
                         <div style="display:flex; gap:15px; justify-content:center;">
-                            <button type="button" onclick="viewProduct(this)" title="Ver Detalle" style="color:#4D3B2E; background:none; border:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-eye"></i></button>
-                            <button type="button" onclick="btnEditProduct(this)" title="Editar" style="color:#AB886D; background:none; border:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
-                            <button type="button" onclick="deleteVariant(<?= $v_id_v ?>)" title="Eliminar" style="color:#772C24; background:none; border:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
+                            <button type="button" onclick="viewProduct(this)" title="Ver Detalle" style="color:#4D3B2E; background:none; border:none; cursor:pointer; font-size:1.1rem;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" onclick="btnEditProduct(this)" title="Editar" style="color:#AB886D; background:none; border:none; cursor:pointer; font-size:1.1rem;">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" onclick="deleteVariant(<?= $v_id_v ?>)" title="Eliminar" style="color:#772C24; background:none; border:none; cursor:pointer; font-size:1.1rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                    </td>
-                </tr>
+                     </td>
+                 </tr>
                 <?php endforeach; endforeach; endif; ?>
             </tbody>
-        </table>
+         </table>
     </div>
 </div>
 
+<!-- Modal de Vista -->
 <div class="modal" id="viewModal" style="display: none; align-items:center; justify-content:center; background: rgba(0,0,0,0.7); position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999;">
     <div class="modal-content" style="background:white; padding:30px; border-radius:15px; width:580px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
         <div style="display:flex; gap:20px; margin-bottom:20px;">
@@ -251,6 +282,7 @@ require __DIR__ . '/../layouts/admin-header.php';
     </div>
 </div>
 
+<!-- Modal de Edición/Creación -->
 <div class="modal" id="productModal" style="display: none; align-items:center; justify-content:center; background: rgba(0,0,0,0.7); position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;">
     <div class="modal-content" style="background:white; padding:30px; border-radius:15px; width:750px; max-height:90vh; overflow-y:auto;">
         <form id="productForm" method="post" enctype="multipart/form-data">
@@ -270,7 +302,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <label>Categoría *</label>
                     <select name="id_categoria" id="id_categoria" required>
                         <?php foreach($categorias as $c): ?> 
-                            <option value="<?= $c['id_categoria'] ?>"><?= $c['nombre_categoria'] ?></option> 
+                            <option value="<?= $c['id_categoria'] ?>"><?= htmlspecialchars($c['nombre_categoria']) ?></option> 
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -278,7 +310,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <label>Marca *</label>
                     <select name="id_marca" id="id_marca" required>
                         <?php foreach($marcas as $m): ?> 
-                            <option value="<?= $m['id_marca'] ?>"><?= $m['nombre_marca'] ?></option> 
+                            <option value="<?= $m['id_marca'] ?>"><?= htmlspecialchars($m['nombre_marca']) ?></option> 
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -300,18 +332,29 @@ require __DIR__ . '/../layouts/admin-header.php';
             </div>
 
             <div class="form-row">
-                <div class="form-group"><label>SKU (Código de Barras) *</label><input type="text" name="codigo_barras" id="codigo_barras" required></div>
+                <div class="form-group">
+                    <label>SKU (Código de Barras) *</label>
+                    <input type="text" name="codigo_barras" id="codigo_barras" required>
+                </div>
                 <div class="form-group"><label>Precio *</label><input type="number" step="0.01" name="precio_venta" id="precio_venta" required></div>
             </div>
 
             <div class="form-row">
-                <div class="form-group"><label>Stock *</label><input type="number" name="stock" id="stock" required></div>
+                <div class="form-group">
+                    <label>Stock *</label>
+                    <input type="number" name="stock" id="stock" required onchange="verificarStockEnFormulario()">
+                    <small id="stockWarning" style="color:#772C24; display:none;">⚠️ Stock en 0 - El producto se desactivará automáticamente</small>
+                </div>
                 <div class="form-group">
                     <label>Estado</label>
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <label class="switch"><input type="checkbox" id="estado_switch" onchange="actualizarTxtEstado(this.checked)"><span class="slider"></span></label>
+                        <label class="switch">
+                            <input type="checkbox" id="estado_switch" onchange="actualizarTxtEstado(this.checked)">
+                            <span class="slider"></span>
+                        </label>
                         <input type="hidden" name="estado_v" id="estado_v" value="activo">
                         <span id="txtEstado" style="font-weight:bold;">ACTIVO</span>
+                        <i id="estadoInfoIcon" class="fas fa-info-circle info-tooltip" style="color:#AB886D; display:none;" title="Producto desactivado automáticamente por falta de stock"></i>
                     </div>
                 </div>
             </div>
@@ -339,6 +382,47 @@ require __DIR__ . '/../layouts/admin-header.php';
 </div>
 
 <script>
+// Actualizar estadísticas
+function actualizarEstadisticas() {
+    const totalFilas = document.querySelectorAll('#tablaProductos tbody tr').length;
+    const activos = document.querySelectorAll('#tablaProductos tbody tr:not(.fila-inactiva)').length;
+    const inactivos = totalFilas - activos;
+    const stockCero = document.querySelectorAll('#tablaProductos tbody tr[data-stock="0"]').length;
+    
+    document.getElementById('totalVariantes').innerText = totalFilas;
+    document.getElementById('totalActivos').innerText = activos;
+    document.getElementById('totalInactivos').innerText = inactivos;
+    document.getElementById('totalBajoStock').innerText = stockCero > 0 ? stockCero : '0';
+}
+
+// Función para verificar stock en el formulario
+function verificarStockEnFormulario() {
+    const stockInput = document.getElementById('stock');
+    const stockValue = parseInt(stockInput.value);
+    const estadoSwitch = document.getElementById('estado_switch');
+    const estadoHidden = document.getElementById('estado_v');
+    const stockWarning = document.getElementById('stockWarning');
+    const estadoInfoIcon = document.getElementById('estadoInfoIcon');
+    
+    if (stockValue <= 0) {
+        // Forzar estado inactivo
+        estadoSwitch.checked = false;
+        estadoHidden.value = 'inactivo';
+        actualizarTxtEstado(false);
+        estadoSwitch.disabled = true;
+        stockWarning.style.display = 'block';
+        estadoInfoIcon.style.display = 'inline-block';
+        
+        // Mostrar tooltip
+        estadoInfoIcon.title = 'Producto desactivado automáticamente por falta de stock';
+    } else {
+        estadoSwitch.disabled = false;
+        stockWarning.style.display = 'none';
+        estadoInfoIcon.style.display = 'none';
+    }
+}
+
+// Función de búsqueda y filtros
 const searchInput = document.getElementById('searchProduct');
 const filterCategory = document.getElementById('filterCategory');
 const filterStatus = document.getElementById('filterStatus');
@@ -355,26 +439,32 @@ function normalizeText(value) {
 function applyProductFilters() {
     const term = normalizeText(searchInput?.value || '');
     const category = normalizeText(filterCategory?.value || '');
-    const status = normalizeText(filterStatus?.value || '');
+    const status = filterStatus?.value || '';
 
     document.querySelectorAll('#tablaProductos tbody tr').forEach(row => {
         const rowText = normalizeText(row.innerText);
         const rowCategory = normalizeText(row.dataset.categoriaNom || '');
-        const rowStatus = normalizeText(row.dataset.vEstado || '');
+        const rowStatus = row.dataset.vEstado || '';
         const rowStock = parseInt(row.dataset.stock || '0', 10);
 
         const passSearch = !term || rowText.includes(term);
         const passCategory = !category || rowCategory.includes(category);
 
         let passStatus = true;
-        if (status === 'activo' || status === 'inactivo') {
-            passStatus = rowStatus === status;
+        if (status === 'activo') {
+            passStatus = rowStatus === 'activo' && rowStock > 0;
+        } else if (status === 'inactivo') {
+            passStatus = rowStatus === 'inactivo' || rowStock <= 0;
         } else if (status === 'bajo_stock') {
-            passStatus = rowStock <= 10;
+            passStatus = rowStock <= 10 && rowStock > 0;
+        } else if (status === 'stock_cero') {
+            passStatus = rowStock <= 0;
         }
 
         row.style.display = (passSearch && passCategory && passStatus) ? '' : 'none';
     });
+    
+    actualizarEstadisticas();
 }
 
 searchInput?.addEventListener('input', applyProductFilters);
@@ -387,6 +477,7 @@ resetFiltersBtn?.addEventListener('click', function () {
     applyProductFilters();
 });
 
+// Ver detalle del producto
 function viewProduct(btn) {
     const d = btn.closest('tr').dataset;
     document.getElementById('v_img').src = d.img;
@@ -397,13 +488,24 @@ function viewProduct(btn) {
     document.getElementById('v_variante_txt').innerText = d.color + " | Talla: " + d.talla;
     document.getElementById('v_precio_txt').innerText = "$" + parseFloat(d.precio).toFixed(2);
     const badge = document.getElementById('v_estado_badge');
-    badge.innerText = d.vEstado;
-    badge.style.background = (d.vEstado === 'activo') ? '#AB886D' : '#772C24';
+    const stockActual = parseInt(d.stock);
+    
+    if(stockActual <= 0) {
+        badge.innerText = 'INACTIVO';
+        badge.style.background = '#772C24';
+    } else {
+        badge.innerText = d.vEstado;
+        badge.style.background = (d.vEstado === 'activo') ? '#AB886D' : '#772C24';
+    }
+    
     document.getElementById('viewModal').style.display = 'flex';
 }
 
-function closeViewModal() { document.getElementById('viewModal').style.display = 'none'; }
+function closeViewModal() { 
+    document.getElementById('viewModal').style.display = 'none'; 
+}
 
+// Editar producto
 function btnEditProduct(btn) {
     const d = btn.closest('tr').dataset;
     
@@ -425,11 +527,38 @@ function btnEditProduct(btn) {
     document.getElementById('precio_venta').value = d.precio;
     document.getElementById('stock').value = d.stock;
     
-    const isActivo = (d.vEstado === 'activo');
-    document.getElementById('estado_switch').checked = isActivo;
-    actualizarTxtEstado(isActivo);
-    document.getElementById('currentImage').src = d.img;
+    const stockActual = parseInt(d.stock);
+    const estadoActual = d.vEstado;
+    const estadoSwitch = document.getElementById('estado_switch');
+    const estadoHidden = document.getElementById('estado_v');
+    const stockWarning = document.getElementById('stockWarning');
+    const estadoInfoIcon = document.getElementById('estadoInfoIcon');
     
+    // Limpiar marca de cambio manual
+    estadoSwitch.removeAttribute('data-manual-change');
+    
+    if (stockActual <= 0) {
+        // Forzar estado inactivo
+        estadoSwitch.checked = false;
+        estadoHidden.value = 'inactivo';
+        actualizarTxtEstado(false);
+        estadoSwitch.disabled = true;
+        stockWarning.style.display = 'block';
+        estadoInfoIcon.style.display = 'inline-block';
+        estadoInfoIcon.title = 'Producto desactivado automáticamente por falta de stock';
+    } else {
+        estadoSwitch.disabled = false;
+        stockWarning.style.display = 'none';
+        estadoInfoIcon.style.display = 'none';
+        
+        // Si hay stock, permitir editar el estado manualmente
+        const isActivo = (estadoActual === 'activo');
+        estadoSwitch.checked = isActivo;
+        actualizarTxtEstado(isActivo);
+        estadoHidden.value = isActivo ? 'activo' : 'inactivo';
+    }
+    
+    document.getElementById('currentImage').src = d.img;
     document.getElementById('modalTitle').innerText = 'Editar Variante';
     document.getElementById('productModal').style.display = 'flex';
 }
@@ -445,8 +574,13 @@ function actualizarTxtEstado(checked) {
 function closeModal() { 
     document.getElementById('productModal').style.display = 'none';
     document.getElementById('newImagePreview').innerHTML = '';
+    // Resetear el switch
+    const estadoSwitch = document.getElementById('estado_switch');
+    estadoSwitch.disabled = false;
+    estadoSwitch.removeAttribute('data-manual-change');
 }
 
+// Nuevo producto
 document.getElementById('btnNuevoProducto').onclick = function() {
     document.getElementById('productForm').reset();
     document.getElementById('accion').value = 'crear';
@@ -455,9 +589,21 @@ document.getElementById('btnNuevoProducto').onclick = function() {
     document.getElementById('id_proveedor').value = "";
     document.getElementById('modalTitle').innerText = 'Nuevo Producto';
     document.getElementById('currentImage').src = "/ElZapato/Assets/img/zapa.jpeg";
+    
+    // Resetear estado del switch
+    const estadoSwitch = document.getElementById('estado_switch');
+    estadoSwitch.checked = true;
+    estadoSwitch.disabled = false;
+    estadoSwitch.removeAttribute('data-manual-change');
+    actualizarTxtEstado(true);
+    
+    document.getElementById('stockWarning').style.display = 'none';
+    document.getElementById('estadoInfoIcon').style.display = 'none';
+    
     document.getElementById('productModal').style.display = 'flex';
 };
 
+// Preview de imagen
 document.getElementById('imagen_producto').onchange = function(e) {
     const preview = document.getElementById('newImagePreview');
     if (this.files && this.files[0]) {
@@ -467,6 +613,7 @@ document.getElementById('imagen_producto').onchange = function(e) {
     }
 };
 
+// Eliminar variante
 function deleteVariant(idV) {
     Swal.fire({
         title: '¿Eliminar?',
@@ -488,22 +635,61 @@ function deleteVariant(idV) {
     });
 }
 
+// Validar antes de enviar el formulario
+document.getElementById('productForm').addEventListener('submit', function(e) {
+    const stockInput = document.getElementById('stock');
+    const stockValue = parseInt(stockInput.value);
+    const estadoHidden = document.getElementById('estado_v');
+    
+    if (stockValue <= 0) {
+        // Forzar estado inactivo
+        estadoHidden.value = 'inactivo';
+        
+        // Mostrar confirmación
+        Swal.fire({
+            title: 'Stock en cero',
+            text: 'El producto se guardará como INACTIVO debido a que el stock es 0',
+            icon: 'info',
+            confirmButtonColor: '#AB886D',
+            timer: 2000,
+            showConfirmButton: true
+        });
+    }
+});
+
+// Escuchar cambios manuales en el switch
+document.getElementById('estado_switch').addEventListener('change', function() {
+    this.setAttribute('data-manual-change', 'true');
+});
+
+// Inicializar estadísticas
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarEstadisticas();
+    console.log('Inventario inicializado - Control de stock automático activo');
+});
+</script>
+
 <?php if(isset($_GET['res'])): ?>
     <?php if($_GET['res'] == 'duplicado'): ?>
+    <script>
     Swal.fire({ 
         title: '¡Código de Barras Duplicado!', 
         html: 'El SKU <strong><?= htmlspecialchars($_GET['sku'] ?? '') ?></strong> ya está en uso.',
         icon: 'error', 
         confirmButtonColor: '#772C24'
     });
+    </script>
     <?php elseif($_GET['res'] == 'error'): ?>
+    <script>
     Swal.fire({ 
         title: '¡Error!', 
         text: 'Ocurrió un error. Verifica que el SKU no esté duplicado.', 
         icon: 'error', 
         confirmButtonColor: '#772C24' 
     });
+    </script>
     <?php else: ?>
+    <script>
     const msjs = {
         creado: 'Producto registrado correctamente', 
         actualizado: 'Cambios guardados con éxito', 
@@ -515,31 +701,10 @@ function deleteVariant(idV) {
         icon: 'success', 
         confirmButtonColor: '#AB886D' 
     });
+    </script>
     <?php endif; ?>
-    window.history.replaceState({}, document.title, "productos.php");
+    <script>window.history.replaceState({}, document.title, "productos.php");</script>
 <?php endif; ?>
-        // Menú contextual
-        let currentProduct = null;
-        
-        function showMenu(productId) {
-            currentProduct = productId;
-            const menu = document.getElementById('contextMenu');
-            menu.classList.add('active');
-            
-            // Cerrar al hacer clic fuera
-            setTimeout(() => {
-                document.addEventListener('click', function closeMenu(e) {
-                    if (!menu.contains(e.target) && !e.target.closest('.btn-icon')) {
-                        menu.classList.remove('active');
-                        document.removeEventListener('click', closeMenu);
-                    }
-                });
-            }, 100);
-        }
-
-
-
-</script>
 
 <?php 
 require __DIR__ . '/../layouts/admin-shell-end.php'; 

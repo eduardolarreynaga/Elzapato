@@ -22,7 +22,7 @@ class VentasModel {
             
             $idVenta = $conexion->lastInsertId();
             
-            // Insertar detalles de venta
+            // Insertar detalles de venta (SOLO ESTO, el trigger actualizará el stock automáticamente)
             $stmtDetalle = $conexion->prepare("
                 INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario, subtotal) 
                 VALUES (:id_venta, :id_variante, :cantidad, :precio_unitario, :subtotal)
@@ -38,6 +38,8 @@ class VentasModel {
                 $stmtDetalle->bindParam(":subtotal", $subtotal, PDO::PARAM_STR);
                 $stmtDetalle->execute();
                 
+                // ELIMINA ESTA PARTE - EL TRIGGER SE ENCARGA DEL STOCK
+                /*
                 // Actualizar stock
                 $stmtStock = $conexion->prepare("
                     UPDATE producto_variante SET stock = stock - :cantidad WHERE id_variante = :id_variante
@@ -45,6 +47,7 @@ class VentasModel {
                 $stmtStock->bindParam(":cantidad", $producto['cantidad'], PDO::PARAM_INT);
                 $stmtStock->bindParam(":id_variante", $producto['id'], PDO::PARAM_INT);
                 $stmtStock->execute();
+                */
             }
             
             $conexion->commit();
@@ -55,6 +58,8 @@ class VentasModel {
             return ["success" => false, "error" => $e->getMessage()];
         }
     }
+    
+    // El resto de tus métodos permanecen igual...
     
     // Obtener últimas ventas
     public static function obtenerUltimasVentas($limite = 5) {

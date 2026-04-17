@@ -34,9 +34,6 @@ class ProductosController {
     /*=============================================
     PROCESAR FORMULARIO (CREAR O ACTUALIZAR)
     =============================================*/
-    /*=============================================
-    PROCESAR FORMULARIO (CREAR O ACTUALIZAR)
-    =============================================*/
     public function ctrProcesarProducto() {
         if (!isset($_POST["nombre_producto"])) {
             return;

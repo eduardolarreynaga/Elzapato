@@ -201,7 +201,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                                 ? (preg_match('/^t/i', $tallaTexto) ? strtoupper($tallaTexto) : ('T' . strtoupper($tallaTexto)))
                                 : '';
                     ?>
-                    <div class="product-card" 
+                    <div class="product-card <?= ($v_stock <= 0) ? 'agotado' : '' ?>" 
                         data-id="<?= $v_id_v ?>" 
                         data-price="<?= $v_precio ?>" 
                         data-stock="<?= $v_stock ?>" 

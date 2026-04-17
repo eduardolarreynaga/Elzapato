@@ -452,7 +452,7 @@ function formatearNombreTicket(nombreBase, talla, color) {
     return sufijo ? (nombre + ' - ' + sufijo) : nombre;
 }
 
-// ==================== CANTIDADES ====================
+// ==================== CANTIDADES (MODIFICADA) ====================
 function cambiarCantidad(btn, valor) {
     var card = btn.closest('.product-card');
     if (!card) return;
@@ -461,12 +461,24 @@ function cambiarCantidad(btn, valor) {
     var stockMax = parseInt(card.dataset.stock);
     var actual = parseInt(input.value);
     
+    // Verificar si el producto está agotado (stock <= 0)
+    if (stockMax <= 0) {
+        mostrarNotificacion('Producto agotado, no se puede seleccionar.', 'warning');
+        return;
+    }
+    
     if (valor > 0 && actual >= stockMax) {
-        mostrarNotificacion('Stock insuficiente.', 'warning');
+        mostrarNotificacion('Stock insuficiente. Stock disponible: ' + stockMax, 'warning');
         return;
     }
     
     var nuevaCantidad = Math.max(0, actual + valor);
+    
+    // No permitir superar el stock máximo
+    if (nuevaCantidad > stockMax) {
+        nuevaCantidad = stockMax;
+    }
+    
     input.value = nuevaCantidad;
     
     var checkbox = card.querySelector('input[type="checkbox"]');
@@ -481,12 +493,27 @@ function toggleProductoVenta(checkbox, id) {
     if (!card) return;
     
     var cantidad = parseInt(card.querySelector('.qty-input').value);
+    var stockMax = parseInt(card.dataset.stock);
     var nombreBase = card.dataset.nombre;
     var nombre = formatearNombreTicket(nombreBase, card.dataset.talla, card.dataset.color);
 
+    // Verificar si el producto está agotado
+    if (stockMax <= 0) {
+        mostrarNotificacion('Producto agotado, no se puede agregar al carrito.', 'warning');
+        checkbox.checked = false;
+        return;
+    }
+
     if (checkbox.checked) {
         if (cantidad <= 0) {
-            mostrarNotificacion('Indique una cantidad.', 'warning');
+            mostrarNotificacion('Indique una cantidad válida.', 'warning');
+            checkbox.checked = false;
+            return;
+        }
+        
+        // Verificar que no exceda el stock disponible
+        if (cantidad > stockMax) {
+            mostrarNotificacion('La cantidad excede el stock disponible (' + stockMax + ')', 'warning');
             checkbox.checked = false;
             return;
         }
@@ -517,13 +544,27 @@ function actualizarItemCarrito(id, nuevaCant) {
     }
     
     if (index !== -1) {
+        var card = document.querySelector('.product-card[data-id="' + id + '"]');
+        var stockMax = card ? parseInt(card.dataset.stock) : 0;
+        
+        // Validar que no exceda el stock
+        if (nuevaCant > stockMax) {
+            mostrarNotificacion('No puedes agregar más de ' + stockMax + ' unidades (stock disponible)', 'warning');
+            nuevaCant = stockMax;
+            if (card) {
+                var input = card.querySelector('.qty-input');
+                if (input) input.value = nuevaCant;
+            }
+        }
+        
         if (nuevaCant <= 0) {
             carrito.splice(index, 1);
             descuentosAplicados = descuentosAplicados.filter(function(d) { return d.id !== id; });
-            var card = document.querySelector('.product-card[data-id="' + id + '"]');
             if (card) {
                 var checkbox = card.querySelector('input[type="checkbox"]');
                 if (checkbox) checkbox.checked = false;
+                var input = card.querySelector('.qty-input');
+                if (input) input.value = 0;
             }
         } else {
             carrito[index].cantidad = nuevaCant;
@@ -741,6 +782,32 @@ async function confirmarPago() {
         return;
     }
     
+    // VERIFICAR STOCK ANTES DE PROCESAR LA VENTA
+    mostrarNotificacion('Verificando stock disponible...', 'info');
+    
+    // Verificar cada producto en el carrito contra el stock actual
+    for (var i = 0; i < carrito.length; i++) {
+        var productoCarrito = carrito[i];
+        var card = document.querySelector('.product-card[data-id="' + productoCarrito.id + '"]');
+        
+        if (!card) {
+            mostrarNotificacion('Error: Producto no encontrado en la vista', 'warning');
+            return;
+        }
+        
+        var stockActual = parseInt(card.dataset.stock);
+        
+        if (stockActual <= 0) {
+            mostrarNotificacion('El producto ' + productoCarrito.nombre + ' está agotado', 'warning');
+            return;
+        }
+        
+        if (productoCarrito.cantidad > stockActual) {
+            mostrarNotificacion('Stock insuficiente para ' + productoCarrito.nombre + '. Disponible: ' + stockActual, 'warning');
+            return;
+        }
+    }
+    
     var cambio = dineroRecibido - total;
     
     mostrarNotificacion('Procesando venta...', 'info');
@@ -785,6 +852,9 @@ async function confirmarPago() {
                 descuentos: descuentosAplicados
             }));
             
+            // Actualizar los stocks en las tarjetas de productos
+            actualizarStocksLocales();
+            
             carrito = [];
             descuentosAplicados = [];
             actualizarTablaResumen();
@@ -810,6 +880,13 @@ async function confirmarPago() {
         console.error('Error al guardar venta:', error);
         mostrarNotificacion('Error al procesar la venta', 'warning');
     }
+}
+
+// ==================== ACTUALIZAR STOCKS LOCALMENTE (NUEVA FUNCIÓN) ====================
+function actualizarStocksLocales() {
+    // Recargar la página para reflejar los cambios de stock
+    // Esto asegura que los productos agotados se marquen correctamente
+    location.reload();
 }
 
 // ==================== FILTROS ====================

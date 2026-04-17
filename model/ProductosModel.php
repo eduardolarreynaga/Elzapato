@@ -104,14 +104,16 @@ class ProductosModel {
         }
     }
 
+
     /*=============================================
-    REGISTRAR VARIANTE COMPLETA
-    =============================================*/
-    /*=============================================
-    REGISTRAR VARIANTE COMPLETA (CON MANEJO DE ERRORES)
+    REGISTRAR VARIANTE COMPLETA (CON VERIFICACIÓN DE STOCK)
     =============================================*/
     static public function mdlRegistrarVariante($datos) {
         try {
+            // Verificar si el stock es 0, el estado debe ser inactivo
+            $stock = (int)$datos["stock"];
+            $estado = ($stock <= 0) ? 'inactivo' : $datos["estado"];
+            
             $stmt = Conexion::conectar()->prepare("INSERT INTO producto_variante(id_producto, talla, color, codigo_barras, precio_venta, stock, estado) 
                                                 VALUES (:id_producto, :talla, :color, :codigo_barras, :precio, :stock, :estado)");
             
@@ -121,7 +123,7 @@ class ProductosModel {
             $stmt->bindParam(":codigo_barras", $datos["codigo_barras"], PDO::PARAM_STR);
             $stmt->bindParam(":precio", $datos["precio"], PDO::PARAM_STR);
             $stmt->bindParam(":stock", $datos["stock"], PDO::PARAM_INT);
-            $stmt->bindParam(":estado", $datos["estado"], PDO::PARAM_STR);
+            $stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 return Conexion::conectar()->lastInsertId();
@@ -129,7 +131,6 @@ class ProductosModel {
                 return "error";
             }
         } catch (PDOException $e) {
-            // Verificar si es error de duplicado (código 1062)
             if ($e->errorInfo[1] == 1062) {
                 return "duplicado";
             }
@@ -160,9 +161,15 @@ class ProductosModel {
     }
 
     /*=============================================
-    ACTUALIZAR VARIANTE COMPLETA
+    ACTUALIZAR VARIANTE COMPLETA (CON VERIFICACIÓN DE STOCK)
     =============================================*/
     static public function mdlActualizarVarianteCompleta($datos) {
+        // Verificar si el stock es 0 o menor, cambiar estado automáticamente
+        $stock = (int)$datos["stock"];
+        if ($stock <= 0) {
+            $datos["estado"] = 'inactivo';
+        }
+        
         $stmt = Conexion::conectar()->prepare("UPDATE producto_variante SET 
                     talla = :talla, 
                     color = :color, 

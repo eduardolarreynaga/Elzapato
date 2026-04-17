@@ -789,6 +789,70 @@ input:disabled + .slider {
 }
 
 /* =========================================
+   EFECTO PRODUCTO AGOTADO
+   ========================================= */
+
+/* Producto agotado - Efecto de línea diagonal y sombreado */
+.product-card.agotado {
+    position: relative;
+    opacity: 0.85;
+    filter: grayscale(0.3);
+    pointer-events: none;
+}
+
+.product-card.agotado::before {
+    content: "AGOTADO";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 1rem;
+    font-weight: 900;
+    color: rgba(119, 44, 36, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    z-index: 20;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px 15px;
+    border-radius: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--nocolor);
+    pointer-events: none;
+}
+
+.product-card.agotado::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        transparent 45%, 
+        rgba(119, 44, 36, 0.15) 45%, 
+        rgba(119, 44, 36, 0.15) 55%, 
+        transparent 55%);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.product-card.agotado .product-img {
+    filter: grayscale(0.5);
+}
+
+.product-card.agotado .switch-top,
+.product-card.agotado .footer-controls {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.product-card.agotado .stock-tag {
+    background: #555;
+    opacity: 0.8;
+}
+
+/* =========================================
    MODALES
    ========================================= */
 .modal { 
