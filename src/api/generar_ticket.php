@@ -42,12 +42,66 @@ try {
     $stmtDetalle->execute([$id_venta]);
     $productos = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
 
-    // 4. Preparar el HTML del ticket - Diseño estándar para ticket térmico
+    // 4. Preparar el HTML del ticket con logo optimizado
     $logoPath = __DIR__ . '/../../Assets/img/logo.png';
     $logoBase64 = '';
+    
     if (file_exists($logoPath)) {
-        $logoData = base64_encode(file_get_contents($logoPath));
-        $logoBase64 = 'data:image/png;base64,' . $logoData;
+        // Optimizar la imagen del logo
+        $logoData = file_get_contents($logoPath);
+        
+        // Intentar optimizar la imagen si es PNG
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $logoPath);
+        finfo_close($finfo);
+        
+        if ($mimeType == 'image/png') {
+            // Redimensionar y optimizar PNG
+            $src = imagecreatefrompng($logoPath);
+            if ($src) {
+                $width = imagesx($src);
+                $height = imagesy($src);
+                $newWidth = min($width, 150); // Máximo 150px de ancho
+                $newHeight = ($newWidth / $width) * $height;
+                
+                $dst = imagecreatetruecolor($newWidth, $newHeight);
+                
+                // Preservar transparencia
+                imagealphablending($dst, false);
+                imagesavealpha($dst, true);
+                $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+                imagefilledrectangle($dst, 0, 0, $newWidth, $newHeight, $transparent);
+                
+                imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                
+                // Guardar imagen optimizada en buffer
+                ob_start();
+                imagepng($dst, null, 9); // Compresión máxima
+                $logoData = ob_get_clean();
+                imagedestroy($src);
+                imagedestroy($dst);
+            }
+        } elseif ($mimeType == 'image/jpeg') {
+            // Optimizar JPEG
+            $src = imagecreatefromjpeg($logoPath);
+            if ($src) {
+                $width = imagesx($src);
+                $height = imagesy($src);
+                $newWidth = min($width, 150);
+                $newHeight = ($newWidth / $width) * $height;
+                
+                $dst = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                
+                ob_start();
+                imagejpeg($dst, null, 85); // Calidad 85%
+                $logoData = ob_get_clean();
+                imagedestroy($src);
+                imagedestroy($dst);
+            }
+        }
+        
+        $logoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoData);
     }
 
     $html = '
@@ -86,9 +140,17 @@ try {
                 border-bottom: 1px dashed #000;
             }
             
+            .logo-container {
+                text-align: center;
+                margin-bottom: 5px;
+            }
+            
             .logo {
-                max-width: 50px;
-                margin-bottom: 4px;
+                max-width: 60px;
+                max-height: 60px;
+                width: auto;
+                height: auto;
+                display: inline-block;
             }
             
             .store-name {
@@ -220,10 +282,16 @@ try {
     </head>
     <body>
         <div class="ticket-container">
-            <!-- Header -->
-            <div class="header">
-                ' . ($logoBase64 ? '<img src="' . $logoBase64 . '" class="logo">' : '') . '
-                <div class="store-name">EL ZAPATO</div>
+            <!-- Header con Logo Optimizado -->
+            <div class="header">';
+    
+    if ($logoBase64) {
+        $html .= '<div class="logo-container">
+                    <img src="' . $logoBase64 . '" class="logo" alt="Logo El Zapato">
+                  </div>';
+    }
+    
+    $html .= '  <div class="store-name">EL ZAPATO</div>
                 <div class="store-info">Ilobasco, Cabañas, El Salvador</div>
                 <div class="store-info">Tel: 2222-2222</div>
             </div>
@@ -272,16 +340,16 @@ try {
         $variantInfo = '';
         if ($item['talla'] || $item['color']) {
             $variantInfo = '<div class="product-variant">';
-            if ($item['talla']) $variantInfo .= 'T:' . $item['talla'];
-            if ($item['talla'] && $item['color']) $variantInfo .= ' ';
-            if ($item['color']) $variantInfo .= $item['color'];
+            if ($item['talla']) $variantInfo .= 'Talla: ' . $item['talla'];
+            if ($item['talla'] && $item['color']) $variantInfo .= ' | ';
+            if ($item['color']) $variantInfo .= 'Color: ' . $item['color'];
             $variantInfo .= '</div>';
         }
         
         $html .= '
                 <tr>
                     <td>
-                        <div class="product-name">' . htmlspecialchars(substr($item['nombre_producto'], 0, 22)) . '</div>
+                        <div class="product-name">' . htmlspecialchars(substr($item['nombre_producto'], 0, 20)) . '</div>
                         ' . $variantInfo . '
                     </td>
                     <td class="text-right">' . $cantidad . '</td>
@@ -330,7 +398,7 @@ try {
     // Configurar mPDF para ticket térmico estándar
     $mpdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
-        'format' => [72, 150], // Ancho 72mm (estándar tickets), altura flexible
+        'format' => [72, 150],
         'margin_left' => 4,
         'margin_right' => 4,
         'margin_top' => 4,
