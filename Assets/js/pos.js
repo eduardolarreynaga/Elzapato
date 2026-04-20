@@ -96,11 +96,21 @@ async function cargarUltimasVentas() {
     }
 }
 
+// FUNCIÓN MODIFICADA: Imprimir ticket de venta
 function imprimirTicketVenta(idVenta, event) {
     if (event) {
         event.stopPropagation();
     }
-    mostrarNotificacion('Imprimiendo ticket de la venta #' + idVenta, 'info');
+    
+    // Cerrar el dropdown de notificaciones
+    var dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('active');
+    }
+    
+    // Abrir el ticket en una nueva pestaña
+    window.open('/ElZapato/src/api/generar_ticket.php?id=' + idVenta, '_blank');
+    mostrarNotificacion('Generando ticket de la venta #' + idVenta, 'info');
 }
 
 async function verDetalleVenta(idVenta, event) {
@@ -330,6 +340,7 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
     
     var botonesHTML = '<div style="display: flex; gap: 10px; margin-top: 20px;">';
     botonesHTML += '<button class="btn-action btn-discount" onclick="cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-check"></i> Cerrar</button>';
+    botonesHTML += '<button class="btn-action btn-sell" onclick="imprimirTicketVenta(' + idVenta + ', event); cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-print"></i> Imprimir Ticket</button>';
     botonesHTML += '</div>';
     
     var detallesHTML = infoBoxHTML;
@@ -827,7 +838,8 @@ async function confirmarPago() {
         total: total,
         metodo_pago: parseInt(metodoPago),
         cambio: cambio,
-        dinero_recibido: dineroRecibido
+        dinero_recibido: dineroRecibido,
+        descuentos: descuentosAplicados
     };
     
     try {
