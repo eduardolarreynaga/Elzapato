@@ -116,4 +116,74 @@ class ProductoVarianteModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    static public function mdlTopClientes() {
+        try {
+            $con = Conexion::conectar();
+
+            $stmt = $con->prepare("
+                SELECT 
+                    c.nombre AS cliente,
+                    COUNT(v.id_venta) AS tickets,
+                    SUM(v.total_venta) AS total_comprado,
+                    MAX(v.fecha_venta) AS ultima_compra
+                FROM ventas v
+                INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+                GROUP BY c.id_cliente
+                ORDER BY total_comprado DESC
+                LIMIT 10
+            ");
+
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            error_log("Error en mdlTopClientes: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    static public function mdlResumenTickets() {
+        try {
+            $con = Conexion::conectar();
+
+            $stmt = $con->prepare("
+                SELECT 
+                    'Hoy' AS periodo,
+                    COUNT(*) AS tickets,
+                    COUNT(*) AS promedio_dia,
+                    IFNULL(AVG(total_venta),0) AS ticket_promedio
+                FROM ventas
+                WHERE DATE(fecha_venta) = CURDATE()
+
+                UNION ALL
+
+                SELECT 
+                    'Últimos 7 días',
+                    COUNT(*),
+                    ROUND(COUNT(*)/7),
+                    IFNULL(AVG(total_venta),0)
+                FROM ventas
+                WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+
+                UNION ALL
+
+                SELECT 
+                    'Mes actual',
+                    COUNT(*),
+                    ROUND(COUNT(*) / DAY(CURDATE())),
+                    IFNULL(AVG(total_venta),0)
+                FROM ventas
+                WHERE MONTH(fecha_venta) = MONTH(CURDATE())
+                AND YEAR(fecha_venta) = YEAR(CURDATE())
+            ");
+
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
 }

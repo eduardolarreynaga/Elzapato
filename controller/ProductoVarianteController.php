@@ -54,4 +54,12 @@ class ProductoVarianteController {
         $respuesta = ProductoVarianteModel::mdlMostrarMovimientos($tabla);
         return $respuesta;
     }
+
+    static public function ctrTopClientes() {
+        return ProductoVarianteModel::mdlTopClientes();
+    }
+
+    static public function ctrResumenTickets() {
+        return ProductoVarianteModel::mdlResumenTickets();
+    }
 }
