@@ -58,7 +58,7 @@ class VentasModel {
             return ["success" => false, "error" => $e->getMessage()];
         }
     }
-    
+     
     // El resto de tus métodos permanecen igual...
     
     // Obtener últimas ventas
