@@ -367,9 +367,10 @@ body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #222; }
 h1 { font-size: 18pt; margin: 0 0 6px 0; color: #AB886D; }
 h2 { font-size: 12pt; margin: 18px 0 8px; color: #772C24; border-bottom: 1px solid #D6C0B3; padding-bottom: 4px; }
 .meta { font-size: 9pt; color: #666; margin-bottom: 10px; }
-.kpi { display: inline-block; width: 32%; background: #E4E0E1; padding: 8px; border-radius: 6px; margin-right: 1%; box-sizing: border-box; }
-.kpi-title { font-size: 8pt; color: #666; text-transform: uppercase; }
-.kpi-value { font-size: 13pt; font-weight: bold; color: #AB886D; margin-top: 4px; }
+.kpi-table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 8px; }
+.kpi-table td { width: 33.33%; background: #E4E0E1; border: 1px solid #D6C0B3; padding: 8px; text-align: center; }
+.kpi-title { display: block; font-size: 8pt; color: #666; text-transform: uppercase; }
+.kpi-value { display: block; font-size: 13pt; font-weight: bold; color: #AB886D; margin-top: 4px; }
 .table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .table th { background: #AB886D; color: #fff; padding: 7px; border: 1px solid #AB886D; font-size: 9pt; }
 .table td { padding: 6px; border: 1px solid #D6C0B3; font-size: 9pt; }
@@ -384,14 +385,16 @@ $html = '<h1>Reporte de Estadísticas - ' . escapeHtml($nombreSistema) . '</h1>'
 $html .= '<div class="meta">Generado: ' . date('d/m/Y H:i') . ' | Periodo seleccionado: ' . escapeHtml($etiquetaPeriodo) . ' (' . $fechaInicio->format('d/m/Y') . ' - ' . $fechaFin->format('d/m/Y') . ')</div>';
 
 if ($imprimirVentasFecha) {
-    $html .= '<h2>Cantidad de ventas por fechas</h2>';
+    $html .= '<h2>Cantidad de venta</h2>';
 
     $cantidadVentas = (int)($resumenVentas['cantidad_ventas'] ?? 0);
     $totalVendido = (float)($resumenVentas['total_vendido'] ?? 0);
 
-    $html .= '<div class="kpi"><div class="kpi-title">Tickets</div><div class="kpi-value">' . $cantidadVentas . '</div></div>';
-    $html .= '<div class="kpi"><div class="kpi-title">Total vendido</div><div class="kpi-value">$' . number_format($totalVendido, 2) . '</div></div>';
-    $html .= '<div class="kpi"><div class="kpi-title">Periodo</div><div class="kpi-value">' . escapeHtml($etiquetaPeriodo) . '</div></div>';
+    $html .= '<table class="kpi-table"><tbody><tr>';
+    $html .= '<td><span class="kpi-title">Tickets: </span><span class="kpi-value">' . $cantidadVentas . '</span></td>';
+    $html .= '<td><span class="kpi-title">Total vendido: </span><span class="kpi-value">$' . number_format($totalVendido, 2) . '</span></td>';
+    $html .= '<td><span class="kpi-title">Periodo: </span><span class="kpi-value">' . escapeHtml($etiquetaPeriodo) . '</span></td>';
+    $html .= '</tr></tbody></table>';
 
     if (empty($ventasPorFecha)) {
         $html .= '<p>No hay ventas registradas en el rango seleccionado.</p>';

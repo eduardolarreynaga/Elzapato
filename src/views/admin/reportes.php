@@ -152,7 +152,7 @@ require __DIR__ . '/../layouts/admin-header.php';
         <span>Tickets Generados <strong><?= (int)($stats['total_tickets'] ?? 0) ?></strong></span>
     </div>
     <div class="stats-list-item">
-        <span>Flujo Neto <strong>$<?= number_format((float)($stats['flujo_neto'] ?? 0), 2) ?></strong></span>
+        <span>Ventas Netas <strong>$<?= number_format((float)($stats['ventas_netas'] ?? $stats['flujo_neto'] ?? 0), 2) ?></strong></span>
     </div>
     <div class="stats-list-item">
         <span>Alertas de Stock Bajo <strong><?= (int)($stats['total_alertas'] ?? 0) ?></strong></span>
@@ -379,10 +379,10 @@ require __DIR__ . '/../layouts/admin-header.php';
 <tbody>
 <?php if(!empty($dataClientes)): foreach($dataClientes as $c): ?>
 <tr>
-<td><?= $c['cliente'] ?></td>
-<td><?= $c['tickets'] ?></td>
-<td>$<?= number_format($c['total_comprado'],2) ?></td>
-<td><?= date("d/m/Y", strtotime($c['ultima_compra'])) ?></td>
+<td><?= htmlspecialchars((string)($c['cliente'] ?? 'Sin nombre')) ?></td>
+<td><?= (int)($c['tickets'] ?? 0) ?></td>
+<td>$<?= number_format((float)($c['total_comprado'] ?? 0), 2) ?></td>
+<td><?= !empty($c['ultima_compra']) ? date("d/m/Y", strtotime((string)$c['ultima_compra'])) : '—' ?></td>
 </tr>
 <?php endforeach; endif; ?>
 </tbody>

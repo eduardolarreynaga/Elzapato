@@ -85,21 +85,17 @@ class ProductoVarianteModel {
         $stmtClientes->execute();
         $clientes = $stmtClientes->fetchColumn();
 
-        // 4. Ingresos (Ventas)
-        $stmtIngresos = $con->prepare("SELECT IFNULL(SUM(total_venta), 0) FROM ventas");
-        $stmtIngresos->execute();
-        $ingresos = $stmtIngresos->fetchColumn();
-
-        // 5. Egresos (Compras)
-        $stmtEgresos = $con->prepare("SELECT IFNULL(SUM(cantidad * precio_unitario), 0) FROM detalle_compra");
-        $stmtEgresos->execute();
-        $egresos = $stmtEgresos->fetchColumn();
+        // 4. Ventas netas (solo ventas no anuladas)
+        $stmtVentasNetas = $con->prepare("SELECT IFNULL(SUM(total_venta), 0) FROM ventas WHERE COALESCE(estado, 'completada') <> 'anulada'");
+        $stmtVentasNetas->execute();
+        $ventasNetas = $stmtVentasNetas->fetchColumn();
 
         return [
             "total_tickets" => $tickets ?: 0,
             "total_alertas" => $alertas ?: 0,
             "total_clientes" => $clientes ?: 0,
-            "flujo_neto" => ($ingresos - $egresos)
+            "ventas_netas" => (float)($ventasNetas ?: 0),
+            "flujo_neto" => (float)($ventasNetas ?: 0)
         ];
     }
 

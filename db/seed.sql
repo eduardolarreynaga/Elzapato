@@ -35,6 +35,14 @@ INSERT INTO proveedores (nombre_empresa, contacto_nombre, telefono, email) VALUE
 ('Urban Footwear Group', 'Sofía Herrera', '77774444', 'hola@urbanfootwear.com'),
 ('Premium Leather Supply', 'Jorge Meléndez', '77775555', 'comercial@premiumleather.com');
 
+-- PROVEEDORES ADICIONALES (ANTIGÜEDAD HISTÓRICA)
+INSERT INTO proveedores (nombre_empresa, contacto_nombre, telefono, email) VALUES
+('Mayorista Andina Shoes', 'Raúl Torres', '77776661', 'ventas@andinashoes.com'),
+('Global Sneakers Hub', 'Mónica Fuentes', '77776662', 'compras@globalsneakers.com'),
+('Leather Craft Imports', 'Héctor Salinas', '77776663', 'contacto@leathercraft.com'),
+('Pasarela Calzado Pro', 'Valeria Méndez', '77776664', 'pro@pasarelacalzado.com'),
+('StepOne Distribuciones', 'Fernando Lima', '77776665', 'ventas@stepone.com');
+
 -- METODOS DE PAGO
 INSERT INTO metodos_pago (nombre_metodo) VALUES
 ('Efectivo'),
@@ -60,6 +68,14 @@ INSERT INTO clientes (nombre, telefono, email) VALUES
 ('Paola Rodríguez', '70007777', 'paola.rodriguez@gmail.com'),
 ('Kevin Duarte', '70008888', 'kevin.duarte@gmail.com'),
 ('Lucía Portillo', '70009999', 'lucia.portillo@gmail.com');
+
+-- CLIENTES ADICIONALES (ANTIGÜEDAD HISTÓRICA)
+INSERT INTO clientes (nombre, telefono, email) VALUES
+('Erick Hernández', '70110001', 'erick.hernandez@gmail.com'),
+('Sonia Castillo', '70110002', 'sonia.castillo@gmail.com'),
+('Mauricio Beltrán', '70110003', 'mauricio.beltran@gmail.com'),
+('Patricia Orellana', '70110004', 'patricia.orellana@gmail.com'),
+('Gabriel Chávez', '70110005', 'gabriel.chavez@gmail.com');
 
 -- USUARIOS (solo administrador)
 INSERT INTO usuarios (nombre_usuario, password_hash, rol, id_caja) VALUES
@@ -138,6 +154,14 @@ INSERT INTO ventas (id_usuario, id_cliente, id_metodo_pago, fecha_venta, total_v
 (1, 8, 3, '2026-04-15 11:30:00', 77.30, 'completada'),
 (1, 6, 1, '2026-04-16 14:10:00', 0.00, 'anulada');
 
+-- VENTAS ADICIONALES (MÁS DE 1 MES DE ANTIGÜEDAD)
+INSERT INTO ventas (id_usuario, id_cliente, id_metodo_pago, fecha_venta, total_venta, estado) VALUES
+(1, 11, 1, '2026-02-05 10:20:00', 149.00, 'completada'),
+(1, 12, 2, '2026-02-09 15:45:00', 184.00, 'completada'),
+(1, 13, 3, '2026-02-14 12:10:00', 98.80, 'completada'),
+(1, 14, 1, '2026-02-21 17:05:00', 160.00, 'completada'),
+(1, 15, 2, '2026-02-27 11:55:00', 72.00, 'completada');
+
 -- DETALLE VENTA
 INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario, subtotal) VALUES
 (1, 1, 2, 89.99, 179.98),
@@ -147,4 +171,11 @@ INSERT INTO detalle_venta (id_venta, id_variante, cantidad, precio_unitario, sub
 (5, 13, 1, 84.99, 84.99),
 (5, 14, 1, 84.99, 84.99),
 (6, 15, 2, 73.40, 146.80),
-(7, 23, 1, 77.30, 77.30);
+(7, 23, 1, 77.30, 77.30),
+(9, 11, 1, 68.90, 68.90),
+(9, 3, 1, 74.50, 74.50),
+(10, 17, 2, 92.00, 184.00),
+(11, 11, 1, 68.90, 68.90),
+(11, 22, 1, 49.90, 49.90),
+(12, 5, 2, 80.00, 160.00),
+(13, 9, 1, 72.00, 72.00);

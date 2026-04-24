@@ -65,7 +65,7 @@ if ($showGlobalLowStockAlert && file_exists($conexionPath)) {
     <link rel="stylesheet" href="/ElZapato/Assets/css/layout/dashboard.css">
     <link rel="stylesheet" href="/ElZapato/Assets/css/layout/sidebar.css">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/cards.css">
-    <link rel="stylesheet" href="/ElZapato/Assets/css/components/buttons.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/components/buttons.css?v=20260424">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/forms.css">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/tables.css">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/footer.css">

@@ -151,20 +151,24 @@ if ($tab === 'panel4') {
     $detalle = $reporteCaja['detalle'] ?? [];
     $filtros = $reporteCaja['filtros'] ?? ['fecha_inicio' => $fechaInicio, 'fecha_fin' => $fechaFin, 'id_caja' => $idCaja];
 
-    $htmlPanel .= '<div class="filtro-box">'
-        . '<span><strong>Desde:</strong> ' . esc($filtros['fecha_inicio'] ?? '') . '</span>'
-        . '<span><strong>Hasta:</strong> ' . esc($filtros['fecha_fin'] ?? '') . '</span>'
-        . '<span><strong>Caja:</strong> ' . (((int)($filtros['id_caja'] ?? 0) === 0) ? 'Todas' : ('#' . (int)$filtros['id_caja'])) . '</span>'
-        . '</div>';
+    $htmlPanel .= '<table class="caja-meta"><tbody><tr>'
+        . '<td><strong>Desde:</strong> ' . esc($filtros['fecha_inicio'] ?? '') . '</td>'
+        . '<td><strong>Hasta:</strong> ' . esc($filtros['fecha_fin'] ?? '') . '</td>'
+        . '<td><strong>Caja:</strong> ' . (((int)($filtros['id_caja'] ?? 0) === 0) ? 'Todas' : ('#' . (int)$filtros['id_caja'])) . '</td>'
+        . '</tr></tbody></table>';
 
-    $htmlPanel .= '<div class="mini-stats">'
-        . '<div class="mini-item"><span>Ventas</span><strong>' . (int)($resumen['total_ventas'] ?? 0) . '</strong></div>'
-        . '<div class="mini-item"><span>Anuladas</span><strong>' . (int)($resumen['total_anuladas'] ?? 0) . '</strong></div>'
-        . '<div class="mini-item"><span>Ingresos</span><strong>' . money($resumen['total_ingresos'] ?? 0) . '</strong></div>'
-        . '<div class="mini-item"><span>Efectivo</span><strong>' . money($resumen['total_efectivo'] ?? 0) . '</strong></div>'
-        . '<div class="mini-item"><span>Tarjeta</span><strong>' . money($resumen['total_tarjeta'] ?? 0) . '</strong></div>'
-        . '<div class="mini-item"><span>Transferencia</span><strong>' . money($resumen['total_transferencia'] ?? 0) . '</strong></div>'
-        . '</div>';
+    $htmlPanel .= '<table class="mini-stats-table">'
+        . '<thead><tr>'
+        . '<th>Ventas</th><th>Anuladas</th><th>Ingresos</th><th>Efectivo</th><th>Tarjeta</th><th>Transferencia</th>'
+        . '</tr></thead>'
+        . '<tbody><tr>'
+        . '<td>' . (int)($resumen['total_ventas'] ?? 0) . '</td>'
+        . '<td>' . (int)($resumen['total_anuladas'] ?? 0) . '</td>'
+        . '<td>' . money($resumen['total_ingresos'] ?? 0) . '</td>'
+        . '<td>' . money($resumen['total_efectivo'] ?? 0) . '</td>'
+        . '<td>' . money($resumen['total_tarjeta'] ?? 0) . '</td>'
+        . '<td>' . money($resumen['total_transferencia'] ?? 0) . '</td>'
+        . '</tr></tbody></table>';
 
     $htmlPanel .= '<h4>Resumen por caja</h4>';
     $htmlPanel .= '<table><thead><tr><th>Caja</th><th>Ventas</th><th>Anuladas</th><th>Ingresos</th><th>Primera Venta</th><th>Última Venta</th></tr></thead><tbody>';
@@ -288,12 +292,11 @@ tbody td { font-size: 10px; padding: 7px; border: 1px solid #efe7e2; }
 .right { text-align: right; }
 .empty { text-align: center; color: #8f7d70; }
 .helper { color: #7b6658; font-size: 10px; margin: 4px 0; }
-.filtro-box { border: 1px solid #e7ddd4; background: #fbf8f6; padding: 8px; margin: 6px 0 10px; }
-.filtro-box span { margin-right: 12px; font-size: 10px; }
-.mini-stats { width: 100%; margin-bottom: 10px; }
-.mini-item { display: inline-block; width: 31%; margin: 0 1% 8px 0; border: 1px solid #e8dfd8; padding: 6px; }
-.mini-item span { display: block; font-size: 8px; text-transform: uppercase; color: #7b6658; }
-.mini-item strong { display: block; margin-top: 2px; color: #4D3B2E; font-size: 12px; }
+.caja-meta { width: 100%; border-collapse: collapse; margin: 6px 0 8px; }
+.caja-meta td { width: 33.33%; border: 1px solid #e7ddd4; background: #fbf8f6; padding: 7px 8px; font-size: 10px; text-align: center; }
+.mini-stats-table { width: 100%; border-collapse: collapse; margin: 0 0 10px; }
+.mini-stats-table thead th { background: #f3ece7; color: #6f5d50; font-size: 9px; text-transform: uppercase; padding: 6px; border: 1px solid #e8dfd8; text-align: center; }
+.mini-stats-table tbody td { border: 1px solid #e8dfd8; padding: 7px 6px; font-size: 11px; font-weight: bold; color: #4D3B2E; text-align: center; }
 h4 { margin: 12px 0 6px; color: #4D3B2E; }
 .badge { border-radius: 10px; padding: 2px 6px; font-size: 9px; font-weight: bold; }
 .badge.bajo { background: #fff3e7; color: #bc6e32; }
