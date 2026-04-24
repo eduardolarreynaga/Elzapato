@@ -1,0 +1,181 @@
+:root {
+    --primary-light: #E4E0E1;   /* Fondo muy claro */
+    --primary-soft: #D6C0B3;    /* Tono suave intermedio */
+    --primary-dark: #AB886D;    /* Tono oscuro para detalles */
+    --text-dark: #000000;       /* Negro para texto */
+    --nocolor: #772c24;         /* Rojo acento / error */
+    --white: #ffffff;
+    --font-family: "Roboto", sans-serif;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.config-container {
+    font-family: var(--font-family);
+    padding: 2rem;
+    background-color: var(--primary-light);
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.config-header-wrapper {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.config-sub-header p {
+    color: var(--primary-dark);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Tarjeta Principal */
+.config-grid-simple {
+    width: 100%;
+    max-width: 500px;
+    perspective: 1000px;
+}
+
+.main-card {
+    background: var(--white);
+    padding: 3rem 2rem;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: var(--transition);
+}
+
+.main-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px rgba(171, 136, 109, 0.15);
+}
+
+/* Avatar / Logo Editor */
+.logo-edit-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.logo-preview-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 40px; /* Estilo squircle */
+    overflow: hidden;
+    background: var(--primary-light);
+    border: 4px solid var(--primary-soft);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.logo-preview-container:hover {
+    border-color: var(--primary-dark);
+    transform: scale(1.02);
+}
+
+.logo-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logo-preview-container .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: var(--transition);
+    backdrop-filter: blur(2px);
+}
+
+.logo-preview-container:hover .overlay {
+    opacity: 1;
+}
+
+/* Inputs y Formulario */
+.form-group {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--primary-light);
+    border-radius: 12px;
+    font-size: 1rem;
+    color: var(--text-dark);
+    background: var(--primary-light);
+    transition: var(--transition);
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-soft);
+    background: var(--white);
+    box-shadow: 0 0 0 4px rgba(214, 192, 179, 0.2);
+}
+
+/* Botón Guardar */
+.btn-save {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: var(--transition);
+    margin-top: 1rem;
+}
+
+.btn-save:hover {
+    background: var(--text-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-save i {
+    font-size: 1.1rem;
+}
+
+#file-info {
+    margin-top: 0.8rem;
+    font-size: 0.8rem;
+    color: var(--primary-dark);
+    font-style: italic;
+}
+
+/* Animación de entrada */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main-card {
+    animation: slideUp 0.6s ease-out;
+}

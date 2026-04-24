@@ -1,0 +1,185 @@
+/* perfil.css - Versión Compacta y Estilizada */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8f5f2;
+    color: #1f1f1f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.perfil-container {
+    width: 100%;
+    max-width: 550px; /* Tarjeta más pequeña y estética */
+    margin: 0 auto;
+}
+
+.perfil-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(214, 192, 179, 0.5);
+    padding: 15px; /* Espacio interno para que el header no toque los bordes */
+}
+
+.perfil-header {
+    background: linear-gradient(135deg, #AB886D 0%, #8B6950 100%);
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+    border-radius: 18px; /* Bordes redondeados propios para que "flote" */
+    margin-bottom: 20px;
+}
+
+.perfil-avatar {
+    width: 80px; /* Avatar un poco más pequeño */
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.perfil-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.role-badge {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.15);
+    padding: 4px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+.perfil-body {
+    padding: 10px 15px;
+}
+
+.seccion-info {
+    margin-bottom: 20px;
+}
+
+.seccion-info h3 {
+    color: #AB886D;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #E4E0E1;
+}
+
+.info-grupo {
+    display: flex;
+    justify-content: space-between; /* Etiqueta a la izquierda, valor a la derecha */
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: #faf7f4;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+.info-etiqueta {
+    font-weight: 600;
+    color: #7b6a60;
+}
+
+.info-valor {
+    color: #1f1f1f;
+    font-weight: 500;
+    text-align: right;
+}
+
+.sistema-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas compactas */
+    gap: 10px;
+}
+
+.sistema-item {
+    background: #fdfcfb;
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #f0ece9;
+}
+
+.sistema-item i {
+    font-size: 1.2rem;
+    color: #AB886D;
+    margin-bottom: 5px;
+}
+
+.sistema-item .label {
+    font-size: 0.65rem;
+    color: #7b6a60;
+}
+
+.sistema-item .value {
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.perfil-footer {
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-volver, .btn-cerrar-sesion {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.btn-volver {
+    background: #E4E0E1;
+    color: #4D3B2E;
+}
+
+.btn-volver:hover {
+    background: #D6C0B3;
+}
+
+.btn-cerrar-sesion {
+    background: #772C24; /* Color oficial borgoña */
+    color: white;
+}
+
+.btn-cerrar-sesion:hover {
+    background: #5a211b;
+}
+
+/* Responsividad para móviles muy pequeños */
+@media (max-width: 480px) {
+    .sistema-grid {
+        grid-template-columns: 1fr;
+    }
+}

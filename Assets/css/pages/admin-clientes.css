@@ -1,0 +1,36 @@
+.clientes-page {
+    display: block;
+}
+
+.clientes-modal-content {
+    width: min(680px, 92vw);
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary-dark);
+    color: #fff;
+    border-color: var(--primary-dark);
+}
+
+.btn-primary:hover {
+    opacity: 0.92;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--primary-dark);
+    border-color: var(--primary-light);
+}
+
+.btn-secondary:hover {
+    background: var(--primary-light);
+}

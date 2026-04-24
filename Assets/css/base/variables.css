@@ -1,0 +1,16 @@
+:root {
+    --primary-light: #E4E0E1;
+    --primary-soft: #D6C0B3;
+    --primary-dark: #AB886D;
+    --text-dark: #000000;
+    --nocolor: #772c24;
+    --surface: #ffffff;
+    --radius-md: 10px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+}

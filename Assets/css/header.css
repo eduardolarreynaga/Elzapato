@@ -1,0 +1,256 @@
+/* Paleta de colores oficial */
+:root {
+    --bg-claro: #E4E0E1;
+    --tono-suave: #D6C0B3;
+    --tono-detalle: #AB886D;
+    --texto-negro: #000000;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fdfdfd;
+}
+
+/* Header Estilos */
+.main-header {
+    background-color: var(--bg-claro);
+    border-bottom: 2px solid var(--tono-suave);
+    padding: 10px 20px;
+}
+
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-menu {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--texto-negro);
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--tono-detalle);
+}
+
+.nav-link.active {
+    color: var(--tono-detalle);
+    border-bottom: 2px solid var(--tono-detalle);
+}
+
+.header-utils {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: var(--tono-detalle);
+    position: relative;
+}
+
+.cart-badge {
+    background-color: var(--tono-suave);
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: var(--texto-negro);
+    font-weight: bold;
+}
+
+.btn-waze {
+    display: block;
+    width: auto;
+    min-width: 150px;
+    background-color: var(--tono-suave);
+    color: var(--texto-negro);
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-waze:hover {
+    background-color: var(--tono-detalle);
+    color: #fff;
+}
+
+.nav-item.dropdown {
+    list-style: none;
+}
+
+.user-dropdown {
+    position: relative;
+}
+
+.user-dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 5px;
+    font-size: 0.95rem;
+}
+
+.user-dropdown-toggle:hover,
+.user-dropdown.open .user-dropdown-toggle {
+    background-color: var(--tono-detalle);
+    color: #fff;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 240px;
+    background-color: #fff;
+    border: 1px solid var(--tono-suave);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    padding: 8px 0;
+    display: none;
+    z-index: 1000;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 16px;
+    padding-left: 16px;
+    background: none;
+    border: none;
+    color: var(--texto-negro);
+    text-decoration: none;
+    text-align: left;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(214, 192, 179, 0.2);
+    color: var(--tono-detalle);
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: 6px 0;
+    background-color: rgba(214, 192, 179, 0.9);
+}
+
+.text-danger {
+    color: #d9534f;
+}
+
+.logout-dropdown-btn {
+    font: inherit;
+}
+
+.mr-1 {
+    margin-right: 0.35rem;
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
+}
+
+/* Estilos específicos para el icono de Punto de Venta */
+.pos-icon-btn {
+    font-size: 1.6rem; /* Tamaño notable para el icono */
+    color: var(--texto-negro);
+    text-decoration: none;
+    transition: color 0.3s, transform 0.2s;
+    display: none; /* Se controla por JS */
+    align-items: center;
+    justify-content: center;
+}
+
+.pos-icon-btn:hover {
+    color: var(--tono-detalle);
+    transform: scale(1.1); /* Efecto sutil de crecimiento */
+}
+
+/* Ajuste para asegurar alineación en el contenedor de utilidades */
+.header-utils {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: var(--tono-detalle);
+    position: relative;
+}
+
+/* Contenedor principal del Loader (ESTO CUBRE TODA LA PANTALLA) */
+/* Contenedor que bloquea toda la pantalla */
+#loader-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #E4E0E1; /* Tu color oficial sólido */
+    display: flex;
+    flex-direction: column; /* Asegura que los puntos salgan abajo */
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+/* Ajuste del GIF de pantalla de carga */
+#loader-gif {
+    width: 450px;
+    height: auto;
+    /* Estas propiedades ayudan a que no se vea borroso al escalar */
+    image-rendering: -webkit-optimize-contrast; /* Para Chrome/Safari */
+    image-rendering: crisp-edges; /* Para Firefox */
+    shape-rendering: geometricPrecision;
+}
+/* Puntos suspensivos animados */
+.loader-text-container {
+    margin-top: 20px;
+    font-size: 3rem;
+    color: #AB886D; /* Tu --tono-detalle */
+    font-family: Arial, sans-serif;
+}
+
+.dot {
+    animation: loadingDots 1.4s infinite;
+    opacity: 0;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loadingDots {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Clase para ocultar */
+.loader-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
