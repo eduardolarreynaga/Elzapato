@@ -5,52 +5,52 @@
 
         <div class="dev-container">
             <div class="dev-card">
-                <img src="https://i.pravatar.cc/140?img=12" alt="Juan Pérez">
-                <h3>Juan Pérez</h3>
-                <p>Backend Developer</p>
+                <img src="/ElZapato/Assets/img/desarrolladores/e.png" alt="eduardo baltazar larreynaga">
+                <h3>EDUARDO BALTAZAR LARREYNAGA</h3>
+                <p>Scrum Master</p>
                 <div class="dev-icons">
-                    <a href="#" aria-label="GitHub de Juan Pérez"><i class="fab fa-github"></i></a>
-                    <a href="mailto:juan@email.com" aria-label="Correo de Juan Pérez"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/eduardolarreynaga" aria-label="GitHub de EDUARDO BALTAZAR LARREYNAGA ORELLANA"><i class="fab fa-github"></i></a>
+                    <a href="mailto:eduardo.larreynaga@catolica.edu.sv" aria-label="Correo de EDUARDO BALTAZAR LARREYNAGA ORELLANA"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
             <div class="dev-card">
-                <img src="https://i.pravatar.cc/140?img=32" alt="María López">
-                <h3>María López</h3>
-                <p>Frontend Developer</p>
+                <img src="/ElZapato/Assets/img/desarrolladores/jd.jpg" alt="Diego Centeno">
+                <h3>JOSE DIEGO CENTENO CORTEZ</h3>
+                <p>BackEnd Developer</p>
                 <div class="dev-icons">
-                    <a href="#" aria-label="GitHub de María López"><i class="fab fa-github"></i></a>
-                    <a href="mailto:maria@email.com" aria-label="Correo de María López"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/jos-b2" aria-label="GitHub de JOSE DIEGO CENTENO CORTEZ"><i class="fab fa-github"></i></a>
+                    <a href="mailto:jose.centeno@catolica.edu.sv" aria-label="Correo de JOSE DIEGO CENTENO CORTEZ"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
             <div class="dev-card">
-                <img src="https://i.pravatar.cc/140?img=15" alt="Carlos Gómez">
-                <h3>Carlos Gómez</h3>
-                <p>Full Stack</p>
+                <img src="/ElZapato/Assets/img/desarrolladores/v.png" alt="Verónica Montoya">
+                <h3>VERONICA LISSETH MONTOYA</h3>
+                <p>BackEnd Developer</p>
                 <div class="dev-icons">
-                    <a href="#" aria-label="GitHub de Carlos Gómez"><i class="fab fa-github"></i></a>
-                    <a href="mailto:carlos@email.com" aria-label="Correo de Carlos Gómez"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/Lisseth-Montoya" aria-label="GitHub de VERONICA LISSETH MONTOYA MENDEZ"><i class="fab fa-github"></i></a>
+                    <a href="mailto:veronica.montoya@catolica.edu.sv" aria-label="Correo de VERONICA LISSETH MONTOYA MENDEZ"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
             <div class="dev-card">
-                <img src="https://i.pravatar.cc/140?img=25" alt="Ana Martínez">
-                <h3>Ana Martínez</h3>
-                <p>UI/UX</p>
+                <img src="/ElZapato/Assets/img/desarrolladores/f.png" alt="Fredis Omar Lopez Molina">
+                <h3>FREDIS OMAR LOPEZ MOLINA</h3>
+                <p>UI/UX FrontEnd Developer</p>
                 <div class="dev-icons">
-                    <a href="#" aria-label="GitHub de Ana Martínez"><i class="fab fa-github"></i></a>
-                    <a href="mailto:ana@email.com" aria-label="Correo de Ana Martínez"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/FR3DI5" aria-label="GitHub de FREDIS OMAR LOPEZ MOLINA"><i class="fab fa-github"></i></a>
+                    <a href="mailto:fredis.lopez@catolica.edu.sv" aria-label="Correo de FREDIS OMAR LOPEZ MOLINA"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
             <div class="dev-card">
-                <img src="https://i.pravatar.cc/140?img=68" alt="Luis Ramírez">
-                <h3>Luis Ramírez</h3>
-                <p>QA Tester</p>
+                <img src="/ElZapato/Assets/img/desarrolladores/j.png" alt="Jeremías Mejia">
+                <h3>JEREMIAS JOSUE MEJIA</h3>
+                <p>UI/UX FrontEnd Developer</p>
                 <div class="dev-icons">
-                    <a href="#" aria-label="GitHub de Luis Ramírez"><i class="fab fa-github"></i></a>
-                    <a href="mailto:luis@email.com" aria-label="Correo de Luis Ramírez"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/jjxirz" aria-label="GitHub de JEREMIAS JOSUE MEJIA CORVERA"><i class="fab fa-github"></i></a>
+                    <a href="mailto:jeremias.mejia@catolica.edu.sv " aria-label="Correo de JEREMIAS JOSUE MEJIA CORVERA"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
         </div>
