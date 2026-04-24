@@ -21,9 +21,11 @@ if (!$id_venta) {
 }
 
 try {
-    $queryVenta = "SELECT v.*, u.nombre_usuario, c.nombre as cliente_nombre, m.nombre_metodo 
+    // Consulta modificada para traer el nombre de la caja
+    $queryVenta = "SELECT v.*, u.nombre_usuario, c.nombre as cliente_nombre, m.nombre_metodo, ca.nombre_caja 
                    FROM ventas v
                    INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+                   LEFT JOIN cajas ca ON u.id_caja = ca.id_caja
                    LEFT JOIN clientes c ON v.id_cliente = c.id_cliente
                    INNER JOIN metodos_pago m ON v.id_metodo_pago = m.id_metodo_pago
                    WHERE v.id_venta = ?";
@@ -115,6 +117,7 @@ try {
             <div class="info-section">
                 <div class="info-row"><span class="info-label">TICKET:</span><span>#' . str_pad($venta['id_venta'], 8, "0", STR_PAD_LEFT) . '</span></div>
                 <div class="info-row"><span class="info-label">FECHA:</span><span>' . date('d/m/Y H:i', strtotime($venta['fecha_venta'])) . '</span></div>
+                <div class="info-row"><span class="info-label">CAJA:</span><span>' . htmlspecialchars($venta['nombre_caja'] ?? 'N/A') . '</span></div>
                 <div class="info-row"><span class="info-label">CAJERO:</span><span>' . htmlspecialchars(substr($venta['nombre_usuario'], 0, 15)) . '</span></div>
                 <div class="info-row"><span class="info-label">CLIENTE:</span><span>' . (isset($venta['cliente_nombre']) ? htmlspecialchars(substr($venta['cliente_nombre'], 0, 20)) : 'Consumidor Final') . '</span></div>
             </div>
