@@ -2,6 +2,21 @@
 let carrito = [];
 let descuentosAplicados = [];
 
+function goMenuGeneralTransition() {
+    var transition = document.getElementById('pageTransitionPos');
+    var targetUrl = '/ElZapato/src/views/layouts/menu-general.php';
+
+    if (!transition) {
+        window.location.href = targetUrl;
+        return;
+    }
+
+    transition.classList.add('active');
+    setTimeout(function() {
+        window.location.href = targetUrl;
+    }, 420);
+}
+
 // ==================== NOTIFICACIONES ====================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const container = document.getElementById('toast-container');
@@ -38,7 +53,7 @@ async function cargarUltimasVentas() {
     try {
         container.innerHTML = '<div class="loading-text"><i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...</div>';
         
-        var resp = await fetch('/Elzapato/src/api/obtener_ventas.php');
+        var resp = await fetch('/ElZapato/src/api/obtener_ventas.php');
         
         if (!resp.ok) {
             throw new Error('HTTP error! status: ' + resp.status);
@@ -96,11 +111,21 @@ async function cargarUltimasVentas() {
     }
 }
 
+// FUNCIÓN MODIFICADA: Imprimir ticket de venta
 function imprimirTicketVenta(idVenta, event) {
     if (event) {
         event.stopPropagation();
     }
-    mostrarNotificacion('Imprimiendo ticket de la venta #' + idVenta, 'info');
+    
+    // Cerrar el dropdown de notificaciones
+    var dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('active');
+    }
+    
+    // Abrir el ticket en una nueva pestaña
+    window.open('/ElZapato/src/api/generar_ticket.php?id=' + idVenta, '_blank');
+    mostrarNotificacion('Generando ticket de la venta #' + idVenta, 'info');
 }
 
 async function verDetalleVenta(idVenta, event) {
@@ -116,7 +141,7 @@ async function verDetalleVenta(idVenta, event) {
         
         mostrarNotificacion('Cargando detalles de la venta...', 'info');
         
-        var resp = await fetch('/Elzapato/src/api/obtener_detalle_venta.php?id=' + idVenta);
+        var resp = await fetch('/ElZapato/src/api/obtener_detalle_venta.php?id=' + idVenta);
         
         if (!resp.ok) {
             throw new Error('HTTP error! status: ' + resp.status);
@@ -134,7 +159,7 @@ async function verDetalleVenta(idVenta, event) {
             return;
         }
         
-        var ventaResp = await fetch('/Elzapato/src/api/obtener_info_venta.php?id=' + idVenta);
+        var ventaResp = await fetch('/ElZapato/src/api/obtener_info_venta.php?id=' + idVenta);
         var infoVenta = await ventaResp.json();
         
         var ventaData = sessionStorage.getItem('ventaData_' + idVenta);
@@ -314,22 +339,23 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
     tablaHTML += '<tr style="border-top: 1px solid #ddd;">';
     tablaHTML += '<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold;">SUBTOTAL:</td>';
     tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold;">$' + subtotalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr>';
+    tablaHTML += '<tr>';
     
     if (totalDescuentos > 0) {
         tablaHTML += '<tr style="background: #fff3e0;">';
         tablaHTML += '<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">DESCUENTO TOTAL:</td>';
         tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">-$' + totalDescuentos.toFixed(2) + '</td>';
-        tablaHTML += '</tr>';
+        tablaHTML += '</table>';
     }
     
     tablaHTML += '<tr style="border-top: 2px solid var(--primary-dark); background: var(--primary-light);">';
     tablaHTML += '<td colspan="4" style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1rem;">TOTAL A PAGAR:</td>';
     tablaHTML += '<td style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1.2rem; color: var(--nocolor);">$' + totalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr></tfoot></table>';
+    tablaHTML += '<tr></tfoot></table>';
     
     var botonesHTML = '<div style="display: flex; gap: 10px; margin-top: 20px;">';
     botonesHTML += '<button class="btn-action btn-discount" onclick="cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-check"></i> Cerrar</button>';
+    botonesHTML += '<button class="btn-action btn-sell" onclick="imprimirTicketVenta(' + idVenta + ', event); cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-print"></i> Imprimir Ticket</button>';
     botonesHTML += '</div>';
     
     var detallesHTML = infoBoxHTML;
@@ -368,6 +394,16 @@ document.addEventListener('click', function(event) {
             dropdown.classList.remove('active');
         }
     }
+});
+
+document.addEventListener('click', function(event) {
+    var target = event.target;
+    if (!target || !target.classList || !target.classList.contains('modal')) return;
+
+    target.classList.remove('active');
+    setTimeout(function() {
+        target.style.display = 'none';
+    }, 300);
 });
 
 // ==================== MODALES ====================
@@ -426,7 +462,23 @@ function cerrarModal(id) {
     setTimeout(function() { modal.style.display = 'none'; }, 300);
 }
 
-// ==================== CANTIDADES ====================
+function formatearNombreTicket(nombreBase, talla, color) {
+    var nombre = (nombreBase || '').toString().trim();
+    var tallaRaw = (talla || '').toString().trim();
+    var colorRaw = (color || '').toString().trim();
+
+    var tallaFmt = '';
+    if (tallaRaw) {
+        tallaFmt = /^t/i.test(tallaRaw) ? tallaRaw.toUpperCase() : ('T' + tallaRaw).toUpperCase();
+    }
+
+    var colorInicial = colorRaw ? colorRaw.charAt(0).toUpperCase() : '';
+    var sufijo = [tallaFmt, colorInicial].filter(Boolean).join('-');
+
+    return sufijo ? (nombre + ' - ' + sufijo) : nombre;
+}
+
+// ==================== CANTIDADES (MODIFICADA) ====================
 function cambiarCantidad(btn, valor) {
     var card = btn.closest('.product-card');
     if (!card) return;
@@ -435,12 +487,24 @@ function cambiarCantidad(btn, valor) {
     var stockMax = parseInt(card.dataset.stock);
     var actual = parseInt(input.value);
     
+    // Verificar si el producto está agotado (stock <= 0)
+    if (stockMax <= 0) {
+        mostrarNotificacion('Producto agotado, no se puede seleccionar.', 'warning');
+        return;
+    }
+    
     if (valor > 0 && actual >= stockMax) {
-        mostrarNotificacion('Stock insuficiente.', 'warning');
+        mostrarNotificacion('Stock insuficiente. Stock disponible: ' + stockMax, 'warning');
         return;
     }
     
     var nuevaCantidad = Math.max(0, actual + valor);
+    
+    // No permitir superar el stock máximo
+    if (nuevaCantidad > stockMax) {
+        nuevaCantidad = stockMax;
+    }
+    
     input.value = nuevaCantidad;
     
     var checkbox = card.querySelector('input[type="checkbox"]');
@@ -455,11 +519,27 @@ function toggleProductoVenta(checkbox, id) {
     if (!card) return;
     
     var cantidad = parseInt(card.querySelector('.qty-input').value);
-    var nombre = card.dataset.nombre;
+    var stockMax = parseInt(card.dataset.stock);
+    var nombreBase = card.dataset.nombre;
+    var nombre = formatearNombreTicket(nombreBase, card.dataset.talla, card.dataset.color);
+
+    // Verificar si el producto está agotado
+    if (stockMax <= 0) {
+        mostrarNotificacion('Producto agotado, no se puede agregar al carrito.', 'warning');
+        checkbox.checked = false;
+        return;
+    }
 
     if (checkbox.checked) {
         if (cantidad <= 0) {
-            mostrarNotificacion('Indique una cantidad.', 'warning');
+            mostrarNotificacion('Indique una cantidad válida.', 'warning');
+            checkbox.checked = false;
+            return;
+        }
+        
+        // Verificar que no exceda el stock disponible
+        if (cantidad > stockMax) {
+            mostrarNotificacion('La cantidad excede el stock disponible (' + stockMax + ')', 'warning');
             checkbox.checked = false;
             return;
         }
@@ -490,13 +570,27 @@ function actualizarItemCarrito(id, nuevaCant) {
     }
     
     if (index !== -1) {
+        var card = document.querySelector('.product-card[data-id="' + id + '"]');
+        var stockMax = card ? parseInt(card.dataset.stock) : 0;
+        
+        // Validar que no exceda el stock
+        if (nuevaCant > stockMax) {
+            mostrarNotificacion('No puedes agregar más de ' + stockMax + ' unidades (stock disponible)', 'warning');
+            nuevaCant = stockMax;
+            if (card) {
+                var input = card.querySelector('.qty-input');
+                if (input) input.value = nuevaCant;
+            }
+        }
+        
         if (nuevaCant <= 0) {
             carrito.splice(index, 1);
             descuentosAplicados = descuentosAplicados.filter(function(d) { return d.id !== id; });
-            var card = document.querySelector('.product-card[data-id="' + id + '"]');
             if (card) {
                 var checkbox = card.querySelector('input[type="checkbox"]');
                 if (checkbox) checkbox.checked = false;
+                var input = card.querySelector('.qty-input');
+                if (input) input.value = 0;
             }
         } else {
             carrito[index].cantidad = nuevaCant;
@@ -677,26 +771,39 @@ function realizarVenta() {
     
     document.getElementById('modalTotalPago').innerText = '$' + total.toFixed(2);
     document.getElementById('dineroRecibido').value = '';
-    document.getElementById('cambioDisplay').innerHTML = '<span style="color: var(--success);">$0.00</span>';
+    document.getElementById('cambioDisplay').innerHTML = '<span style="color: var(--primary-dark);">$0.00</span>';
     document.getElementById('metodoPago').value = '1';
+    
+    // IMPORTANTE: Ocultar/mostrar campos según método de pago antes de mostrar el modal
+    toggleCamposPorMetodoPago();
     
     var modal = document.getElementById('modalPago');
     modal.style.display = 'flex';
     setTimeout(function() { modal.classList.add('active'); }, 10);
     
+    var metodoPagoSelect = document.getElementById('metodoPago');
     var dineroInput = document.getElementById('dineroRecibido');
     dineroInput.oninput = function() {
         calcularCambio(total);
     };
+    metodoPagoSelect.onchange = function() {
+        toggleCamposPorMetodoPago();
+        if (document.getElementById('metodoPago').value === '1') {
+            calcularCambio(total);
+        }
+    };
 }
 
 function calcularCambio(total) {
+    var metodoPago = document.getElementById('metodoPago').value;
+    if (metodoPago !== '1') return;
+    
     var dineroRecibido = parseFloat(document.getElementById('dineroRecibido').value) || 0;
     var cambio = dineroRecibido - total;
     var cambioDisplay = document.getElementById('cambioDisplay');
     
     if (cambio >= 0) {
-        cambioDisplay.innerHTML = '<span style="color: var(--success);">$' + cambio.toFixed(2) + '</span>';
+        cambioDisplay.innerHTML = '<span style="color: var(--primary-dark);">$' + cambio.toFixed(2) + '</span>';
     } else {
         cambioDisplay.innerHTML = '<span style="color: var(--nocolor);">Falta $' + Math.abs(cambio).toFixed(2) + '</span>';
     }
@@ -705,16 +812,43 @@ function calcularCambio(total) {
 async function confirmarPago() {
     var totalTexto = document.getElementById('modalTotalPago').innerText;
     var total = parseFloat(totalTexto.replace('$', ''));
-    var dineroRecibido = parseFloat(document.getElementById('dineroRecibido').value) || 0;
     var metodoPago = document.getElementById('metodoPago').value;
+    var esTarjeta = metodoPago === '2';
+    var dineroRecibido = esTarjeta ? total : (parseFloat(document.getElementById('dineroRecibido').value) || 0);
     var metodoPagoTexto = document.getElementById('metodoPago').options[document.getElementById('metodoPago').selectedIndex].text;
     
-    if (dineroRecibido < total) {
+    if (!esTarjeta && dineroRecibido < total) {
         mostrarNotificacion('El dinero recibido es insuficiente', 'warning');
         return;
     }
     
-    var cambio = dineroRecibido - total;
+    // VERIFICAR STOCK ANTES DE PROCESAR LA VENTA
+    mostrarNotificacion('Verificando stock disponible...', 'info');
+    
+    // Verificar cada producto en el carrito contra el stock actual
+    for (var i = 0; i < carrito.length; i++) {
+        var productoCarrito = carrito[i];
+        var card = document.querySelector('.product-card[data-id="' + productoCarrito.id + '"]');
+        
+        if (!card) {
+            mostrarNotificacion('Error: Producto no encontrado en la vista', 'warning');
+            return;
+        }
+        
+        var stockActual = parseInt(card.dataset.stock);
+        
+        if (stockActual <= 0) {
+            mostrarNotificacion('El producto ' + productoCarrito.nombre + ' está agotado', 'warning');
+            return;
+        }
+        
+        if (productoCarrito.cantidad > stockActual) {
+            mostrarNotificacion('Stock insuficiente para ' + productoCarrito.nombre + '. Disponible: ' + stockActual, 'warning');
+            return;
+        }
+    }
+    
+    var cambio = esTarjeta ? 0 : (dineroRecibido - total);
     
     mostrarNotificacion('Procesando venta...', 'info');
     
@@ -733,11 +867,12 @@ async function confirmarPago() {
         total: total,
         metodo_pago: parseInt(metodoPago),
         cambio: cambio,
-        dinero_recibido: dineroRecibido
+        dinero_recibido: dineroRecibido,
+        descuentos: descuentosAplicados
     };
     
     try {
-        var response = await fetch('/Elzapato/src/api/guardar_venta.php', {
+        var response = await fetch('/ElZapato/src/api/guardar_venta.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -748,7 +883,8 @@ async function confirmarPago() {
         var result = await response.json();
         
         if (result.success) {
-            mostrarNotificacion('Venta #' + result.id_venta + ' realizada con éxito. Cambio: $' + cambio.toFixed(2), 'success');
+            mostrarNotificacion('Venta #' + result.id_venta + ' realizada con éxito.', 'success');
+            mostrarNotificacion('Imprimiendo ticket...', 'info');
             
             sessionStorage.setItem('ventaData_' + result.id_venta, JSON.stringify({
                 cambio: cambio,
@@ -757,6 +893,9 @@ async function confirmarPago() {
                 total: total,
                 descuentos: descuentosAplicados
             }));
+            
+            // Actualizar los stocks en las tarjetas de productos
+            actualizarStocksLocales();
             
             carrito = [];
             descuentosAplicados = [];
@@ -785,11 +924,48 @@ async function confirmarPago() {
     }
 }
 
+// ==================== ACTUALIZAR STOCKS LOCALMENTE ====================
+function actualizarStocksLocales() {
+    setTimeout(function() {
+        location.reload();
+    }, 1300);
+}
+
+// ==================== FUNCIÓN PARA OCULTAR/MOSTRAR CAMPOS SEGÚN MÉTODO DE PAGO ====================
+function toggleCamposPorMetodoPago() {
+    var metodoPago = document.getElementById('metodoPago').value;
+    var efectivoFieldsContainer = document.getElementById('efectivoFieldsContainer');
+    var dineroRecibido = document.getElementById('dineroRecibido');
+    var cambioDisplay = document.getElementById('cambioDisplay');
+    
+    if (metodoPago === '2') { // Tarjeta
+        if (efectivoFieldsContainer) {
+            efectivoFieldsContainer.style.display = 'none';
+        }
+        if (dineroRecibido) {
+            dineroRecibido.value = '';
+            dineroRecibido.disabled = true;
+        }
+        if (cambioDisplay) {
+            cambioDisplay.innerHTML = '<span style="color: var(--primary-dark);">$0.00</span>';
+        }
+    } else { // Efectivo
+        if (efectivoFieldsContainer) {
+            efectivoFieldsContainer.style.display = 'block';
+        }
+        if (dineroRecibido) {
+            dineroRecibido.disabled = false;
+        }
+    }
+}
+
 // ==================== FILTROS ====================
 document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('productSearch');
     var categoryFilter = document.getElementById('categoryFilter');
     var brandFilter = document.getElementById('brandFilter');
+
+    cargarUltimasVentas();
     
     function filtrarProductos() {
         var searchTerm = searchInput.value.toLowerCase();
