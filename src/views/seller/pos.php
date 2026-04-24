@@ -196,8 +196,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                             
                             $imagenFinal = "/ElZapato/Assets/img/zapa.jpeg"; 
                             $pathImg = "/Assets/img/productos/" . $v_id_v . ".jpg";
-                            $fullPath = __DIR__ . '/../../../Assets/img/productos/' . $v_id_v . '.jpg';
-                            if (file_exists($fullPath)) {
+                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
                                 $imagenFinal = "/ElZapato" . $pathImg;
                             }
 
@@ -328,7 +327,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </div>
     </div>
 
-    <!-- Modal de Pago -->
+    <!-- Modal de Pago MODIFICADO -->
     <div id="modalPago" class="modal">
         <div class="modal-content" style="width: 450px;">
             <span class="close-modal" onclick="cerrarModal('modalPago')">&times;</span>
@@ -356,24 +355,26 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                 </div>
             </div>
             
-            <div class="form-group">
-                <label><i class="fa-solid fa-money-bill"></i> Dinero Recibido:</label>
-                <input type="number" id="dineroRecibido" class="input-modal" step="0.01" min="0" placeholder="Ingrese el monto recibido" style="font-size: 1.2rem; text-align: right;">
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fa-solid fa-coins"></i> Cambio:</label>
-                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="cambioDisplay">
-                    $0.00
+            <!-- Contenedor para Dinero Recibido y Cambio (se oculta con tarjeta) -->
+            <div id="efectivoFieldsContainer">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-money-bill"></i> Dinero Recibido:</label>
+                    <input type="number" id="dineroRecibido" class="input-modal" step="0.01" min="0" placeholder="Ingrese el monto recibido" style="font-size: 1.2rem; text-align: right;">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa-solid fa-coins"></i> Cambio:</label>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="cambioDisplay">
+                        $0.00
+                    </div>
                 </div>
             </div>
             
             <div class="form-group">
                 <label><i class="fa-solid fa-credit-card"></i> Método de Pago:</label>
-                <select id="metodoPago" class="input-modal">
+                <select id="metodoPago" class="input-modal" onchange="toggleCamposPorMetodoPago()">
                     <option value="1">Efectivo</option>
                     <option value="2">Tarjeta</option>
-                    <option value="3">Transferencia</option>
                 </select>
             </div>
             
