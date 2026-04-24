@@ -10,6 +10,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
     <title><?php echo $nombreSistema; ?> - Dashboard Principal</title>
     
     <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/components/dev-modal.css?v=20260423">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -176,7 +177,11 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
 
     <footer class="main-footer">
         <p>&copy; <?php echo date('Y'); ?> <?php echo $nombreSistema; ?> - Sistema de Gestión Escolar UNICAES</p>
+        <button type="button" onclick="openDevModal()" class="btn-devs">Desarrollado por</button>
     </footer>
+
+    <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/dev-team-modal.php'; ?>
+    <script src="/ElZapato/Assets/js/dev-modal.js?v=20260423"></script>
 
 </body>
 </html>

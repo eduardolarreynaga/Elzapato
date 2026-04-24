@@ -23,6 +23,7 @@ $pageStyles = $pageStyles ?? [];
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/forms.css">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/tables.css">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/footer.css">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/components/dev-modal.css?v=20260423">
     <?php foreach ($pageStyles as $stylePath): ?>
         <link rel="stylesheet" href="<?= htmlspecialchars($stylePath, ENT_QUOTES, 'UTF-8') ?>">
     <?php endforeach; ?>

@@ -635,6 +635,11 @@ body {
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
+.cta-content .btn-primary.dark {
+    position: relative;
+    z-index: 2;
+}
+
 /* =========================
    FOOTER
 ========================= */
@@ -804,6 +809,7 @@ body {
         width: 100%;
         max-width: 430px;
     }
+
 }
 
 @media (max-width: 992px) {
@@ -859,6 +865,7 @@ body {
     .hero-floating-card {
         max-width: 100%;
     }
+
 }
 
 @media (max-width: 480px) {
@@ -885,4 +892,5 @@ body {
     .hero-shoe-1 {
         font-size: 4rem;
     }
+
 }
