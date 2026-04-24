@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../config/auth.php';
 require_auth('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $rutaLogoBase = __DIR__ . '/../../../../Assets/img/';
+    $rutaLogoBase = $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/Assets/img/';
     $configPath = __DIR__ . '/../../config/settings.php';
     $cambios = 0;
 
