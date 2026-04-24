@@ -68,29 +68,27 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
             </div>
 
             <div class="promo-container">
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-shoe-prints"></i>
-                    </div>
-                    <h3>Variedad de Calzado</h3>
-                    <p>Encuentra estilos casuales, deportivos y formales para toda ocasión.</p>
+                <div class="card promo-card promo-hombre">
+                    <h3>Para Caballero</h3>
+                    <p>Modelos elegantes y casuales para cualquier ocasión.</p>
+                </div>
+                
+                <div class="card promo-card promo-mujer">
+                    <h3>Para Dama</h3>
+                    <p>Bonitos y versátiles que combinan personalidad y estilo.</p>
                 </div>
 
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-ruler-combined"></i>
-                    </div>
-                    <h3>Tallas Disponibles</h3>
-                    <p>Contamos con diferentes tallas y modelos para brindar una mejor opción al cliente.</p>
+                <div class="card promo-card promo-nino">
+                    <h3>Para Niño</h3>
+                    <p>Opciones cómodas, resistentes y diseños atractivos para uso diario.</p>
                 </div>
 
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <h3>Atención en Tienda</h3>
-                    <p>Brindamos atención directa y apoyo en la elección del calzado ideal.</p>
+                <div class="card promo-card promo-nina">
+                    <h3>Para Niña</h3>
+                    <p>Diseños coloridos, cómodos y bonitos para cada etapa y actividad.</p>
                 </div>
+
+
             </div>
         </section>
 
