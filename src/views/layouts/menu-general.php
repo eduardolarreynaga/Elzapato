@@ -23,6 +23,13 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
 </head>
 <body>
 
+    <div class="background-media" aria-hidden="true">
+        <video class="background-video" autoplay muted loop playsinline>
+            <source src="/ElZapato/Assets/video/model_edit.mp4" type="video/mp4">
+        </video>
+        <div class="background-overlay"></div>
+    </div>
+
     <nav class="top-bar">
         <div class="brand">
             <span class="dot"></span> <?php echo $nombreSistema; ?>
