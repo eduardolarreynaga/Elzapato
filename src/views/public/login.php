@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/ElZapato/Assets/css/login.css">
-    <link rel="icon" type="image/x-icon" href="/ElZapato/Assets/img/logo.png">
+    <link rel="icon" type="image/jpeg" href="/ElZapato/Assets/img/zapa.jpeg">
 </head>
 <body>
     <div class="auth-wrapper">

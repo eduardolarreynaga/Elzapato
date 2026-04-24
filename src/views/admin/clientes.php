@@ -6,23 +6,21 @@ require_auth('admin');
 $basePath = realpath(__DIR__ . '/../../../');
 require_once $basePath . "/controller/clientesController.php";
 require_once $basePath . "/model/ClientesModel.php";
+require_once $basePath . "/model/conexion.php";
 
 $controlador = new ClientesController();
 $controlador->ctrCrearCliente();
 $controlador->ctrActualizarCliente();
 
 
-$clientesPorPagina = 5;
-$paginaActual = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
-if ($paginaActual < 1) $paginaActual = 1;
-$base = ($paginaActual - 1) * $clientesPorPagina;
+$paginaActual = 1;
 
 // ELIMINAR CLIENTE
 if (isset($_POST["id_eliminar_cliente"])) {
     $respuesta = $controlador->ctrEliminarCliente();
 
     if ($respuesta == "ok") {
-       header("Location: clientes.php?pagina=" . $paginaActual);
+       header("Location: clientes.php");
 exit();
     }
 }
@@ -30,20 +28,45 @@ exit();
 // ENVIAR EMAIL AL CLIENTE
 if (isset($_POST["enviar_email_cliente"])) {
     $resultadoCorreo = $controlador->ctrEnviarCorreoCliente();
-    header("Location: clientes.php?pagina=" . $paginaActual . "&mail=" . $resultadoCorreo);
+    header("Location: clientes.php?mail=" . $resultadoCorreo);
     exit();
 }
 
 
 $todosLosClientesFull = ClientesController::ctrMostrarClientes();
 $totalClientes = count($todosLosClientesFull);
-$totalPaginas = ceil($totalClientes / $clientesPorPagina);
-
-// Obtenemos solo los de la página actual
-$clientesPaginados = ClientesController::ctrMostrarClientesPaginados(null, null, $base, $clientesPorPagina);
+$clientesPaginados = $todosLosClientesFull;
 
 $conEmail = count(array_filter($todosLosClientesFull, fn($c) => !empty($c['email'])));
-$nuevosMes = count(array_filter($todosLosClientesFull, fn($c) => (isset($c['fecha']) && strtotime($c['fecha']) > strtotime('-30 days'))));
+$nuevosMes = 0;
+
+$clientesConCompras = 0;
+try {
+    $dbClientesStats = Conexion::conectar();
+
+    $stmtColFecha = $dbClientesStats->query("SHOW COLUMNS FROM clientes LIKE 'fecha_registro'");
+    $tieneFechaRegistro = $stmtColFecha && $stmtColFecha->fetch(PDO::FETCH_ASSOC);
+
+    if (!$tieneFechaRegistro) {
+        $dbClientesStats->exec("ALTER TABLE clientes ADD COLUMN fecha_registro TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP AFTER email");
+        $tieneFechaRegistro = true;
+    }
+
+    $stmtTotal = $dbClientesStats->query("SELECT COUNT(*) AS total, SUM(CASE WHEN email IS NOT NULL AND TRIM(email) <> '' THEN 1 ELSE 0 END) AS con_email FROM clientes");
+    $statsClientes = $stmtTotal->fetch(PDO::FETCH_ASSOC) ?: [];
+    $totalClientes = (int)($statsClientes['total'] ?? 0);
+    $conEmail = (int)($statsClientes['con_email'] ?? 0);
+
+    if ($tieneFechaRegistro) {
+        $stmtNuevosMes = $dbClientesStats->query("SELECT COUNT(*) AS total FROM clientes WHERE fecha_registro >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND fecha_registro < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)");
+        $nuevosMes = (int)($stmtNuevosMes->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+    }
+
+    $stmtCompras = $dbClientesStats->query("SELECT COUNT(DISTINCT id_cliente) AS total FROM ventas WHERE id_cliente IS NOT NULL");
+    $clientesConCompras = (int)($stmtCompras->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+} catch (Throwable $e) {
+    $clientesConCompras = 0;
+}
 
 $activeMenu = 'clientes';
 $pageTitle = 'Clientes';
@@ -57,25 +80,28 @@ $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
 
 $mailStatus = $_GET['mail'] ?? '';
+$resultStatus = $_GET['res'] ?? '';
 ?>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="clientes-page">
     <div class="stats-grid stats-list">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-users"></i> Clientes Totales</span>
-            <span class="stats-list-value"><?= $totalClientes ?></span>
+            <span class="stats-list-value" id="statsClientesTotal"><?= $totalClientes ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-user-plus"></i> Nuevos este Mes</span>
-            <span class="stats-list-value"><?= $nuevosMes > 0 ? $nuevosMes : '0' ?></span>
+            <span class="stats-list-value" id="statsClientesNuevos"><?= $nuevosMes > 0 ? $nuevosMes : '0' ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-user-check"></i> Con Compras</span>
-            <span class="stats-list-value">97</span>
+            <span class="stats-list-value" id="statsClientesCompras"><?= $clientesConCompras ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-envelope"></i> Con Email</span>
-            <span class="stats-list-value"><?= $conEmail ?></span>
+            <span class="stats-list-value" id="statsClientesEmail"><?= $conEmail ?></span>
         </div>
     </div>
 
@@ -118,7 +144,7 @@ $mailStatus = $_GET['mail'] ?? '';
                         <td><?= !empty($c['telefono']) ? $c['telefono'] : '-' ?></td>
                         <td><?= !empty($c['email']) ? $c['email'] : '-' ?></td>
                         <td>Activo</td>
-                        <td>
+                        <td class="acciones-admin">
     <!-- EDITAR -->
     <button class="btn-icon small" onclick="editCliente(<?= htmlspecialchars(json_encode($c)) ?>)">
         <i class="fas fa-edit"></i>
@@ -126,26 +152,25 @@ $mailStatus = $_GET['mail'] ?? '';
 
     <!-- ENVIAR EMAIL -->
     <?php if (!empty($c['email'])): ?>
-    <form method="post" style="display:inline;">
+    <form method="post">
         <input type="hidden" name="enviar_email_cliente" value="1">
         <input type="hidden" name="email_cliente" value="<?= htmlspecialchars($c['email']) ?>">
         <input type="hidden" name="nombre_cliente" value="<?= htmlspecialchars($c['nombre']) ?>">
-        <button type="submit" class="btn-icon small" title="Enviar email" style="color:#7a5c45; border:none; background:none; cursor:pointer;">
+        <button type="submit" class="btn-icon small" title="Enviar email">
             <i class="fas fa-envelope"></i>
         </button>
     </form>
     <?php else: ?>
-    <button type="button" class="btn-icon small" title="Cliente sin email" style="opacity:0.45; color:#7a5c45; border:none; background:none; cursor:not-allowed;" disabled>
+    <button type="button" class="btn-icon small" title="Cliente sin email" style="opacity:0.45; cursor:not-allowed;" disabled>
         <i class="fas fa-envelope"></i>
     </button>
     <?php endif; ?>
 
     <!-- ELIMINAR -->
-    <form method="post" style="display:inline;">
+    <form method="post">
         <input type="hidden" name="id_eliminar_cliente" value="<?= $c['id_cliente'] ?>">
 
         <button type="submit" class="btn-icon small"
-            style="color:#7a5c45; border:none; background:none; cursor:pointer;"
             onclick="return confirm('¿Eliminar este cliente?')">
 
             <i class="fas fa-trash"></i>
@@ -160,17 +185,6 @@ $mailStatus = $_GET['mail'] ?? '';
     </div>
 </div>
 
-<div class="pagination-simple" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-    <span style="font-size: 0.85rem; color: #666;">Página <?= $paginaActual ?> de <?= $totalPaginas ?></span>
-    <div style="display: flex; gap: 5px;">
-        <?php for ($i = 1; $i <= $totalPaginas; $i++): 
-            $btnStyle = ($paginaActual == $i) ? 'background: #A67C52; color: white;' : 'background: #f4f4f4; color: #333;';
-        ?>
-        <a href="clientes.php?pagina=<?= $i ?>" style="padding: 5px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; <?= $btnStyle ?>"><?= $i ?></a>
-        <?php endfor; ?>
-    </div>
-</div>
-
 <!-- MODAL (IDEM ANTERIOR PERO LIMPIO) -->
 <div class="modal" id="clienteModal" style="display: none; background: rgba(0,0,0,0.5); position:fixed; top:0; left:0; width:100%; height:100%; z-index:1000; align-items:center; justify-content:center;">
     <div class="modal-content" style="background:white; padding:20px; border-radius:8px; width:400px;">
@@ -178,11 +192,21 @@ $mailStatus = $_GET['mail'] ?? '';
         <form method="post" id="clienteForm">
             <input type="hidden" name="id_cliente" id="id_cliente">
             <div class="form-group"><label>Nombre</label><input class="form-control" name="nuevoNombre" id="clienteNombre" required style="width:100%"></div>
-            <div class="form-group"><label>Teléfono</label><input class="form-control" name="nuevoTelefono" id="clienteTelefono" style="width:100%"></div>
-            <div class="form-group"><label>Email</label><input class="form-control" name="nuevoEmail" id="clienteEmail" type="email" style="width:100%"></div>
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px;">
-                <button class="btn-secondary" type="button" onclick="closeClienteModal()">Cancelar</button>
-                <button class="btn-primary" type="submit">Guardar</button>
+            <div class="form-group">
+                <label>Teléfono</label>
+                <input class="form-control" name="nuevoTelefono" id="clienteTelefono" type="text" inputmode="numeric" maxlength="8" pattern="^\d{8}$" style="width:100%">
+                <small style="display:block; margin-top:4px; color:#666;">Ingresa 8 dígitos numéricos (opcional).</small>
+                <small id="clienteTelefonoError" style="display:none; margin-top:4px; color:#772c24;">El teléfono debe tener exactamente 8 dígitos numéricos.</small>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-control" name="nuevoEmail" id="clienteEmail" type="email" style="width:100%">
+                <small style="display:block; margin-top:4px; color:#666;">Opcional. Si lo ingresas, debe tener formato válido.</small>
+                <small id="clienteEmailError" style="display:none; margin-top:4px; color:#772c24;">Ingresa un correo con formato válido.</small>
+            </div>
+            <div class="modal-actions" style="margin-top:15px;">
+                <button class="btn-modal-cancel" type="button" onclick="closeClienteModal()">Cancelar</button>
+                <button class="btn-modal-primary" type="submit">Guardar</button>
             </div>
         </form>
     </div>
@@ -192,6 +216,7 @@ $mailStatus = $_GET['mail'] ?? '';
 
 <script>
 const mailStatus = <?= json_encode($mailStatus, JSON_UNESCAPED_UNICODE) ?>;
+const resultStatus = <?= json_encode($resultStatus, JSON_UNESCAPED_UNICODE) ?>;
 
 function showEmailToast(message, type = 'info') {
     const toast = document.getElementById('emailToast');
@@ -239,14 +264,55 @@ if (mailStatus) {
     window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ''));
 }
 
+if (resultStatus === 'creado') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Cliente guardado',
+            text: 'El cliente se registró correctamente.',
+            confirmButtonColor: '#A67C52'
+        });
+    } else {
+        showEmailToast('El cliente se registró correctamente.', 'success');
+    }
+} else if (resultStatus === 'actualizado') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Cliente actualizado',
+            text: 'Los cambios se guardaron correctamente.',
+            confirmButtonColor: '#A67C52'
+        });
+    } else {
+        showEmailToast('Los cambios se guardaron correctamente.', 'success');
+    }
+}
+
+if (resultStatus) {
+    const urlRes = new URL(window.location.href);
+    urlRes.searchParams.delete('res');
+    window.history.replaceState({}, document.title, urlRes.pathname + (urlRes.search ? urlRes.search : ''));
+}
+
 // BUSCADOR EN TIEMPO REAL
-document.getElementById('searchCliente')?.addEventListener('keyup', function() {
-    const term = this.value.toLowerCase();
+const searchClienteHeader = document.getElementById('searchCliente');
+
+function aplicarBusquedaClientes() {
+    const term = (searchClienteHeader?.value || '').toLowerCase();
     const rows = document.querySelectorAll('#clientesTable tbody tr');
     rows.forEach(row => {
         row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
     });
+    actualizarStatsClientes();
+}
+
+searchClienteHeader?.addEventListener('keyup', function() {
+    aplicarBusquedaClientes();
 });
+
+function actualizarStatsClientes() {
+    return;
+}
 
 // ORDENAR TABLA (A-Z / Z-A)
 function applySort() {
@@ -263,6 +329,7 @@ function applySort() {
     });
 
     rows.forEach(row => tbody.appendChild(row));
+    actualizarStatsClientes();
 }
 
 function openClienteModal() {
@@ -289,6 +356,65 @@ function editCliente(data) {
 }
 
 function closeClienteModal() { document.getElementById('clienteModal').style.display = 'none'; }
+
+function limpiarErroresClienteModal() {
+    const telError = document.getElementById('clienteTelefonoError');
+    const emailError = document.getElementById('clienteEmailError');
+    const telInput = document.getElementById('clienteTelefono');
+    const emailInput = document.getElementById('clienteEmail');
+
+    if (telError) telError.style.display = 'none';
+    if (emailError) emailError.style.display = 'none';
+    if (telInput) telInput.style.borderColor = '';
+    if (emailInput) emailInput.style.borderColor = '';
+}
+
+function validarClienteModal() {
+    limpiarErroresClienteModal();
+
+    const telInput = document.getElementById('clienteTelefono');
+    const emailInput = document.getElementById('clienteEmail');
+    const telError = document.getElementById('clienteTelefonoError');
+    const emailError = document.getElementById('clienteEmailError');
+
+    const telefono = (telInput?.value || '').trim();
+    const email = (emailInput?.value || '').trim();
+    const telValido = telefono === '' || /^\d{8}$/.test(telefono);
+    const emailValido = email === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    let esValido = true;
+
+    if (!telValido) {
+        esValido = false;
+        if (telError) telError.style.display = 'block';
+        if (telInput) telInput.style.borderColor = '#772c24';
+    }
+
+    if (!emailValido) {
+        esValido = false;
+        if (emailError) emailError.style.display = 'block';
+        if (emailInput) emailInput.style.borderColor = '#772c24';
+    }
+
+    if (!esValido && !telValido && telInput) {
+        telInput.focus();
+    } else if (!esValido && !emailValido && emailInput) {
+        emailInput.focus();
+    }
+
+    return esValido;
+}
+
+document.getElementById('clienteForm')?.addEventListener('submit', function(event) {
+    if (!validarClienteModal()) {
+        event.preventDefault();
+    }
+});
+
+document.getElementById('clienteTelefono')?.addEventListener('input', limpiarErroresClienteModal);
+document.getElementById('clienteEmail')?.addEventListener('input', limpiarErroresClienteModal);
+
+document.addEventListener('DOMContentLoaded', actualizarStatsClientes);
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>

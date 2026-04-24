@@ -339,19 +339,19 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
     tablaHTML += '<tr style="border-top: 1px solid #ddd;">';
     tablaHTML += '<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold;">SUBTOTAL:</td>';
     tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold;">$' + subtotalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr>';
+    tablaHTML += '<tr>';
     
     if (totalDescuentos > 0) {
         tablaHTML += '<tr style="background: #fff3e0;">';
         tablaHTML += '<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">DESCUENTO TOTAL:</td>';
         tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">-$' + totalDescuentos.toFixed(2) + '</td>';
-        tablaHTML += '</tr>';
+        tablaHTML += '</table>';
     }
     
     tablaHTML += '<tr style="border-top: 2px solid var(--primary-dark); background: var(--primary-light);">';
     tablaHTML += '<td colspan="4" style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1rem;">TOTAL A PAGAR:</td>';
     tablaHTML += '<td style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1.2rem; color: var(--nocolor);">$' + totalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr></tfoot></table>';
+    tablaHTML += '<tr></tfoot></table>';
     
     var botonesHTML = '<div style="display: flex; gap: 10px; margin-top: 20px;">';
     botonesHTML += '<button class="btn-action btn-discount" onclick="cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-check"></i> Cerrar</button>';
@@ -739,28 +739,6 @@ function confirmarDescuento() {
 }
 
 // ==================== VENTAS ====================
-function actualizarCamposPagoPorMetodo(total) {
-    var metodoPago = document.getElementById('metodoPago').value;
-    var dineroInput = document.getElementById('dineroRecibido');
-    var cambioDisplay = document.getElementById('cambioDisplay');
-    var esPagoSinEfectivo = metodoPago === '2' || metodoPago === '3';
-
-    dineroInput.disabled = esPagoSinEfectivo;
-
-    if (esPagoSinEfectivo) {
-        dineroInput.value = '';
-        cambioDisplay.innerHTML = '<span style="color: var(--primary-dark);">$0.00</span>';
-        cambioDisplay.style.opacity = '0.6';
-        cambioDisplay.style.pointerEvents = 'none';
-        cambioDisplay.setAttribute('aria-disabled', 'true');
-    } else {
-        cambioDisplay.style.opacity = '1';
-        cambioDisplay.style.pointerEvents = 'auto';
-        cambioDisplay.removeAttribute('aria-disabled');
-        calcularCambio(total);
-    }
-}
-
 function realizarVenta() {
     if (carrito.length === 0) {
         mostrarNotificacion('No hay productos en el carrito', 'warning');
@@ -796,6 +774,9 @@ function realizarVenta() {
     document.getElementById('cambioDisplay').innerHTML = '<span style="color: var(--primary-dark);">$0.00</span>';
     document.getElementById('metodoPago').value = '1';
     
+    // IMPORTANTE: Ocultar/mostrar campos según método de pago antes de mostrar el modal
+    toggleCamposPorMetodoPago();
+    
     var modal = document.getElementById('modalPago');
     modal.style.display = 'flex';
     setTimeout(function() { modal.classList.add('active'); }, 10);
@@ -806,13 +787,17 @@ function realizarVenta() {
         calcularCambio(total);
     };
     metodoPagoSelect.onchange = function() {
-        actualizarCamposPagoPorMetodo(total);
+        toggleCamposPorMetodoPago();
+        if (document.getElementById('metodoPago').value === '1') {
+            calcularCambio(total);
+        }
     };
-
-    actualizarCamposPagoPorMetodo(total);
 }
 
 function calcularCambio(total) {
+    var metodoPago = document.getElementById('metodoPago').value;
+    if (metodoPago !== '1') return;
+    
     var dineroRecibido = parseFloat(document.getElementById('dineroRecibido').value) || 0;
     var cambio = dineroRecibido - total;
     var cambioDisplay = document.getElementById('cambioDisplay');
@@ -828,13 +813,11 @@ async function confirmarPago() {
     var totalTexto = document.getElementById('modalTotalPago').innerText;
     var total = parseFloat(totalTexto.replace('$', ''));
     var metodoPago = document.getElementById('metodoPago').value;
-    var esPagoSinEfectivo = metodoPago === '2' || metodoPago === '3';
-    var dineroRecibido = esPagoSinEfectivo
-        ? total
-        : (parseFloat(document.getElementById('dineroRecibido').value) || 0);
+    var esTarjeta = metodoPago === '2';
+    var dineroRecibido = esTarjeta ? total : (parseFloat(document.getElementById('dineroRecibido').value) || 0);
     var metodoPagoTexto = document.getElementById('metodoPago').options[document.getElementById('metodoPago').selectedIndex].text;
     
-    if (!esPagoSinEfectivo && dineroRecibido < total) {
+    if (!esTarjeta && dineroRecibido < total) {
         mostrarNotificacion('El dinero recibido es insuficiente', 'warning');
         return;
     }
@@ -865,7 +848,7 @@ async function confirmarPago() {
         }
     }
     
-    var cambio = esPagoSinEfectivo ? 0 : (dineroRecibido - total);
+    var cambio = esTarjeta ? 0 : (dineroRecibido - total);
     
     mostrarNotificacion('Procesando venta...', 'info');
     
@@ -900,7 +883,7 @@ async function confirmarPago() {
         var result = await response.json();
         
         if (result.success) {
-            mostrarNotificacion('Venta #' + result.id_venta + ' realizada con éxito. Cambio: $' + cambio.toFixed(2), 'success');
+            mostrarNotificacion('Venta #' + result.id_venta + ' realizada con éxito.', 'success');
             mostrarNotificacion('Imprimiendo ticket...', 'info');
             
             sessionStorage.setItem('ventaData_' + result.id_venta, JSON.stringify({
@@ -941,13 +924,39 @@ async function confirmarPago() {
     }
 }
 
-// ==================== ACTUALIZAR STOCKS LOCALMENTE (NUEVA FUNCIÓN) ====================
+// ==================== ACTUALIZAR STOCKS LOCALMENTE ====================
 function actualizarStocksLocales() {
-    // Recargar la página para reflejar los cambios de stock
-    // Esto asegura que los productos agotados se marquen correctamente
     setTimeout(function() {
         location.reload();
     }, 1300);
+}
+
+// ==================== FUNCIÓN PARA OCULTAR/MOSTRAR CAMPOS SEGÚN MÉTODO DE PAGO ====================
+function toggleCamposPorMetodoPago() {
+    var metodoPago = document.getElementById('metodoPago').value;
+    var efectivoFieldsContainer = document.getElementById('efectivoFieldsContainer');
+    var dineroRecibido = document.getElementById('dineroRecibido');
+    var cambioDisplay = document.getElementById('cambioDisplay');
+    
+    if (metodoPago === '2') { // Tarjeta
+        if (efectivoFieldsContainer) {
+            efectivoFieldsContainer.style.display = 'none';
+        }
+        if (dineroRecibido) {
+            dineroRecibido.value = '';
+            dineroRecibido.disabled = true;
+        }
+        if (cambioDisplay) {
+            cambioDisplay.innerHTML = '<span style="color: var(--primary-dark);">$0.00</span>';
+        }
+    } else { // Efectivo
+        if (efectivoFieldsContainer) {
+            efectivoFieldsContainer.style.display = 'block';
+        }
+        if (dineroRecibido) {
+            dineroRecibido.disabled = false;
+        }
+    }
 }
 
 // ==================== FILTROS ====================

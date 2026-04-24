@@ -56,14 +56,21 @@ usort($stockBajo, fn($a, $b) => $a['stock'] <=> $b['stock']);
 
 $activeMenu = 'dashboard';
 $pageTitle = 'Dashboard';
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-dashboard-report.css'];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 $pageHeading = 'Dashboard El Zapato';
+$showSearch = false;
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
 <div class="dashboard-content" style="padding: 20px; background-color: #f8f9fa; min-height: 100vh;">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+        <button type="button" class="btn-outline-primary" id="btnImprimirDashboard">
+            <i class="fas fa-print"></i> Imprimir Estadísticas
+        </button>
+    </div>
     
     <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-bottom: 25px;">
         <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; min-height: 380px;">
@@ -114,7 +121,48 @@ require __DIR__ . '/../layouts/admin-header.php';
     </div>
 </div>
 
+<div id="modalImprimirDashboard" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" id="cerrarModalImprimirDashboard">&times;</span>
+        <h3><i class="fas fa-file-pdf"></i> Configurar impresión de estadísticas</h3>
+
+        <div class="form-group">
+            <label for="reportePeriodo">Periodo de ventas</label>
+            <select id="reportePeriodo">
+                <option value="semana">Semana actual</option>
+                <option value="mes">Mes actual</option>
+                <option value="anio">Año actual</option>
+                <option value="personalizado">Elegir fecha personalizada</option>
+            </select>
+        </div>
+
+        <div id="rangoPersonalizado">
+            <div>
+                <label for="fechaInicioReporte">Fecha inicio</label>
+                <input type="date" id="fechaInicioReporte">
+            </div>
+            <div>
+                <label for="fechaFinReporte">Fecha fin</label>
+                <input type="date" id="fechaFinReporte">
+            </div>
+        </div>
+
+        <p>El PDF incluirá ventas por fecha y las primeras 3 gráficas del dashboard.</p>
+
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" id="cancelarImpresionDashboard">
+                Cancelar
+            </button>
+            <button type="button" class="btn-modal-primary" id="confirmarImpresionDashboard">
+                Imprimir
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+    const dashboardCharts = {};
+
     const commonOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -122,7 +170,7 @@ require __DIR__ . '/../layouts/admin-header.php';
     };
 
     // Gráfico de Ventas
-    new Chart(document.getElementById('salesChart'), {
+    dashboardCharts.salesChart = new Chart(document.getElementById('salesChart'), {
         type: 'line',
         data: {
             labels: <?= json_encode($diasSemanales) ?>,
@@ -138,7 +186,7 @@ require __DIR__ . '/../layouts/admin-header.php';
     });
 
     // Gráfico de Categorías
-    new Chart(document.getElementById('categoryChart'), {
+    dashboardCharts.categoryChart = new Chart(document.getElementById('categoryChart'), {
         type: 'doughnut',
         data: {
             labels: <?= json_encode($nombresCats) ?>,
@@ -151,7 +199,7 @@ require __DIR__ . '/../layouts/admin-header.php';
     });
 
     // Gráfico de Barras
-    new Chart(document.getElementById('topProductsChart'), {
+    dashboardCharts.topProductsChart = new Chart(document.getElementById('topProductsChart'), {
         type: 'bar',
         data: {
             labels: <?= json_encode($nombresTop) ?>,
@@ -175,6 +223,190 @@ require __DIR__ . '/../layouts/admin-header.php';
                 },
                 x: { grid: { display: false } }
             }
+        }
+    });
+
+    function abrirModalImprimirDashboard() {
+        const modal = document.getElementById('modalImprimirDashboard');
+        if (!modal) return;
+        establecerFechasHoyPorDefecto();
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function cerrarModalImprimirDashboard() {
+        const modal = document.getElementById('modalImprimirDashboard');
+        if (!modal) return;
+        modal.classList.remove('active');
+        setTimeout(() => { modal.style.display = 'none'; }, 250);
+    }
+
+    function actualizarRangoPersonalizado() {
+        const periodo = document.getElementById('reportePeriodo');
+        const rango = document.getElementById('rangoPersonalizado');
+        if (!periodo || !rango) return;
+        rango.style.display = periodo.value === 'personalizado' ? 'flex' : 'none';
+    }
+
+    function establecerFechasHoyPorDefecto() {
+        const fechaInicio = document.getElementById('fechaInicioReporte');
+        const fechaFin = document.getElementById('fechaFinReporte');
+        const hoy = new Date().toISOString().slice(0, 10);
+
+        if (fechaInicio && !fechaInicio.value) {
+            fechaInicio.value = hoy;
+        }
+        if (fechaFin && !fechaFin.value) {
+            fechaFin.value = hoy;
+        }
+    }
+
+    async function obtenerImagenesGraficas() {
+        const imagenes = [];
+        const mapeo = [
+            { key: 'salesChart', titulo: 'Rendimiento de Ventas Semana' },
+            { key: 'categoryChart', titulo: 'Ventas por Categoría' },
+            { key: 'topProductsChart', titulo: 'Productos Más Vendidos' }
+        ];
+
+        const canvasToBlob = (canvas) => new Promise((resolve) => {
+            canvas.toBlob((blob) => resolve(blob), 'image/png', 1.0);
+        });
+
+        for (const item of mapeo) {
+            try {
+                const chart = dashboardCharts[item.key];
+                const canvasOriginal = chart?.canvas;
+                if (chart && canvasOriginal) {
+                    chart.update('none');
+                    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                    const canvasExport = document.createElement('canvas');
+                    const width = canvasOriginal.width || 900;
+                    const height = canvasOriginal.height || 420;
+
+                    canvasExport.width = width;
+                    canvasExport.height = height;
+
+                    const ctx = canvasExport.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(canvasOriginal, 0, 0, width, height);
+
+                    const dataUrl = canvasExport.toDataURL('image/png', 1.0);
+                    const blob = await canvasToBlob(canvasExport);
+                    imagenes.push({
+                        key: item.key,
+                        titulo: item.titulo,
+                        dataUrl,
+                        blob,
+                        size: blob?.size || 0
+                    });
+                } else {
+                    imagenes.push({
+                        key: item.key,
+                        titulo: item.titulo,
+                        dataUrl: '',
+                        blob: null,
+                        size: 0
+                    });
+                }
+            } catch (e) {
+                imagenes.push({
+                    key: item.key,
+                    titulo: item.titulo,
+                    dataUrl: '',
+                    blob: null,
+                    size: 0
+                });
+            }
+        }
+
+        return imagenes;
+    }
+
+    async function imprimirDashboardPDF() {
+        const periodo = document.getElementById('reportePeriodo');
+        const fechaInicio = document.getElementById('fechaInicioReporte');
+        const fechaFin = document.getElementById('fechaFinReporte');
+
+        if (periodo.value === 'personalizado') {
+            if (!fechaInicio.value || !fechaFin.value) {
+                alert('Selecciona fecha de inicio y fecha de fin.');
+                return;
+            }
+            if (fechaInicio.value > fechaFin.value) {
+                alert('La fecha de inicio no puede ser mayor que la fecha de fin.');
+                return;
+            }
+        }
+
+        const imagenes = await obtenerImagenesGraficas();
+        const capturasValidas = imagenes.filter((img) => img.size > 1000);
+        if (capturasValidas.length === 0) {
+            alert('No se pudo capturar ninguna gráfica del dashboard.');
+            return;
+        }
+
+        const nuevaVentana = window.open('', '_blank');
+        const formData = new FormData();
+        formData.append('imprimir_ventas_fecha', '1');
+        formData.append('incluir_graficas', '1');
+        formData.append('periodo', periodo.value);
+        formData.append('fecha_inicio', fechaInicio.value || '');
+        formData.append('fecha_fin', fechaFin.value || '');
+        formData.append('graficas_data', JSON.stringify(imagenes.map(({ key, titulo, dataUrl, size }) => ({ key, titulo, dataUrl, size }))));
+
+        imagenes.forEach((imagen) => {
+            if (imagen.blob && imagen.size > 0) {
+                formData.append('grafica_' + imagen.key, imagen.blob, imagen.key + '.png');
+            }
+        });
+
+        try {
+            const response = await fetch('/ElZapato/src/api/generar_reporte_dashboard.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'No se pudo generar el PDF.');
+            }
+
+            const pdfBlob = await response.blob();
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+
+            if (nuevaVentana) {
+                nuevaVentana.location.href = pdfUrl;
+            } else {
+                window.open(pdfUrl, '_blank');
+            }
+        } catch (error) {
+            if (nuevaVentana) {
+                nuevaVentana.close();
+            }
+            alert('Error al generar PDF: ' + error.message);
+            return;
+        }
+
+        cerrarModalImprimirDashboard();
+    }
+
+    document.getElementById('btnImprimirDashboard')?.addEventListener('click', abrirModalImprimirDashboard);
+    document.getElementById('cerrarModalImprimirDashboard')?.addEventListener('click', cerrarModalImprimirDashboard);
+    document.getElementById('cancelarImpresionDashboard')?.addEventListener('click', cerrarModalImprimirDashboard);
+    document.getElementById('confirmarImpresionDashboard')?.addEventListener('click', imprimirDashboardPDF);
+    document.getElementById('reportePeriodo')?.addEventListener('change', actualizarRangoPersonalizado);
+    establecerFechasHoyPorDefecto();
+    actualizarRangoPersonalizado();
+
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('modalImprimirDashboard');
+        if (!modal) return;
+        if (event.target === modal) {
+            cerrarModalImprimirDashboard();
         }
     });
 </script>

@@ -6,5 +6,11 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
-VentasController::obtenerUltimasVentas();
+$all = isset($_GET['all']) && $_GET['all'] === '1';
+
+if ($all) {
+	VentasController::obtenerVentas(null);
+} else {
+	VentasController::obtenerUltimasVentas();
+}
 ?>

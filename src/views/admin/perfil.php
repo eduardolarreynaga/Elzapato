@@ -100,7 +100,7 @@ $email = $_SESSION['email'] ?? 'No disponible';
     </style>
 </head>
 <body>
-    <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
+    <?php include __DIR__ . '/../layouts/header.php'; ?>
 
     <main class="profile-page">
         <section class="profile-card">

@@ -40,30 +40,78 @@ $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .table-tools {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .acciones-venta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-badge.cancelled {
+        background: #772C24;
+        color: #fff;
+    }
+
+    #filterVentaFecha {
+        background: #E4E0E1;
+        border: 1px solid #D6C0B3;
+        color: #4D3B2E;
+        border-radius: 6px;
+        padding: 6px 8px;
+    }
+
+    #filterVentaFecha::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        filter: sepia(45%) saturate(220%) hue-rotate(335deg) brightness(0.75);
+    }
+
+    #filterVentaFecha:focus {
+        outline: none;
+        border-color: #AB886D;
+        box-shadow: 0 0 0 2px rgba(171, 136, 109, 0.2);
+    }
+
+    .swal2-actions {
+        gap: 12px !important;
+    }
+</style>
+
 <div class="ventas-page">
     
     <div class="stats-grid stats-list">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-receipt"></i> Ventas Registradas</span>
-            <span class="stats-list-value"><?= $totalVentas ?></span>
+            <span class="stats-list-value" id="statsVentasTotal"><?= $totalVentas ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-dollar-sign"></i> Total Facturado</span>
-            <span class="stats-list-value">$<?= number_format($totalFacturado, 2) ?></span>
+            <span class="stats-list-value" id="statsVentasFacturado">$<?= number_format($totalFacturado, 2) ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-credit-card"></i> Pagos con Tarjeta</span>
-            <span class="stats-list-value"><?= $pagosTarjeta ?></span>
+            <span class="stats-list-value" id="statsVentasTarjeta"><?= $pagosTarjeta ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-user-check"></i> Ventas con Cliente</span>
-            <span class="stats-list-value"><?= $ventasConCliente ?></span>
+            <span class="stats-list-value" id="statsVentasCliente"><?= $ventasConCliente ?></span>
         </div>
     </div>
 
     <div class="actions-bar">
         <div class="actions-left">
             <div class="filters">
+                <div class="header-search" style="min-width: 210px;">
+                    <i class="fas fa-calendar-alt"></i>
+                    <input type="date" id="filterVentaFecha">
+                </div>
                 <select class="filter-select" id="filterVentaMetodo">
                     <option value="">Método de Pago</option>
                     <option value="efectivo">Efectivo</option>
@@ -80,7 +128,10 @@ require __DIR__ . '/../layouts/admin-header.php';
     <div class="table-card">
         <div class="table-header">
             <h3>Listado de Ventas Realizadas</h3>
-            <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+            <div class="table-tools">
+                <a href="reportes.php" class="view-all"><i class="fas fa-chart-line"></i> Ver reportes</a>
+                <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+            </div>
         </div>
         <div class="table-responsive">
             <table class="data-table" id="ventasTable">
@@ -99,11 +150,12 @@ require __DIR__ . '/../layouts/admin-header.php';
                 <tbody>
                     <?php if(empty($ventas)): ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">No se encontraron registros de ventas.</td>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">No se encontraron registros de ventas.</td>
                     </tr>
                     <?php else: ?>
                         <?php foreach ($ventas as $venta): ?>
-                        <tr>
+                        <?php $estadoVenta = strtolower((string)($venta['estado_venta'] ?? 'completada')); ?>
+                        <tr data-sale-id="<?= (int)$venta['id_venta'] ?>">
                             <td style="font-weight: bold; color: #A67C52;">
                                 V-<?= str_pad($venta["id_venta"], 6, "0", STR_PAD_LEFT) ?>
                             </td>
@@ -113,10 +165,14 @@ require __DIR__ . '/../layouts/admin-header.php';
                             <td><?= date("d/m/Y H:i", strtotime($venta["fecha_venta"])) ?></td>
                             <td style="font-weight: bold;">$<?= number_format($venta["total_venta"], 2) ?></td>
                             <td>
-                                <span class="status-badge completed">Completada</span>
+                                <span class="status-badge <?= $estadoVenta === 'anulada' ? 'cancelled' : 'completed' ?>">
+                                    <?= $estadoVenta === 'anulada' ? 'Anulada' : 'Completada' ?>
+                                </span>
                             </td>
-                            <td>
-                                <button class="btn-icon small" onclick="editVenta(this)"><i class="fas fa-edit"></i></button>
+                            <td class="acciones-venta acciones-admin">
+                                <button class="btn-icon small" onclick="editarVenta(<?= (int)$venta['id_venta'] ?>, '<?= $estadoVenta ?>', event)" title="Editar venta"><i class="fas fa-edit"></i></button>
+                                <button class="btn-icon small" onclick="verDetalleVenta(<?= (int)$venta['id_venta'] ?>, event)" title="Ver detalle"><i class="fas fa-eye"></i></button>
+                                <button class="btn-icon small" onclick="imprimirTicketVenta(<?= (int)$venta['id_venta'] ?>, event)" title="Imprimir ticket"><i class="fas fa-print"></i></button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -128,31 +184,355 @@ require __DIR__ . '/../layouts/admin-header.php';
 </div>
 
 <script>
+    function mostrarAlertaSistema({ titulo = 'Aviso', mensaje = '', icono = 'info', color = '#AB886D' } = {}) {
+        Swal.fire({
+            title: titulo,
+            html: mensaje,
+            icon: icono,
+            confirmButtonColor: color
+        });
+    }
+
+    function imprimirTicketVenta(idVenta, event) {
+        if (event) event.stopPropagation();
+        window.open('/ElZapato/src/api/generar_ticket.php?id=' + idVenta, '_blank');
+    }
+
+    async function editarVenta(idVenta, estadoVenta, event) {
+        if (event) event.stopPropagation();
+
+        const estadoActual = (estadoVenta || 'completada').toLowerCase();
+        if (estadoActual === 'anulada') {
+            mostrarAlertaSistema({
+                titulo: 'Venta ya anulada',
+                mensaje: `La venta #${idVenta} ya se encuentra en estado anulada.`,
+                icono: 'info',
+                color: '#AB886D'
+            });
+            return;
+        }
+
+        const confirmacion = await Swal.fire({
+            title: '¿Anular venta?',
+            html: `La venta <strong>#${idVenta}</strong> cambiará a <strong>ANULADA</strong>.<br>Se reincorporará el stock y se eliminará el ingreso de la venta.`,
+            icon: 'warning',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn-modal-primary',
+                cancelButton: 'btn-modal-cancel'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Sí, anular',
+            cancelButtonText: 'Cancelar'
+
+        });
+
+        if (!confirmacion.isConfirmed) return;
+
+        try {
+            const resp = await fetch('/ElZapato/src/api/actualizar_venta.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_venta: idVenta,
+                    estado: 'anulada',
+                    accion: 'cambiar_estado'
+                })
+            });
+
+            const data = await resp.json();
+            if (!resp.ok || !data.success) {
+                throw new Error(data.error || 'No se pudo anular la venta.');
+            }
+
+            const row = document.querySelector(`#ventasTable tbody tr[data-sale-id="${idVenta}"]`);
+            if (row) {
+                if (row.children[5]) row.children[5].textContent = '$0.00';
+                if (row.children[6]) {
+                    row.children[6].innerHTML = '<span class="status-badge cancelled">Anulada</span>';
+                }
+                const btnEditar = row.querySelector('button[title="Editar venta"]');
+                if (btnEditar) {
+                    btnEditar.setAttribute('onclick', `editarVenta(${idVenta}, 'anulada', event)`);
+                }
+            }
+
+            applyVentasFilters();
+            mostrarAlertaSistema({
+                titulo: 'Venta anulada',
+                mensaje: `La venta #${idVenta} fue anulada correctamente.`,
+                icono: 'success',
+                color: '#AB886D'
+            });
+        } catch (error) {
+            mostrarAlertaSistema({
+                titulo: 'No se pudo anular',
+                mensaje: error.message || 'Ocurrió un error al anular la venta.',
+                icono: 'error',
+                color: '#772C24'
+            });
+        }
+    }
+
+    function construirFilaVenta(venta) {
+        const idVenta = parseInt(venta.id_venta || 0, 10);
+        const cliente = (venta.nombre_cliente || 'Cliente Mostrador');
+        const usuario = (venta.nombre_usuario || venta.usuario || 'Usuario');
+        const metodo = (venta.metodo_pago || 'N/A');
+        const total = parseFloat(venta.total_venta || 0);
+        const fecha = venta.fecha_venta ? new Date(venta.fecha_venta) : null;
+        const fechaTxt = fecha
+            ? fecha.toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : 'N/A';
+        const estado = (venta.estado_venta || 'completada').toString().toLowerCase();
+        const badgeClass = estado === 'anulada' ? 'cancelled' : 'completed';
+        const badgeText = estado === 'anulada' ? 'Anulada' : 'Completada';
+        const totalDisplay = estado === 'anulada' ? 0 : total;
+
+        const fila = document.createElement('tr');
+        fila.setAttribute('data-sale-id', String(idVenta));
+        fila.innerHTML = `
+            <td style="font-weight: bold; color: #A67C52;">V-${String(idVenta).padStart(6, '0')}</td>
+            <td>${cliente}</td>
+            <td><small>${usuario}</small></td>
+            <td>${metodo}</td>
+            <td>${fechaTxt}</td>
+            <td style="font-weight: bold;">$${totalDisplay.toFixed(2)}</td>
+            <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
+            <td class="acciones-venta">
+                <button class="btn-icon small" onclick="editarVenta(${idVenta}, '${estado}', event)" title="Editar venta"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon small" onclick="verDetalleVenta(${idVenta}, event)" title="Ver detalle"><i class="fas fa-eye"></i></button>
+                <button class="btn-icon small" onclick="imprimirTicketVenta(${idVenta}, event)" title="Imprimir ticket"><i class="fas fa-print"></i></button>
+            </td>
+        `;
+        return fila;
+    }
+
+    function actualizarStatsVentas() {
+        const filas = Array.from(document.querySelectorAll('#ventasTable tbody tr[data-sale-id]'))
+            .filter(row => row.style.display !== 'none');
+
+        const total = filas.length;
+        let facturado = 0;
+        let tarjeta = 0;
+        let conCliente = 0;
+
+        filas.forEach(row => {
+            const cliente = (row.children[1]?.textContent || '').trim().toLowerCase();
+            const metodo = (row.children[3]?.textContent || '').trim().toLowerCase();
+            const estado = (row.children[6]?.textContent || '').trim().toLowerCase();
+            const totalTxt = (row.children[5]?.textContent || '').replace(/[^0-9.\-]/g, '');
+            const totalNum = parseFloat(totalTxt || '0');
+
+            if (estado.includes('anulada')) {
+                return;
+            }
+
+            facturado += Number.isFinite(totalNum) ? totalNum : 0;
+            if (metodo.includes('tarjeta')) tarjeta++;
+            if (cliente !== '' && cliente !== 'cliente mostrador') conCliente++;
+        });
+
+        const totalEl = document.getElementById('statsVentasTotal');
+        const facturadoEl = document.getElementById('statsVentasFacturado');
+        const tarjetaEl = document.getElementById('statsVentasTarjeta');
+        const clienteEl = document.getElementById('statsVentasCliente');
+
+        if (totalEl) totalEl.textContent = String(total);
+        if (facturadoEl) facturadoEl.textContent = '$' + facturado.toFixed(2);
+        if (tarjetaEl) tarjetaEl.textContent = String(tarjeta);
+        if (clienteEl) clienteEl.textContent = String(conCliente);
+    }
+
+    async function cargarVentasSiTablaVacia() {
+        const tbody = document.querySelector('#ventasTable tbody');
+        if (!tbody) return;
+
+        const filasConVenta = tbody.querySelectorAll('tr[data-sale-id]').length;
+        if (filasConVenta > 0) return;
+
+        try {
+            const resp = await fetch('/ElZapato/src/api/obtener_ventas.php?all=1');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+            const ventasData = await resp.json();
+            if (!Array.isArray(ventasData) || ventasData.length === 0 || ventasData.error) {
+                return;
+            }
+
+            tbody.innerHTML = '';
+            ventasData.forEach(v => tbody.appendChild(construirFilaVenta(v)));
+            applyVentasFilters();
+            actualizarStatsVentas();
+        } catch (error) {
+            mostrarAlertaSistema({
+                titulo: 'No se pudo actualizar Ventas',
+                mensaje: 'No fue posible cargar el historial de ventas en este momento.',
+                icono: 'warning',
+                color: '#AB886D'
+            });
+        }
+    }
+
+    async function verDetalleVenta(idVenta, event) {
+        if (event) event.stopPropagation();
+
+        try {
+            const [detalleResp, infoResp] = await Promise.all([
+                fetch('/ElZapato/src/api/obtener_detalle_venta.php?id=' + idVenta),
+                fetch('/ElZapato/src/api/obtener_info_venta.php?id=' + idVenta)
+            ]);
+
+            if (!detalleResp.ok || !infoResp.ok) {
+                throw new Error('No se pudo consultar la venta.');
+            }
+
+            const detalles = await detalleResp.json();
+            const infoVenta = await infoResp.json();
+
+            if (!Array.isArray(detalles) || detalles.length === 0 || detalles.error) {
+                mostrarAlertaSistema({
+                    titulo: 'Sin detalle disponible',
+                    mensaje: 'No se encontraron productos para esta venta.',
+                    icono: 'info',
+                    color: '#AB886D'
+                });
+                return;
+            }
+
+            let filas = '';
+            let total = 0;
+            detalles.forEach(item => {
+                const cantidad = parseInt(item.cantidad || 0, 10);
+                const precio = parseFloat(item.precio_unitario || 0);
+                const subtotal = parseFloat(item.subtotal || (cantidad * precio));
+                total += subtotal;
+                filas += `
+                    <tr>
+                        <td style="padding:8px; border-bottom:1px solid #eee;">${cantidad}</td>
+                        <td style="padding:8px; border-bottom:1px solid #eee;">${item.nombre_producto || 'Producto'}</td>
+                        <td style="padding:8px; border-bottom:1px solid #eee;">${item.talla || '—'}</td>
+                        <td style="padding:8px; border-bottom:1px solid #eee;">${item.color || '—'}</td>
+                        <td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">$${precio.toFixed(2)}</td>
+                        <td style="padding:8px; border-bottom:1px solid #eee; text-align:right; font-weight:600;">$${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            const fecha = infoVenta?.fecha_venta ? new Date(infoVenta.fecha_venta).toLocaleString('es-MX') : 'N/A';
+            const metodo = infoVenta?.metodo_pago || 'N/A';
+            const usuario = infoVenta?.usuario || 'N/A';
+
+            const html = `
+                <div style="text-align:left; margin-bottom:12px; background:#f8f6f4; padding:10px 12px; border-radius:8px;">
+                    <div><strong>Venta:</strong> #${idVenta}</div>
+                    <div><strong>Fecha:</strong> ${fecha}</div>
+                    <div><strong>Cajero:</strong> ${usuario}</div>
+                    <div><strong>Método:</strong> ${metodo}</div>
+                </div>
+                <div style="max-height:360px; overflow:auto; border:1px solid #eee; border-radius:8px;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                        <thead>
+                            <tr style="background:#AB886D; color:white;">
+                                <th style="padding:8px; text-align:left;">Cant.</th>
+                                <th style="padding:8px; text-align:left;">Producto</th>
+                                <th style="padding:8px; text-align:left;">Talla</th>
+                                <th style="padding:8px; text-align:left;">Color</th>
+                                <th style="padding:8px; text-align:right;">P. Unit.</th>
+                                <th style="padding:8px; text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filas}</tbody>
+                        <tfoot>
+                            <tr style="background:#f4f1ef;">
+                                <td colspan="5" style="padding:10px; text-align:right; font-weight:700;">TOTAL</td>
+                                <td style="padding:10px; text-align:right; font-weight:700;">$${total.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Detalle de Venta',
+                html,
+                width: '900px',
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'btn-modal-primary',
+                    cancelButton: 'btn-modal-cancel'
+                },
+                showCancelButton: true,
+                cancelButtonText: 'Cerrar',
+                confirmButtonText: '<i class="fas fa-print"></i> Imprimir Ticket'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    imprimirTicketVenta(idVenta);
+                }
+            });
+        } catch (error) {
+            mostrarAlertaSistema({
+                titulo: 'No se pudo abrir la venta',
+                mensaje: 'Ocurrió un problema al consultar el detalle. Intenta nuevamente.',
+                icono: 'error',
+                color: '#772C24'
+            });
+        }
+    }
+
     // Filtrado JS
     const searchVenta = document.getElementById('searchVenta');
     const filterMetodo = document.getElementById('filterVentaMetodo');
+    const filterVentaFecha = document.getElementById('filterVentaFecha');
+
+    function fechaFilaToISO(fechaTexto) {
+        const raw = (fechaTexto || '').trim();
+        if (!raw) return '';
+
+        const parteFecha = raw.split(' ')[0] || '';
+        const pedazos = parteFecha.split('/');
+        if (pedazos.length !== 3) return '';
+
+        const [dia, mes, anio] = pedazos;
+        if (!dia || !mes || !anio) return '';
+
+        return `${anio.padStart(4, '0')}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    }
 
     function applyVentasFilters() {
         const term = (searchVenta?.value || '').toLowerCase().trim();
         const metodo = (filterMetodo?.value || '').toLowerCase();
+        const fecha = (filterVentaFecha?.value || '').trim();
 
         document.querySelectorAll('#ventasTable tbody tr').forEach(row => {
             if(row.cells.length < 2) return;
             const text = row.textContent.toLowerCase();
             const metodoCell = row.cells[3]?.textContent.toLowerCase() || '';
+            const fechaCell = row.cells[4]?.textContent || '';
+            const fechaIso = fechaFilaToISO(fechaCell);
             const passSearch = term === '' || text.includes(term);
             const passMetodo = metodo === '' || metodoCell.includes(metodo);
-            row.style.display = (passSearch && passMetodo) ? '' : 'none';
+            const passFecha = fecha === '' || fechaIso === fecha;
+            row.style.display = (passSearch && passMetodo && passFecha) ? '' : 'none';
         });
+
+        actualizarStatsVentas();
     }
 
     searchVenta?.addEventListener('input', applyVentasFilters);
     filterMetodo?.addEventListener('change', applyVentasFilters);
+    filterVentaFecha?.addEventListener('change', applyVentasFilters);
 
     document.getElementById('btnResetVentaFiltros')?.addEventListener('click', function () {
         if (filterMetodo) filterMetodo.value = '';
         if (searchVenta) searchVenta.value = '';
+        if (filterVentaFecha) filterVentaFecha.value = '';
         applyVentasFilters();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        cargarVentasSiTablaVacia();
+        actualizarStatsVentas();
     });
 </script>
 

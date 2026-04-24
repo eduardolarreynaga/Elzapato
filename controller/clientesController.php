@@ -18,9 +18,10 @@ class ClientesController {
             $respuesta = ClientesModel::mdlIngresarCliente($tabla, $datos);
 
             if ($respuesta == "ok") {
-                echo '<script>
-                    window.location = "clientes.php";
-                </script>';
+                $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+                if ($pagina < 1) $pagina = 1;
+                header('Location: clientes.php?pagina=' . $pagina . '&res=creado');
+                exit;
             }
         }
     }
@@ -42,9 +43,10 @@ class ClientesController {
             $respuesta = ClientesModel::mdlEditarCliente($tabla, $datos);
 
             if ($respuesta == "ok") {
-                echo '<script>
-                    window.location = "clientes.php";
-                </script>';
+                $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+                if ($pagina < 1) $pagina = 1;
+                header('Location: clientes.php?pagina=' . $pagina . '&res=actualizado');
+                exit;
             }
         }
     }

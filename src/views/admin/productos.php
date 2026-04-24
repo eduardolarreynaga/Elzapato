@@ -32,8 +32,12 @@ $proveedores = ProductosController::ctrMostrarProveedores();
 
 // 3. ESTADÍSTICAS
 $totalModelos = count($productos);
+$stockBajoUmbral = defined('LOW_STOCK_THRESHOLD') ? (int)LOW_STOCK_THRESHOLD : 10;
 $totalStock = 0;
 $bajoStockCount = 0;
+$totalVariantesCount = 0;
+$totalActivosCount = 0;
+$totalInactivosCount = 0;
 
 if($productos){
     foreach($productos as $p){
@@ -42,8 +46,21 @@ if($productos){
         foreach($vars as $v){
             $d = explode("|", $v);
             $cant = (int)($d[3] ?? 0);
+            $estadoVariante = $d[5] ?? 'activo';
+
+            if ($cant <= 0 && $estadoVariante === 'activo') {
+                $estadoVariante = 'inactivo';
+            }
+
             $totalStock += $cant;
-            if($cant <= 10 && $cant > 0) $bajoStockCount++;
+            if($cant <= $stockBajoUmbral && $cant > 0) $bajoStockCount++;
+            $totalVariantesCount++;
+
+            if ($estadoVariante === 'activo') {
+                $totalActivosCount++;
+            } else {
+                $totalInactivosCount++;
+            }
         }
     }
 }
@@ -51,6 +68,10 @@ if($productos){
 $activeMenu = 'productos';
 $pageTitle = 'Inventario | ElZapato';
 $pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css?v=' . time(), '/ElZapato/Assets/css/pages/admin-productos.css?v=' . time()];
+$imgProductosDir = $basePath . '/Assets/img/productos/';
+$imgProductosUrl = '/ElZapato/Assets/img/productos/';
+$imgDefault = '/ElZapato/Assets/img/zapa.jpeg';
+$imgCacheBust = time();
 require __DIR__ . '/../layouts/admin-shell-start.php';
 ?>
 
@@ -112,11 +133,11 @@ require __DIR__ . '/../layouts/admin-header.php';
     <div class="stats-grid stats-list" aria-label="Resumen de productos">
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-boxes"></i> Total Variantes</span>
-            <span class="stats-list-value" id="totalVariantes">0</span>
+            <span class="stats-list-value" id="totalVariantes"><?= $totalVariantesCount ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-check-circle"></i> Activos</span>
-            <span class="stats-list-value" id="totalActivos">0</span>
+            <span class="stats-list-value" id="totalActivos"><?= $totalActivosCount ?></span>
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</span>
@@ -124,12 +145,12 @@ require __DIR__ . '/../layouts/admin-header.php';
         </div>
         <div class="stats-list-item">
             <span class="stats-list-label"><i class="fas fa-ban"></i> Inactivos</span>
-            <span class="stats-list-value" id="totalInactivos">0</span>
+            <span class="stats-list-value" id="totalInactivos"><?= $totalInactivosCount ?></span>
         </div>
     </div>
 
     <div class="actions-bar" style="margin-bottom: 15px;">
-        <button class="btn-primary" id="btnNuevoProducto" style="background:#AB886D; border:none; padding:12px 24px; border-radius:8px; color:white; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;">
+        <button class="btn-outline-primary" id="btnNuevoProducto" type="button">
             <i class="fas fa-plus"></i> Nuevo Producto
         </button>
         <div class="filters">
@@ -143,7 +164,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                 <option value="">Estado</option>
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
-                <option value="bajo_stock">Stock Bajo (≤10)</option>
+                <option value="bajo_stock">Stock Bajo (≤<?= $stockBajoUmbral ?>)</option>
                 <option value="stock_cero">Stock Cero</option>
             </select>
             <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
@@ -189,10 +210,14 @@ require __DIR__ . '/../layouts/admin-header.php';
                             if($v_estado == 'activo') $totalActivos++;
                             if($v_estado == 'inactivo') $totalInactivos++;
 
-                            $imgDefault = "/ElZapato/Assets/img/zapa.jpeg";
-                            $rutaImagen = "/ElZapato/Assets/img/productos/" . $v_id_v . ".jpg";
-                            $fullPathServer = $_SERVER['DOCUMENT_ROOT'] . $rutaImagen;
-                            $img = file_exists($fullPathServer) ? $rutaImagen . "?t=" . time() : $imgDefault;
+                            $img = $imgDefault;
+                            foreach (['jpg', 'jpeg', 'png', 'webp'] as $extImagen) {
+                                $fullPathServer = $imgProductosDir . $v_id_v . '.' . $extImagen;
+                                if (file_exists($fullPathServer)) {
+                                    $img = $imgProductosUrl . $v_id_v . '.' . $extImagen . '?t=' . $imgCacheBust;
+                                    break;
+                                }
+                            }
 
                             $max = 50; 
                             $perc = min(($v_stock / $max) * 100, 100);
@@ -240,14 +265,14 @@ require __DIR__ . '/../layouts/admin-header.php';
                         </span>
                      </td>
                     <td>
-                        <div style="display:flex; gap:15px; justify-content:center;">
-                            <button type="button" onclick="viewProduct(this)" title="Ver Detalle" style="color:#4D3B2E; background:none; border:none; cursor:pointer; font-size:1.1rem;">
+                        <div class="acciones-admin">
+                            <button type="button" class="btn-icon small" onclick="viewProduct(this)" title="Ver Detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button type="button" onclick="btnEditProduct(this)" title="Editar" style="color:#AB886D; background:none; border:none; cursor:pointer; font-size:1.1rem;">
+                            <button type="button" class="btn-icon small" onclick="btnEditProduct(this)" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" onclick="deleteVariant(<?= $v_id_v ?>)" title="Eliminar" style="color:#772C24; background:none; border:none; cursor:pointer; font-size:1.1rem;">
+                            <button type="button" class="btn-icon small" onclick="deleteVariant(<?= $v_id_v ?>)" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -276,8 +301,8 @@ require __DIR__ . '/../layouts/admin-header.php';
             <div class="info-item"><label>Variante</label><span id="v_variante_txt"></span></div>
             <div class="info-item" style="background:#f4f1ef;"><label>Precio</label><span id="v_precio_txt" style="font-size:1.2rem; font-weight:bold;"></span></div>
         </div>
-        <div style="margin-top:20px; text-align:right;">
-            <button onclick="closeViewModal()" style="padding:12px 35px; background:#4D3B2E; color:white; border:none; border-radius:8px; cursor:pointer;">Cerrar</button>
+        <div class="modal-actions" style="margin-top:20px;">
+            <button type="button" class="btn-modal-cancel" onclick="closeViewModal()">Cerrar</button>
         </div>
     </div>
 </div>
@@ -368,8 +393,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <label>SKU (Código de Barras) *</label>
                     <div class="input-group">
                         <span class="input-group-icon"><i class="fas fa-barcode"></i></span>
-                        <input type="text" name="codigo_barras" id="codigo_barras" required>
+                        <input type="text" name="codigo_barras" id="codigo_barras" required maxlength="7" inputmode="numeric" pattern="\d{7}">
                     </div>
+                    <small id="skuHelper" style="display:block; margin-top:6px; color:#666;">El SKU debe tener 7 números.</small>
                 </div>
                 <div class="form-group">
                     <label>Precio *</label>
@@ -410,9 +436,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
-                <button type="button" onclick="closeModal()" style="padding:10px 20px; background:#eee; border:none; border-radius:8px; cursor:pointer;">Cancelar</button>
-                <button type="submit" style="padding:10px 25px; background:#AB886D; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Guardar</button>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn-modal-primary">Guardar</button>
             </div>
         </form>
     </div>
@@ -421,15 +447,21 @@ require __DIR__ . '/../layouts/admin-header.php';
 <script>
 // Actualizar estadísticas
 function actualizarEstadisticas() {
-    const totalFilas = document.querySelectorAll('#tablaProductos tbody tr').length;
-    const activos = document.querySelectorAll('#tablaProductos tbody tr:not(.fila-inactiva)').length;
+    const filasVisibles = Array.from(document.querySelectorAll('#tablaProductos tbody tr'))
+        .filter(row => row.style.display !== 'none');
+
+    const totalFilas = filasVisibles.length;
+    const activos = filasVisibles.filter(row => !row.classList.contains('fila-inactiva')).length;
     const inactivos = totalFilas - activos;
-    const stockCero = document.querySelectorAll('#tablaProductos tbody tr[data-stock="0"]').length;
+    const bajoStock = filasVisibles.filter(row => {
+        const stock = parseInt(row.dataset.stock || '0', 10);
+        return stock > 0 && stock <= STOCK_BAJO_UMBRAL;
+    }).length;
     
     document.getElementById('totalVariantes').innerText = totalFilas;
     document.getElementById('totalActivos').innerText = activos;
     document.getElementById('totalInactivos').innerText = inactivos;
-    document.getElementById('totalBajoStock').innerText = stockCero > 0 ? stockCero : '0';
+    document.getElementById('totalBajoStock').innerText = bajoStock > 0 ? bajoStock : '0';
 }
 
 // Función para verificar stock en el formulario
@@ -493,7 +525,7 @@ function applyProductFilters() {
         } else if (status === 'inactivo') {
             passStatus = rowStatus === 'inactivo' || rowStock <= 0;
         } else if (status === 'bajo_stock') {
-            passStatus = rowStock <= 10 && rowStock > 0;
+            passStatus = rowStock <= STOCK_BAJO_UMBRAL && rowStock > 0;
         } else if (status === 'stock_cero') {
             passStatus = rowStock <= 0;
         }
@@ -502,6 +534,76 @@ function applyProductFilters() {
     });
     
     actualizarEstadisticas();
+}
+
+const SKU_LENGTH = 7;
+const STOCK_BAJO_UMBRAL = <?= (int)$stockBajoUmbral ?>;
+const skuInput = document.getElementById('codigo_barras');
+const skuHelper = document.getElementById('skuHelper');
+
+function obtenerSkusExistentes() {
+    const skus = new Set();
+    document.querySelectorAll('#tablaProductos tbody tr').forEach(row => {
+        const sku = (row.dataset.sku || '').trim();
+        if (sku !== '') {
+            skus.add(sku);
+        }
+    });
+    return skus;
+}
+
+function validarSkuFormulario() {
+    if (!skuInput || !skuHelper) return true;
+
+    const valorOriginal = (skuInput.value || '').trim();
+    const soloDigitos = valorOriginal.replace(/\D/g, '');
+    if (valorOriginal !== soloDigitos) {
+        skuInput.value = soloDigitos;
+    }
+
+    const sku = skuInput.value.trim();
+    const faltan = Math.max(0, SKU_LENGTH - sku.length);
+
+    const idVarianteActual = (document.getElementById('id_variante')?.value || '').trim();
+    const skusExistentes = obtenerSkusExistentes();
+
+    if (idVarianteActual !== '') {
+        const filaActual = document.querySelector(`#tablaProductos tbody tr[data-id-v="${idVarianteActual}"]`);
+        const skuActualFila = (filaActual?.dataset?.sku || '').trim();
+        if (skuActualFila !== '') {
+            skusExistentes.delete(skuActualFila);
+        }
+    }
+
+    const existe = sku !== '' && skusExistentes.has(sku);
+
+    if (sku.length === 0) {
+        skuHelper.textContent = `El SKU debe tener ${SKU_LENGTH} números.`;
+        skuHelper.style.color = '#666';
+        return false;
+    }
+
+    if (faltan > 0) {
+        skuHelper.textContent = `Faltan ${faltan} número${faltan === 1 ? '' : 's'} para completar el SKU (${SKU_LENGTH}).`;
+        skuHelper.style.color = '#bc6e32';
+        return false;
+    }
+
+    if (sku.length > SKU_LENGTH) {
+        skuHelper.textContent = `El SKU no puede superar ${SKU_LENGTH} números.`;
+        skuHelper.style.color = '#772C24';
+        return false;
+    }
+
+    if (existe) {
+        skuHelper.textContent = 'SKU ya detectado en la lista. Al guardar, el sistema validará si realmente está duplicado.';
+        skuHelper.style.color = '#bc6e32';
+        return true;
+    }
+
+    skuHelper.textContent = 'SKU válido y disponible.';
+    skuHelper.style.color = '#2e7d32';
+    return true;
 }
 
 searchInput?.addEventListener('input', applyProductFilters);
@@ -597,6 +699,7 @@ function btnEditProduct(btn) {
     
     document.getElementById('currentImage').src = d.img;
     document.getElementById('modalTitle').innerText = 'Editar Variante';
+    validarSkuFormulario();
     document.getElementById('productModal').style.display = 'flex';
 }
 
@@ -615,6 +718,10 @@ function closeModal() {
     const estadoSwitch = document.getElementById('estado_switch');
     estadoSwitch.disabled = false;
     estadoSwitch.removeAttribute('data-manual-change');
+    if (skuHelper) {
+        skuHelper.textContent = `El SKU debe tener ${SKU_LENGTH} números.`;
+        skuHelper.style.color = '#666';
+    }
 }
 
 // Nuevo producto
@@ -636,6 +743,7 @@ document.getElementById('btnNuevoProducto').onclick = function() {
     
     document.getElementById('stockWarning').style.display = 'none';
     document.getElementById('estadoInfoIcon').style.display = 'none';
+    validarSkuFormulario();
     
     document.getElementById('productModal').style.display = 'flex';
 };
@@ -692,7 +800,19 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
             showConfirmButton: true
         });
     }
+
+    if (!validarSkuFormulario()) {
+        e.preventDefault();
+        Swal.fire({
+            title: '¡Revisa el SKU!',
+            text: 'El SKU debe contener exactamente 7 números.',
+            icon: 'error',
+            confirmButtonColor: '#772C24'
+        });
+    }
 });
+
+skuInput?.addEventListener('input', validarSkuFormulario);
 
 // Escuchar cambios manuales en el switch
 document.getElementById('estado_switch').addEventListener('change', function() {
@@ -702,6 +822,7 @@ document.getElementById('estado_switch').addEventListener('change', function() {
 // Inicializar estadísticas
 document.addEventListener('DOMContentLoaded', function() {
     actualizarEstadisticas();
+    validarSkuFormulario();
     console.log('Inventario inicializado - Control de stock automático activo');
 });
 </script>
@@ -710,8 +831,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php if($_GET['res'] == 'duplicado'): ?>
     <script>
     Swal.fire({ 
-        title: '¡Código de Barras Duplicado!', 
-        html: 'El SKU <strong><?= htmlspecialchars($_GET['sku'] ?? '') ?></strong> ya está en uso.',
+        title: 'No se pudo guardar', 
+        html: 'El SKU <strong><?= htmlspecialchars($_GET['sku'] ?? '') ?></strong> ya está registrado. Intenta con uno diferente.',
         icon: 'error', 
         confirmButtonColor: '#772C24'
     });
@@ -723,6 +844,34 @@ document.addEventListener('DOMContentLoaded', function() {
         text: 'Ocurrió un error. Verifica que el SKU no esté duplicado.', 
         icon: 'error', 
         confirmButtonColor: '#772C24' 
+    });
+    </script>
+    <?php elseif($_GET['res'] == 'creado_img_error' || $_GET['res'] == 'actualizado_img_error'): ?>
+    <script>
+    const estadoImagen = '<?= htmlspecialchars($_GET['img_status'] ?? '') ?>';
+    const mensajesImagen = {
+        upload_1: 'La imagen supera el tamaño máximo permitido por el servidor (upload_max_filesize).',
+        upload_2: 'La imagen supera el tamaño máximo permitido por el formulario.',
+        upload_3: 'La imagen se subió parcialmente. Intenta nuevamente.',
+        upload_4: 'No se recibió ningún archivo de imagen.',
+        upload_6: 'Falta la carpeta temporal del servidor para subir archivos.',
+        upload_7: 'El servidor no pudo escribir la imagen en disco.',
+        upload_8: 'La subida fue detenida por una extensión de PHP.',
+        archivo_invalido: 'El archivo de imagen recibido no es válido.',
+        archivo_vacio: 'La imagen está vacía o dañada.',
+        tamano: 'La imagen supera el máximo permitido de 5MB.',
+        formato: 'Formato no permitido. Usa JPG, JPEG, PNG o WEBP.',
+        directorio: 'No se pudo crear la carpeta de imágenes.',
+        sin_permisos: 'Sin permisos para guardar imágenes en el servidor.',
+        error: 'No se pudo mover la imagen al directorio final.'
+    };
+
+    const accion = '<?= $_GET['res'] === 'creado_img_error' ? 'registró' : 'actualizó' ?>';
+    Swal.fire({ 
+        title: 'Guardado con advertencia', 
+        html: `El producto se ${accion}, pero la imagen no se pudo guardar.<br><br><strong>Detalle:</strong> ${mensajesImagen[estadoImagen] || 'Error desconocido al guardar la imagen.'}`,
+        icon: 'warning', 
+        confirmButtonColor: '#AB886D' 
     });
     </script>
     <?php else: ?>

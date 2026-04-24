@@ -83,7 +83,8 @@ CREATE TABLE clientes (
     id_cliente INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150),
     telefono VARCHAR(20),
-    email VARCHAR(100)
+    email VARCHAR(100),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- METODOS DE PAGO
@@ -92,13 +93,24 @@ CREATE TABLE metodos_pago (
     nombre_metodo VARCHAR(50) NOT NULL
 );
 
+-- CAJAS
+CREATE TABLE cajas (
+    id_caja INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_caja VARCHAR(80) NOT NULL UNIQUE,
+    estado ENUM('activa','inactiva') DEFAULT 'activa',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- USUARIOS
 CREATE TABLE usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol ENUM('admin','cajero') DEFAULT 'cajero',
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id_caja INT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (id_caja) REFERENCES cajas(id_caja)
 );
 
 -- VENTAS
@@ -109,6 +121,7 @@ CREATE TABLE ventas (
     id_metodo_pago INT NOT NULL,
     fecha_venta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     total_venta DECIMAL(10,2) NOT NULL,
+    estado ENUM('completada','anulada') DEFAULT 'completada',
 
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
     FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),

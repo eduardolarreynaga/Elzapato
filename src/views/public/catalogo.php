@@ -3,6 +3,32 @@
 require_once __DIR__ . '/../../config/auth.php';
 $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
 
+$basePath = realpath(__DIR__ . '/../../../');
+require_once $basePath . '/controller/marcasController.php';
+require_once $basePath . '/model/MarcasModel.php';
+
+$marcasCatalogo = MarcasController::ctrMostrarMarcas() ?: [];
+$marcasTrend = [];
+
+foreach ($marcasCatalogo as $marca) {
+	$nombreMarca = trim((string)($marca['nombre_marca'] ?? ''));
+	if ($nombreMarca === '') {
+		continue;
+	}
+
+	$marcasTrend[] = [
+		'nombre' => $nombreMarca
+	];
+}
+
+if (empty($marcasTrend)) {
+	$marcasTrend = [
+		['nombre' => 'ElZapato']
+	];
+}
+
+$marcasTrendLoop = array_merge($marcasTrend, $marcasTrend);
+
 $catalogProducts = [
 	['image' => '1.jpg',  'name' => 'Nova Street Sand',   'category' => 'casual',     'badge' => 'Nuevo',      'price' => 42.90, 'tone' => 'negro',  'size' => '39', 'desc' => 'Silueta urbana con acabado limpio y presencia ligera para uso diario.'],
 	['image' => '2.jpg',  'name' => 'Urban Drift White',  'category' => 'sneakers',   'badge' => 'Top',        'price' => 48.50, 'tone' => 'blanco', 'size' => '41', 'desc' => 'Diseño minimalista con perfil moderno y máxima comodidad visual.'],
@@ -25,27 +51,23 @@ $catalogProducts = [
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Catálogo público de ElZapato con estilos casuales, deportivos, sneakers y formales.">
 	<title>Catálogo | ElZapato</title>
+	<link rel="icon" type="image/jpeg" href="/ElZapato/Assets/img/zapa.jpeg">
 	<link rel="stylesheet" href="/ElZapato/Assets/css/catalogo.css?v=20260417">
 	<link rel="stylesheet" href="/ElZapato/Assets/css/components/dev-modal.css?v=20260423">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-	<?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
+	<?php include __DIR__ . '/../layouts/header.php'; ?>
 
 	<main class="catalog-page">
 		<section class="trend-rail" id="catalogTrends" aria-label="Tendencias del catálogo">
 			<div class="trend-track">
-				<span>Casual Flow</span>
-				<span>Sneaker Culture</span>
-				<span>Editorial Motion</span>
-				<span>Soft Luxury</span>
-				<span>Urban Layers</span>
-				<span>Color Statements</span>
-				<span>Formal Essentials</span>
-				<span>Casual Flow</span>
-				<span>Sneaker Culture</span>
-				<span>Editorial Motion</span>
+				<?php foreach ($marcasTrendLoop as $item): ?>
+					<span class="trend-brand">
+						<?= htmlspecialchars($item['nombre']) ?>
+					</span>
+				<?php endforeach; ?>
 			</div>
 		</section>
 
@@ -176,7 +198,7 @@ $catalogProducts = [
         <button type="button" onclick="openDevModal()" class="btn-devs">Desarrollado por</button>
     </footer>
 
-	<?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/dev-team-modal.php'; ?>
+	<?php include __DIR__ . '/../layouts/dev-team-modal.php'; ?>
 	<script src="/ElZapato/Assets/js/dev-modal.js?v=20260423"></script>
 
 	<script>

@@ -39,6 +39,16 @@ class VentasController {
         $ventas = VentasModel::obtenerUltimasVentas(5);
         echo json_encode($ventas);
     }
+
+    // Obtener ventas (últimas o todas)
+    public static function obtenerVentas($limite = 5) {
+        if ($limite === null) {
+            $ventas = VentasModel::obtenerTodasLasVentas();
+        } else {
+            $ventas = VentasModel::obtenerUltimasVentas((int)$limite);
+        }
+        echo json_encode($ventas);
+    }
     
     // Obtener detalle de venta
     public static function obtenerDetalleVenta($idVenta) {
@@ -62,6 +72,18 @@ class VentasController {
         }
         
         return $ventas;
+    }
+
+    public static function ctrObtenerMetodosPago() {
+        return VentasModel::obtenerMetodosPago();
+    }
+
+    public static function actualizarMetodoPagoVenta($idVenta, $idMetodoPago) {
+        return VentasModel::actualizarMetodoPagoVenta((int)$idVenta, (int)$idMetodoPago);
+    }
+
+    public static function cambiarEstadoVenta($idVenta, $estado) {
+        return VentasModel::cambiarEstadoVenta((int)$idVenta, (string)$estado);
     }
     
     // Inicializar métodos de pago

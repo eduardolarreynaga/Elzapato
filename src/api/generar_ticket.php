@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../model/conexion.php';
+ini_set('pcre.backtrack_limit', '5000000');
 
 // --- INICIO DE CAMBIO: Carga de configuración dinámica ---
 require_once __DIR__ . '/../config/auth.php';
@@ -43,49 +44,25 @@ try {
     $stmtDetalle->execute([$id_venta]);
     $productos = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
 
-    $logoPath = __DIR__ . '/../../Assets/img/logo.png';
-    $logoBase64 = '';
-    
-    if (file_exists($logoPath)) {
-        $logoData = file_get_contents($logoPath);
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_file($finfo, $logoPath);
-        finfo_close($finfo);
-        
-        if ($mimeType == 'image/png') {
-            $src = imagecreatefrompng($logoPath);
-            if ($src) {
-                $width = imagesx($src);
-                $height = imagesy($src);
-                $newWidth = min($width, 150);
-                $newHeight = ($newWidth / $width) * $height;
-                $dst = imagecreatetruecolor($newWidth, $newHeight);
-                imagealphablending($dst, false);
-                imagesavealpha($dst, true);
-                $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-                imagefilledrectangle($dst, 0, 0, $newWidth, $newHeight, $transparent);
-                imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                ob_start();
-                imagepng($dst, null, 9);
-                $logoData = ob_get_clean();
-                imagedestroy($src); imagedestroy($dst);
-            }
-        } elseif ($mimeType == 'image/jpeg') {
-            $src = imagecreatefromjpeg($logoPath);
-            if ($src) {
-                $width = imagesx($src);
-                $height = imagesy($src);
-                $newWidth = min($width, 150);
-                $newHeight = ($newWidth / $width) * $height;
-                $dst = imagecreatetruecolor($newWidth, $newHeight);
-                imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                ob_start();
-                imagejpeg($dst, null, 85);
-                $logoData = ob_get_clean();
-                imagedestroy($src); imagedestroy($dst);
-            }
+    $logoPath = realpath(__DIR__ . '/../../Assets/img/logopdf.png');
+    if (!$logoPath || !file_exists($logoPath)) {
+        $logoPath = realpath(__DIR__ . '/../../Assets/img/logo.png');
+    }
+    $logoSrc = ($logoPath && file_exists($logoPath)) ? str_replace('\\', '/', $logoPath) : '';
+
+    $tmpDir = realpath(__DIR__ . '/../../tmp');
+    if ($tmpDir === false) {
+        $tmpDir = __DIR__ . '/../../tmp';
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0775, true);
         }
-        $logoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoData);
+    }
+    $mpdfTempDir = $tmpDir . '/mpdf';
+    if (!is_dir($mpdfTempDir)) {
+        @mkdir($mpdfTempDir, 0775, true);
+    }
+    if (!is_writable($mpdfTempDir)) {
+        $mpdfTempDir = sys_get_temp_dir();
     }
 
     $html = '
@@ -126,8 +103,8 @@ try {
         <div class="ticket-container">
             <div class="header">';
     
-    if ($logoBase64) {
-        $html .= '<div class="logo-container"><img src="' . $logoBase64 . '" class="logo"></div>';
+    if ($logoSrc !== '') {
+        $html .= '<div class="logo-container"><img src="' . htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8') . '" class="logo"></div>';
     }
     
     $html .= '  <div class="store-name">' . $nombreSistema . '</div>
@@ -189,7 +166,7 @@ try {
     </html>';
 
     $mpdf = new \Mpdf\Mpdf([
-        'mode' => 'utf-8', 'format' => [72, 150], 'margin_left' => 4, 'margin_right' => 4, 'margin_top' => 4, 'margin_bottom' => 4, 'default_font' => 'courier',
+        'mode' => 'utf-8', 'format' => [72, 150], 'margin_left' => 4, 'margin_right' => 4, 'margin_top' => 4, 'margin_bottom' => 4, 'default_font' => 'courier', 'tempDir' => $mpdfTempDir,
     ]);
 
     $mpdf->WriteHTML($html);

@@ -1,0 +1,208 @@
+/* Modal de impresión de dashboard */
+#modalImprimirDashboard {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+#modalImprimirDashboard.active {
+    display: flex;
+}
+
+#modalImprimirDashboard .modal-content {
+    background: white;
+    border-radius: 10px;
+    width: min(620px, 94vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    position: relative;
+}
+
+#modalImprimirDashboard .close-modal {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #999;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+#modalImprimirDashboard .close-modal:hover {
+    color: #333;
+    background: #f5f5f5;
+}
+
+#modalImprimirDashboard h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.15rem;
+    color: var(--primary-dark);
+    padding-right: 40px;
+}
+
+#modalImprimirDashboard .form-group {
+    margin-bottom: 14px;
+}
+
+#modalImprimirDashboard label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+#modalImprimirDashboard label[type="checkbox"],
+#modalImprimirDashboard input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+#modalImprimirDashboard input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-dark);
+}
+
+.form-check-input {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.form-check-input input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-dark);
+}
+
+.form-check-input label {
+    margin: 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+#modalImprimirDashboard select,
+#modalImprimirDashboard input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+#modalImprimirDashboard select:focus,
+#modalImprimirDashboard input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(171, 136, 109, 0.1);
+}
+
+#rangoPersonalizado {
+    display: none;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#rangoPersonalizado > div {
+    flex: 1;
+    background: #f9f6f2;
+    border: 1px solid #eadfd5;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#rangoPersonalizado label {
+    font-size: 0.92rem;
+    margin-bottom: 8px;
+}
+
+#rangoPersonalizado input[type="date"] {
+    padding: 14px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    min-height: 46px;
+    background: #fff;
+    border: 1px solid #d8c6b7;
+}
+
+#modalImprimirDashboard p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 4px;
+    margin-bottom: 18px;
+}
+
+#modalImprimirDashboard .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+#modalImprimirDashboard .btn-action {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+#modalImprimirDashboard .btn-discount {
+    background: #f5f5f5;
+    color: var(--primary-dark);
+    border: 1px solid #ddd;
+}
+
+#modalImprimirDashboard .btn-discount:hover {
+    background: #efefef;
+    border-color: #bbb;
+}
+
+#modalImprimirDashboard .btn-sell {
+    background: var(--primary-dark);
+    color: white;
+}
+
+#modalImprimirDashboard .btn-sell:hover {
+    background: #8a6d51;
+}
+
+@media (max-width: 600px) {
+    #modalImprimirDashboard .modal-content {
+        width: 95vw;
+        padding: 16px;
+    }
+
+    #modalImprimirDashboard h3 {
+        font-size: 1.05rem;
+    }
+
+    #rangoPersonalizado {
+        flex-direction: column;
+    }
+}
