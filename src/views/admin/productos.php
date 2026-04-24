@@ -50,7 +50,7 @@ if($productos){
 
 $activeMenu = 'productos';
 $pageTitle = 'Inventario | ElZapato';
-$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css', '/ElZapato/Assets/css/pages/admin-productos.css'];
+$pageStyles = ['/ElZapato/Assets/css/pages/admin-stats.css?v=' . time(), '/ElZapato/Assets/css/pages/admin-productos.css?v=' . time()];
 require __DIR__ . '/../layouts/admin-shell-start.php';
 ?>
 
@@ -284,8 +284,8 @@ require __DIR__ . '/../layouts/admin-header.php';
 
 <!-- Modal de Edición/Creación -->
 <div class="modal" id="productModal" style="display: none; align-items:center; justify-content:center; background: rgba(0,0,0,0.7); position:fixed; top:0; left:0; width:100%; height:100%; z-index:9998;">
-    <div class="modal-content" style="background:white; padding:30px; border-radius:15px; width:750px; max-height:90vh; overflow-y:auto;">
-        <form id="productForm" method="post" enctype="multipart/form-data">
+    <div class="modal-content product-modal-content" style="background:white; padding:30px; border-radius:15px; width:min(900px, 94vw); max-height:92vh; overflow-y:auto;">
+        <form id="productForm" class="product-modal-form" method="post" enctype="multipart/form-data">
             <h3 id="modalTitle" style="color: #AB886D; border-bottom: 2px solid #f4f1ef; padding-bottom:10px;">Editar Producto</h3>
             
             <input type="hidden" name="accion" id="accion" value="">
@@ -294,68 +294,102 @@ require __DIR__ . '/../layouts/admin-header.php';
             
             <div class="form-group">
                 <label>Nombre del Calzado *</label>
-                <input type="text" name="nombre_producto" id="nombre_producto" required>
+                <div class="input-group">
+                    <span class="input-group-icon"><i class="fas fa-shoe-prints"></i></span>
+                    <input type="text" name="nombre_producto" id="nombre_producto" required>
+                </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label>Categoría *</label>
-                    <select name="id_categoria" id="id_categoria" required>
-                        <?php foreach($categorias as $c): ?> 
-                            <option value="<?= $c['id_categoria'] ?>"><?= htmlspecialchars($c['nombre_categoria']) ?></option> 
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-layer-group"></i></span>
+                        <select name="id_categoria" id="id_categoria" required>
+                            <?php foreach($categorias as $c): ?> 
+                                <option value="<?= $c['id_categoria'] ?>"><?= htmlspecialchars($c['nombre_categoria']) ?></option> 
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Marca *</label>
-                    <select name="id_marca" id="id_marca" required>
-                        <?php foreach($marcas as $m): ?> 
-                            <option value="<?= $m['id_marca'] ?>"><?= htmlspecialchars($m['nombre_marca']) ?></option> 
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-tags"></i></span>
+                        <select name="id_marca" id="id_marca" required>
+                            <?php foreach($marcas as $m): ?> 
+                                <option value="<?= $m['id_marca'] ?>"><?= htmlspecialchars($m['nombre_marca']) ?></option> 
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Proveedor</label>
-                <select name="id_proveedor" id="id_proveedor">
-                    <option value="">Seleccione un proveedor</option>
-                    <?php foreach($proveedores as $prov): ?> 
-                        <option value="<?= $prov['id_proveedor'] ?>"><?= htmlspecialchars($prov['nombre_empresa']) ?></option> 
-                    <?php endforeach; ?>
-                </select>
+                <div class="input-group">
+                    <span class="input-group-icon"><i class="fas fa-truck"></i></span>
+                    <select name="id_proveedor" id="id_proveedor">
+                        <option value="">Seleccione un proveedor</option>
+                        <?php foreach($proveedores as $prov): ?> 
+                            <option value="<?= $prov['id_proveedor'] ?>"><?= htmlspecialchars($prov['nombre_empresa']) ?></option> 
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group"><label>Talla *</label><input type="text" name="talla" id="talla" required></div>
-                <div class="form-group"><label>Color *</label><input type="text" name="color" id="color" required></div>
+            <div class="form-row form-row-three">
+                <div class="form-group">
+                    <label>Talla *</label>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-ruler"></i></span>
+                        <input type="text" name="talla" id="talla" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Color *</label>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-palette"></i></span>
+                        <input type="text" name="color" id="color" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Stock *</label>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-boxes"></i></span>
+                        <input type="number" name="stock" id="stock" required onchange="verificarStockEnFormulario()">
+                    </div>
+                    <small id="stockWarning" style="color:#772C24; display:none;">⚠️ Stock en 0 - El producto se desactivará automáticamente</small>
+                </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>SKU (Código de Barras) *</label>
-                    <input type="text" name="codigo_barras" id="codigo_barras" required>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-barcode"></i></span>
+                        <input type="text" name="codigo_barras" id="codigo_barras" required>
+                    </div>
                 </div>
-                <div class="form-group"><label>Precio *</label><input type="number" step="0.01" name="precio_venta" id="precio_venta" required></div>
+                <div class="form-group">
+                    <label>Precio *</label>
+                    <div class="input-group">
+                        <span class="input-group-icon"><i class="fas fa-dollar-sign"></i></span>
+                        <input type="number" step="0.01" name="precio_venta" id="precio_venta" required>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Stock *</label>
-                    <input type="number" name="stock" id="stock" required onchange="verificarStockEnFormulario()">
-                    <small id="stockWarning" style="color:#772C24; display:none;">⚠️ Stock en 0 - El producto se desactivará automáticamente</small>
-                </div>
-                <div class="form-group">
-                    <label>Estado</label>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <label class="switch">
-                            <input type="checkbox" id="estado_switch" onchange="actualizarTxtEstado(this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                        <input type="hidden" name="estado_v" id="estado_v" value="activo">
-                        <span id="txtEstado" style="font-weight:bold;">ACTIVO</span>
-                        <i id="estadoInfoIcon" class="fas fa-info-circle info-tooltip" style="color:#AB886D; display:none;" title="Producto desactivado automáticamente por falta de stock"></i>
-                    </div>
+            <div class="form-group">
+                <label>Estado</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label class="switch">
+                        <input type="checkbox" id="estado_switch" onchange="actualizarTxtEstado(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                    <input type="hidden" name="estado_v" id="estado_v" value="activo">
+                    <span id="txtEstado" style="font-weight:bold;">ACTIVO</span>
+                    <i id="estadoInfoIcon" class="fas fa-info-circle info-tooltip" style="color:#AB886D; display:none;" title="Producto desactivado automáticamente por falta de stock"></i>
                 </div>
             </div>
 
@@ -367,7 +401,10 @@ require __DIR__ . '/../layouts/admin-header.php';
                 <div class="form-group">
                     <label>Cambiar Imagen</label>
                     <div class="image-box">
-                        <input type="file" name="imagen_producto" id="imagen_producto" accept="image/*">
+                        <div class="input-group">
+                            <span class="input-group-icon"><i class="fas fa-image"></i></span>
+                            <input type="file" name="imagen_producto" id="imagen_producto" accept="image/*">
+                        </div>
                         <div id="newImagePreview" style="margin-top:10px;"></div>
                     </div>
                 </div>

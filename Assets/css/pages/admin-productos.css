@@ -18,6 +18,114 @@
     gap: 6px;
 }
 
+.product-modal-content {
+  width: min(900px, 94vw) !important;
+  max-width: min(900px, 94vw) !important;
+  padding: 30px 34px !important;
+}
+
+.product-modal-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.product-modal-content .product-modal-form .form-row.form-row-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.product-modal-form .form-group {
+  margin-bottom: 16px;
+}
+
+.product-modal-form .form-row .form-group {
+  margin-bottom: 0;
+}
+
+.product-modal-content .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #4d3b2e;
+}
+
+.product-modal-content .input-group {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #d6c0b3;
+  border-radius: 10px;
+  background: #fff;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.product-modal-content .input-group:focus-within {
+  border-color: #ab886d;
+  box-shadow: 0 0 0 3px rgba(171, 136, 109, 0.18);
+}
+
+.product-modal-content .input-group-icon {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f1ef;
+  color: #8e6e56;
+  border-right: 1px solid #e5d8cf;
+}
+
+.product-modal-content .input-group input,
+.product-modal-content .input-group select {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  background: transparent;
+}
+
+.product-modal-content .input-group input[type="file"] {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.product-modal-content .input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.product-modal-content #stockWarning {
+  display: block;
+  margin-top: 6px;
+}
+
+.product-modal-content .image-box {
+  border: 1px solid #e4e0e1;
+  border-radius: 10px;
+  padding: 10px;
+  background: #faf9f8;
+}
+
+@media (max-width: 768px) {
+  .product-modal-content {
+    width: min(96vw, 96vw) !important;
+    padding: 20px !important;
+  }
+
+  .product-modal-form .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .product-modal-content .product-modal-form .form-row.form-row-three {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Estilos para el Switch */
 .switch {
   position: relative;

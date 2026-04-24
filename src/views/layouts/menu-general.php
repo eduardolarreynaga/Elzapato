@@ -126,6 +126,10 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
         </div>
     </div>
 
+    <div id="pageTransition" class="page-transition" aria-hidden="true">
+        <div class="page-transition-loader"></div>
+    </div>
+
     <script>
         function confirmarSalida() {
             document.getElementById('modalLogout').classList.add('active');
@@ -150,6 +154,33 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
                 cerrarModalPerfil();
             }
         }
+
+        const pageTransition = document.getElementById('pageTransition');
+
+        function navigateWithTransition(targetUrl) {
+            if (!pageTransition || !targetUrl) {
+                window.location.href = targetUrl;
+                return;
+            }
+
+            pageTransition.classList.add('active');
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 420);
+        }
+
+        document.querySelectorAll('a[href]').forEach((link) => {
+            const href = link.getAttribute('href') || '';
+            if (!href || href.startsWith('javascript:') || href.startsWith('#')) return;
+
+            link.addEventListener('click', function(event) {
+                if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target === '_blank') {
+                    return;
+                }
+                event.preventDefault();
+                navigateWithTransition(this.getAttribute('href'));
+            });
+        });
     </script>
 </body>
 </html>

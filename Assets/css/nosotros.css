@@ -345,14 +345,26 @@ body {
 }
 
 .intro-card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.58), rgba(214,192,179,0.24));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     border: 1px solid rgba(171, 136, 109, 0.14);
     border-radius: 24px;
     padding: 24px;
     box-shadow: var(--shadow-soft);
     transition: var(--transition);
+    position: relative;
+    overflow: hidden;
     transform: translateY(35px);
     opacity: 0;
+}
+
+.intro-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 10%, rgba(0, 0, 0, 0.72) 100%);
+    z-index: 0;
 }
 
 .intro-card.is-visible {
@@ -377,6 +389,8 @@ body {
     font-size: 1.45rem;
     margin-bottom: 16px;
     transition: var(--transition);
+    position: relative;
+    z-index: 1;
 }
 
 .intro-card:hover .intro-icon {
@@ -387,12 +401,35 @@ body {
 .intro-card h3 {
     margin: 0 0 10px;
     font-size: 1.25rem;
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 }
 
 .intro-card p {
     margin: 0;
     line-height: 1.75;
-    color: rgba(0,0,0,0.76);
+    color: rgba(255, 255, 255, 0.92);
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.intro-card p strong {
+    color: #fff;
+}
+
+.intro-person-1 {
+    background-image: url('https://images.pexels.com/photos/15557045/pexels-photo-15557045.jpeg?auto=compress&cs=tinysrgb&w=900');
+}
+
+.intro-person-2 {
+    background-image: url('https://images.pexels.com/photos/2277602/pexels-photo-2277602.jpeg?auto=compress&cs=tinysrgb&w=900');
+}
+
+.intro-person-3 {
+    background-image: url('https://images.pexels.com/photos/18601962/pexels-photo-18601962.jpeg?auto=compress&cs=tinysrgb&w=900');
 }
 
 .about-points {

@@ -37,7 +37,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </div>
         <div class="brand-logo">SISTEMA DE VENTAS <?= strtoupper(htmlspecialchars($nombreSistema)) ?></div>
         <div class="nav-icons">
-            <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/ElZapato/src/views/layouts/menu-general.php'"></i>            
+            <i class="fa-solid fa-house" title="Inicio" onclick="goMenuGeneralTransition()"></i>
             <div class="notification-container">
                 <i class="fa-solid fa-bell" id="bellIcon" onclick="toggleNotifications()"></i>
                 <span class="badge" id="notificationBadge">0</span>
@@ -274,7 +274,19 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             </div>
             <div class="form-group">
                 <label><i class="fa-solid fa-percent"></i> 3. Porcentaje de ahorro:</label>
-                <input type="number" id="descPorcentajeInput" class="input-modal" placeholder="Ej: 10" min="1" max="100">
+                <select id="descPorcentajeInput" class="input-modal">
+                    <option value="">Seleccione porcentaje</option>
+                    <option value="5">5%</option>
+                    <option value="10">10%</option>
+                    <option value="15">15%</option>
+                    <option value="20">20%</option>
+                    <option value="25">25%</option>
+                    <option value="30">30%</option>
+                    <option value="35">35%</option>
+                    <option value="40">40%</option>
+                    <option value="45">45%</option>
+                    <option value="50">50%</option>
+                </select>
             </div>
             <button class="btn-action btn-sell" style="width:100%; margin-top:10px;" onclick="confirmarDescuento()">
                 <i class="fa-solid fa-check"></i> GUARDAR DESCUENTO
@@ -350,7 +362,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             
             <div class="form-group">
                 <label><i class="fa-solid fa-coins"></i> Cambio:</label>
-                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success); text-align: center; padding: 10px; background: #e8f5e9; border-radius: 8px;" id="cambioDisplay">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="cambioDisplay">
                     $0.00
                 </div>
             </div>
@@ -376,6 +388,10 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
     </div>
 
     <div id="toast-container"></div>
+
+    <div id="pageTransitionPos" class="page-transition" aria-hidden="true">
+        <div class="page-transition-loader"></div>
+    </div>
 
     <script src="/ElZapato/Assets/js/pos.js?v=<?php echo time(); ?>"></script>
 </body>

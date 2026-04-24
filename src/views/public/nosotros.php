@@ -83,7 +83,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
                 </div>
                 
                 <div class="about-intro">
-                    <article class="intro-card wide">
+                    <article class="intro-card wide intro-person-1">
                         <div class="intro-icon">
                             <i class="fas fa-crown"></i>
                         </div>
@@ -98,7 +98,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
                         </div>
                     </article>
 
-                    <article class="intro-card">
+                    <article class="intro-card intro-person-2">
                         <div class="intro-icon">
                             <i class="fas fa-bullseye"></i>
                         </div>
@@ -112,7 +112,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
                         </div>
                     </article>
 
-                    <article class="intro-card">
+                    <article class="intro-card intro-person-3">
                         <div class="intro-icon">
                             <i class="fas fa-handshake-angle"></i>
                         </div>
