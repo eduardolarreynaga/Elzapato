@@ -1,4 +1,3 @@
 <?php
 // Generado automaticamente
-define('SYSTEM_NAME', 'ElZapato');
-define('LOW_STOCK_THRESHOLD', 10);
+define('SYSTEM_NAME', 'jeremias compani');
