@@ -3,6 +3,9 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../model/conexion.php';
 
+// --- NUEVO: Cargar Auth para obtener SYSTEM_NAME ---
+require_once __DIR__ . '/../config/auth.php';
+
 $basePath = realpath(__DIR__ . '/../../../');
 // Ajuste de rutas según tu estructura
 require_once $basePath . "/ElZapato/controller/ProductoVarianteController.php";
@@ -21,6 +24,9 @@ $c_primary_soft  = "#D6C0B3"; // Tono suave intermedio
 $c_primary_dark  = "#AB886D"; // Tono oscuro para detalles
 $c_nocolor       = "#772C24"; // Rojo para egresos/alertas
 $c_text          = "#000000";
+
+// --- NUEVO: Obtener nombre dinámico ---
+$nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'EL ZAPATO';
 
 try {
     switch ($tipo) {
@@ -57,16 +63,14 @@ try {
             $tablaHtml .= '</tbody></table>';
             break;
 
-        case '4': // CAJA (SINCRONIZADO CON LA VISTA WEB)
+        case '4': // CAJA
             $tituloReporte = "Reporte de Flujo de Caja y Balance";
             $stats = ProductoVarianteController::ctrMostrarResumenReportes();
             $inventario = ProductoVarianteController::ctrMostrarTodoElStock();
             
-            // Cálculo de egresos (Inversión estimada al 70% del valor venta)
             $egresos = 0;
             foreach($inventario as $inv) { $egresos += ($inv['precio_venta'] * 0.7) * $inv['stock']; }
             
-            // Usamos abs() para asegurar que los ingresos se vean positivos como en la vista
             $ingresosPositivos = abs($stats['flujo_neto']);
             $balance = $ingresosPositivos - $egresos;
 
@@ -123,9 +127,7 @@ try {
     $css = "
         body { font-family: 'Helvetica', sans-serif; color: $c_text; }
         .header { border-bottom: 3px solid $c_primary_dark; padding-bottom: 10px; }
-        .logo { width: 80px; float: left; }
-        .brand-container { float: left; margin-left: 15px; margin-top: 5px; }
-        .brand { font-size: 24px; font-weight: bold; letter-spacing: 3px; }
+        .brand { font-size: 24px; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
         .subtitle { font-size: 11px; color: #666; text-transform: uppercase; margin-top: 3px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -146,7 +148,7 @@ try {
         'format' => 'Letter'
     ]);
 
-    // --- ENCABEZADO CON LOGO ---
+    // --- ENCABEZADO CON LOGO DINÁMICO ---
     $headerHtml = '
     <div class="header">
         <table style="border: none; width: 100%;">
@@ -155,7 +157,7 @@ try {
                     <img src="'.$basePath.'/ElZapato/Assets/img/logo.png" style="width: 70px;">
                 </td>
                 <td style="border: none; width: 50%; vertical-align: middle;">
-                    <div class="brand">EL ZAPATO</div>
+                    <div class="brand">'.$nombreSistema.'</div>
                     <div class="subtitle">'.$tituloReporte.'</div>
                 </td>
                 <td style="border: none; width: 35%; text-align: right; vertical-align: bottom; font-size: 8px;">
@@ -167,12 +169,12 @@ try {
     </div>';
 
     $mpdf->SetHTMLHeader($headerHtml);
-    $mpdf->SetHTMLFooter('<div class="footer">Documento oficial generado por el Sistema de Gestión ElZapato. Página {PAGENO} de {nbpg}</div>');
+    $mpdf->SetHTMLFooter('<div class="footer">Documento oficial generado por el Sistema de Gestión '.$nombreSistema.'. Página {PAGENO} de {nbpg}</div>');
     
     $mpdf->WriteHTML($css, \Mpdf\HTMLParserMode::HEADER_CSS);
     $mpdf->WriteHTML($tablaHtml, \Mpdf\HTMLParserMode::HTML_BODY);
     
-    $mpdf->Output("Reporte_ElZapato_".date('Ymd_His').".pdf", \Mpdf\Output\Destination::INLINE);
+    $mpdf->Output("Reporte_".$nombreSistema."_".date('Ymd_His').".pdf", \Mpdf\Output\Destination::INLINE);
 
 } catch (Exception $e) { 
     echo "Error crítico en el motor de reportes: " . $e->getMessage(); 

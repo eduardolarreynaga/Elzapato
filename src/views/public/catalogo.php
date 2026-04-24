@@ -1,4 +1,8 @@
 <?php
+
+require_once __DIR__ . '/../../config/auth.php';
+$nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
+
 $catalogProducts = [
 	['image' => '1.jpg',  'name' => 'Nova Street Sand',   'category' => 'casual',     'badge' => 'Nuevo',      'price' => 42.90, 'tone' => 'negro',  'size' => '39', 'desc' => 'Silueta urbana con acabado limpio y presencia ligera para uso diario.'],
 	['image' => '2.jpg',  'name' => 'Urban Drift White',  'category' => 'sneakers',   'badge' => 'Top',        'price' => 48.50, 'tone' => 'blanco', 'size' => '41', 'desc' => 'Diseño minimalista con perfil moderno y máxima comodidad visual.'],
@@ -167,8 +171,8 @@ $catalogProducts = [
 	</div>
 
 	<footer class="catalog-footer">
-		<p>&copy; 2026 ElZapato - Catálogo público de inspiración visual</p>
-	</footer>
+        <p>&copy; <?php echo date('Y'); ?> <?php echo $nombreSistema; ?> - Catálogo de Inspiración Visual</p>
+    </footer>
 
 	<script>
 		const filterButtons = document.querySelectorAll('.filter-pill');

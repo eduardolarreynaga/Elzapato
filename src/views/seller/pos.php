@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../../config/auth.php';
 if (!is_authenticated()) { header("Location: /ElZapato/src/views/public/login.php"); exit(); }
 
+// Obtener el nombre del sistema desde la configuración
+$nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
+if (!is_authenticated()) { header("Location: /ElZapato/src/views/public/login.php"); exit(); }
+
 $rolActual = $_SESSION['rol'] ?? '';
 if (!in_array($rolActual, ['cajero', 'admin'], true)) { header("Location: /ElZapato/src/views/layouts/menu-general.php"); exit(); }
 
@@ -19,7 +23,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>POS - El Zapato</title>
+   <title>POS - <?= htmlspecialchars($nombreSistema) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/ElZapato/Assets/css/pos.css?v=<?php echo time(); ?>">
@@ -31,7 +35,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             <i class="fa-solid fa-circle-user"></i>
             <span><strong><?= htmlspecialchars($nombreUsuario) ?></strong> (<?= strtoupper($rolActual) ?>)</span>
         </div>
-        <div class="brand-logo">SISTEMA DE VENTAS EL ZAPATO</div>
+        <div class="brand-logo">SISTEMA DE VENTAS <?= strtoupper(htmlspecialchars($nombreSistema)) ?></div>
         <div class="nav-icons">
             <i class="fa-solid fa-house" title="Inicio" onclick="window.location.href='/ElZapato/src/views/layouts/menu-general.php'"></i>            
             <div class="notification-container">

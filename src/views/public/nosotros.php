@@ -1,34 +1,29 @@
 <?php
-session_start();
-// Si viene el rol por la URL, lo guardamos en la sesión (compatibilidad)
+require_once __DIR__ . '/../../config/auth.php';
+// Mantenemos tu lógica de compatibilidad de roles
 $incomingRole = $_GET['login_success'] ?? $_GET['set_role'] ?? null;
 
 if ($incomingRole !== null) {
     $role = strtolower(trim((string) $incomingRole));
-
     if (in_array($role, ['admin', 'seller'], true)) {
         $_SESSION['user_role'] = $role;
         $_SESSION['rol'] = $role;
-
-        if (!isset($_SESSION['usuario'])) {
-            $_SESSION['usuario'] = $role;
-        }
-
-        if (!isset($_SESSION['id_usuario'])) {
-            $_SESSION['id_usuario'] = $role === 'admin' ? 1 : 2;
-        }
+        if (!isset($_SESSION['usuario'])) { $_SESSION['usuario'] = $role; }
+        if (!isset($_SESSION['id_usuario'])) { $_SESSION['id_usuario'] = $role === 'admin' ? 1 : 2; }
     }
 }
+
+$nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta name="description" content="ElZapato - Calzado salvadoreño de calidad. Conoce nuestra historia, misión y valores.">
-    <title>Nosotros | ElZapato</title>
+    <meta name="description" content="<?php echo $nombreSistema; ?> - Calzado salvadoreño de calidad. Conoce nuestra historia, misión y valores.">
+    <title>Nosotros | <?php echo $nombreSistema; ?></title>
 
-    <link rel="stylesheet" href="/ElZapato/Assets/css/nosotros.css?v=20260416">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/nosotros.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -36,7 +31,6 @@ if ($incomingRole !== null) {
     <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
 
     <main class="about-page">
-
         <section class="about-hero">
             <div class="about-hero-overlay"></div>
             <div class="about-hero-particles"></div>
@@ -45,7 +39,7 @@ if ($incomingRole !== null) {
                 <span class="hero-kicker">Orgullo salvadoreño • Estilo • Calidad</span>
                 <h1>Más que zapatos, <span>creamos experiencias</span></h1>
                 <p>
-                    En ElZapato caminamos junto a cada cliente con una propuesta moderna,
+                    En <strong><?php echo $nombreSistema; ?></strong> caminamos junto a cada cliente con una propuesta moderna,
                     cercana y auténtica, uniendo diseño, comodidad y el talento local.
                 </p>
 
@@ -79,7 +73,6 @@ if ($incomingRole !== null) {
 
         <section class="about-section" id="nosotros">
             <div class="about-content">
-
                 <div class="section-top">
                     <span class="section-mini">Nuestra esencia</span>
                     <h2 class="section-title">Nosotros</h2>
@@ -96,7 +89,7 @@ if ($incomingRole !== null) {
                         <div>
                             <h3>Quiénes somos</h3>
                             <p>
-                                En <strong>ElZapato</strong> no solo vendemos zapatos, <strong>creamos experiencias</strong>
+                                En <strong><?php echo $nombreSistema; ?></strong> no solo vendemos zapatos, <strong>creamos experiencias</strong>
                                 que te llevan a donde necesitas ir. Somos una zapatería salvadoreña con alma,
                                 dedicada a calzar los sueños de empresas grandes, medianas y de cada salvadoreño
                                 que busca calidad y estilo.
@@ -111,7 +104,7 @@ if ($incomingRole !== null) {
                         <div>
                             <h3>Nuestro superpoder</h3>
                             <p>
-                                Escuchamos tus necesidades hasta entender cada paso que das.
+                                Escuchamos tus necesidades hasta entender cada paso que das en <strong><?php echo $nombreSistema; ?></strong>.
                                 Recomendamos el modelo ideal según tu actividad y buscamos que cada par
                                 sea tu aliado perfecto.
                             </p>
@@ -202,7 +195,7 @@ if ($incomingRole !== null) {
                         <i class="fas fa-heart"></i>
                     </div>
                     <p class="closing-main">
-                        En ElZapato creemos que cada paso cuenta una historia.
+                        En <?php echo $nombreSistema; ?> creemos que cada paso cuenta una historia.
                     </p>
                     <p class="closing-quote">
                         “Un buen par de zapatos no solo te lleva a donde quieres ir,
@@ -218,10 +211,11 @@ if ($incomingRole !== null) {
     </div>
 
     <footer class="about-footer">
-        <p>&copy; 2026 ElZapato - Sistema de Gestión Escolar UNICAES</p>
+        <p>&copy; <?php echo date('Y'); ?> <?php echo $nombreSistema; ?> - Sistema de Gestión Escolar UNICAES</p>
     </footer>
 
     <script>
+        // Mantengo tus funciones de animación JS intactas
         function animateNumber(element, start, end, duration) {
             let startTimestamp = null;
             const step = (timestamp) => {
@@ -245,7 +239,6 @@ if ($incomingRole !== null) {
                         animateNumber(clientsEl, 0, 5847, 2300);
                         animateNumber(artisansEl, 0, 28, 1500);
                     }
-
                     observer.disconnect();
                 }
             });
@@ -265,6 +258,5 @@ if ($incomingRole !== null) {
 
         revealItems.forEach(item => revealObserver.observe(item));
     </script>
-
 </body>
 </html>

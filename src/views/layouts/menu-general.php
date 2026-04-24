@@ -6,6 +6,9 @@ if (!is_authenticated()) {
     exit();
 }
 
+// --- NUEVO: Obtener nombre dinámico ---
+$nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
+
 $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
 ?>
@@ -14,7 +17,7 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElZapato - Panel</title>
+    <title><?php echo $nombreSistema; ?> - Panel</title>
     <link rel="stylesheet" href="/ElZapato/Assets/css/layout/menu-general.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -22,7 +25,7 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
 
     <nav class="top-bar">
         <div class="brand">
-            <span class="dot"></span> ElZapato
+            <span class="dot"></span> <?php echo $nombreSistema; ?>
         </div>
         <div class="user-section">
             <div onclick="abrirModalPerfil()" class="user-info-clickable">
@@ -101,7 +104,7 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
                 <i class="fa-solid fa-right-from-bracket"></i>
             </div>
             <h3>¿Cerrar Sesión?</h3>
-            <p>Estás a punto de salir del sistema de El Zapato. ¿Deseas continuar?</p>
+            <p>Estás a punto de salir del sistema de <?php echo $nombreSistema; ?>. ¿Deseas continuar?</p>
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="cerrarModalLogout()">CANCELAR</button>
                 <a href="/ElZapato/src/views/public/logout.php" class="btn-confirm">SÍ, SALIR</a>
@@ -117,22 +120,23 @@ $rolUsuario    = $_SESSION['rol']     ?? 'Cajero';
     </div>
 
     <script>
-        // Funciones Logout
         function confirmarSalida() {
             document.getElementById('modalLogout').classList.add('active');
         }
 
-        // Funciones Perfil
+        function cerrarModalLogout() {
+            document.getElementById('modalLogout').classList.remove('active');
+        }
+
         function abrirModalPerfil() {
             document.getElementById('modalPerfil').classList.add('active');
-            document.body.style.overflow = 'hidden'; // Bloquea scroll fondo
+            document.body.style.overflow = 'hidden';
         }
         function cerrarModalPerfil() {
             document.getElementById('modalPerfil').classList.remove('active');
-            document.body.style.overflow = 'auto'; // Libera scroll
+            document.body.style.overflow = 'auto';
         }
 
-        // Cerrar al hacer clic fuera
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
                 cerrarModalLogout();

@@ -1,11 +1,15 @@
+<?php 
+require_once __DIR__ . '/../../config/auth.php'; 
+$nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElZapato - Dashboard Principal</title>
+    <title><?php echo $nombreSistema; ?> - Dashboard Principal</title>
     
-    <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css?v=20260323">
+    <link rel="stylesheet" href="/ElZapato/Assets/css/principal.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -21,7 +25,7 @@
 
             <div class="hero-content">
                 <span class="hero-badge">Estilo • Calidad • Comodidad</span>
-                <h1>Bienvenido a <span>ElZapato</span></h1>
+                <h1>Bienvenido a <span><?php echo $nombreSistema; ?></span></h1>
                 <p>
                     Descubre una experiencia moderna en calzado con modelos elegantes,
                     deportivos y casuales pensados para cada paso de tu vida.
@@ -59,7 +63,7 @@
         <section class="promo-section" id="beneficios">
             <div class="section-heading">
                 <span>Nuestros beneficios</span>
-                <h2>¿Por qué elegir ElZapato?</h2>
+                <h2>¿Por qué elegir <?php echo $nombreSistema; ?>?</h2>
                 <p>Una tienda pensada para ofrecer variedad, comodidad y atención de calidad.</p>
             </div>
 
@@ -157,7 +161,7 @@
 
         <section class="cta-section">
             <div class="cta-content">
-                <span class="cta-mini">ElZapato</span>
+                <span class="cta-mini"><?php echo $nombreSistema; ?></span>
                 <h2>Camina con estilo, seguridad y personalidad</h2>
                 <p>
                     Nuestra colección está pensada para ofrecer una experiencia visual atractiva
@@ -173,7 +177,7 @@
     </main>
 
     <footer class="main-footer">
-        <p>&copy; 2026 ElZapato - Sistema de Gestión Escolar UNICAES</p>
+        <p>&copy; <?php echo date('Y'); ?> <?php echo $nombreSistema; ?> - Sistema de Gestión Escolar UNICAES</p>
     </footer>
 
 </body>

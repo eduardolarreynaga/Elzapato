@@ -4,6 +4,18 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
+ * CARGA DE AJUSTES DEL SISTEMA
+ */
+if (file_exists(__DIR__ . '/settings.php')) {
+    require_once __DIR__ . '/settings.php';
+}
+
+// 2. DEFINIR NOMBRE POR DEFECTO (Si el archivo falla o no existe)
+if (!defined('SYSTEM_NAME')) {
+    define('SYSTEM_NAME', 'ElZapato');
+}
+
+/**
  * Registra los datos del usuario en la sesión
  */
 if (!function_exists('login_user')) {
@@ -27,20 +39,14 @@ if (!function_exists('is_authenticated')) {
 
 /**
  * PROTECCIÓN DE VISTAS
- * Si no está autenticado, lo manda al login.
- * Si se pide un rol específico (ej: 'admin') y no lo tiene, lo manda a error.
  */
 if (!function_exists('require_auth')) {
     function require_auth($roleRequired = null) {
-        // 1. ¿Está logueado?
         if (!is_authenticated()) {
             header('Location: /ElZapato/src/views/public/login.php');
             exit;
         }
-
-        // 2. ¿Tiene el rol necesario?
         if ($roleRequired !== null && $_SESSION['rol'] !== $roleRequired) {
-            // Si es un usuario normal queriendo entrar a admin, o viceversa
             header('Location: /ElZapato/src/views/public/login.php?error=no_access');
             exit;
         }
