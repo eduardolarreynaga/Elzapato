@@ -21,7 +21,7 @@ $userRole = $_SESSION['rol'] ?? 'Sin Rol';
                 <a href="/ElZapato/src/views/layouts/menu-general.php"><i class="fas fa-home"></i><span>Pagina principal</span></a>
             </li>
             <li class="<?= $activeMenu === 'dashboard' ? 'active' : '' ?>">
-                <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i><span>Estadisticas</span></a>
+                <a href="dashboard.php"><i class="fas fa-chart-pie"></i><span>Estadisticas</span></a>
             </li>
             <li class="<?= $activeMenu === 'productos' ? 'active' : '' ?>">
                 <a href="productos.php"><i class="fas fa-boxes"></i><span>Inventario</span></a>
