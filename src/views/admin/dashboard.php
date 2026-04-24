@@ -98,7 +98,7 @@ require __DIR__ . '/../layouts/admin-header.php';
 
         <div class="card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 380px;">
             <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #333;">
-                <i class="fas fa-exclamation-triangle" style="color: #bc6e32;"></i> Bajo stock
+                <i class="fas fa-exclamation-triangle" style="color: #bc6e32;"></i> Stock bajo
             </h3>
             <div style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                 <?php if(empty($stockBajo)): ?>
