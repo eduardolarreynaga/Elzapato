@@ -142,13 +142,15 @@ require __DIR__ . '/../layouts/admin-header.php';
             <select class="filter-select" id="filterStatus">
                 <option value="">Estado</option>
                 <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
+                <option value="inactivo">Inactivo<td style="text-align: center;"></option>
                 <option value="bajo_stock">Stock Bajo (≤10)</option>
                 <option value="stock_cero">Stock Cero</option>
             </select>
-            <button class="btn-outline-primary" id="btnResetProductoFiltros" type="button" title="Limpiar filtros">
-                <i class="fas fa-times"></i> Limpiar
-            </button>
+            <button class="btn-outline-primary" onclick="window.location.href='productos.php'">
+                    <i class="fas fa-times"></i> Actualizar
+                </button>
+
+
         </div>
     </div>
 

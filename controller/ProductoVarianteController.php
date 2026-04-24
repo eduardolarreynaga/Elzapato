@@ -62,4 +62,12 @@ class ProductoVarianteController {
     static public function ctrResumenTickets() {
         return ProductoVarianteModel::mdlResumenTickets();
     }
+
+    static public function ctrUltimasCompras() {
+        return ProductoVarianteModel::mdlUltimasCompras();
+    }
+
+    static public function ctrResumenCaja() {
+        return ProductoVarianteModel::mdlResumenCaja();
+    }
 }

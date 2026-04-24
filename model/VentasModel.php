@@ -9,13 +9,14 @@ class VentasModel {
             $conexion = Conexion::conectar();
             $conexion->beginTransaction();
             
+            $clienteFinal = (!empty($idCliente) && $idCliente !== 'null') ? $idMetodoPago : 1;
             // Insertar venta principal
             $stmt = $conexion->prepare("
                 INSERT INTO ventas (id_usuario, id_cliente, id_metodo_pago, total_venta, fecha_venta) 
                 VALUES (:id_usuario, :id_cliente, :id_metodo_pago, :total, NOW())
             ");
             $stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
-            $stmt->bindParam(":id_cliente", $idCliente, PDO::PARAM_INT);
+            $stmt->bindParam(":id_cliente", $clienteFinal, PDO::PARAM_INT);
             $stmt->bindParam(":id_metodo_pago", $idMetodoPago, PDO::PARAM_INT);
             $stmt->bindParam(":total", $total, PDO::PARAM_STR);
             $stmt->execute();

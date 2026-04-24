@@ -69,7 +69,11 @@ class ProductoVarianteModel {
         $ingresos = $stmtIngresos->fetchColumn();
 
         // 5. Egresos (Compras)
-        $stmtEgresos = $con->prepare("SELECT IFNULL(SUM(cantidad * precio_unitario), 0) FROM detalle_compra");
+        //$stmtEgresos = $con->prepare("SELECT IFNULL(SUM(cantidad * precio_unitario), 0) FROM detalle_compra");
+        //$stmtEgresos->execute();
+        //$egresos = $stmtEgresos->fetchColumn();
+
+        $stmtEgresos = $con->prepare("SELECT IFNULL(SUM(dc.cantidad * dc.precio_unitario), 0) FROM detalle_compra dc");
         $stmtEgresos->execute();
         $egresos = $stmtEgresos->fetchColumn();
 
@@ -186,4 +190,58 @@ class ProductoVarianteModel {
             return [];
         }
     }
+
+    static public function mdlUltimasCompras() {
+        try {
+            $con = Conexion::conectar();
+
+            $stmt = $con->prepare("
+                SELECT 
+                    c.id_compra,
+                    c.fecha_compra,
+                    p.nombre_empresa AS proveedor,
+                    COUNT(dc.id_detalle_compra) AS items,
+                    IFNULL(SUM(dc.cantidad * dc.precio_unitario),0) AS total
+                FROM compras c
+                LEFT JOIN proveedores p ON c.id_proveedor = p.id_proveedor
+                LEFT JOIN detalle_compra dc ON c.id_compra = dc.id_compra
+                GROUP BY c.id_compra
+                ORDER BY c.fecha_compra DESC
+                LIMIT 10
+            ");
+
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
+
+    static public function mdlResumenCaja() {
+        try {
+            $con = Conexion::conectar();
+
+            // 1. Obtener Ingresos
+            $stmtIngresos = $con->prepare("SELECT COUNT(*) AS total_tickets, IFNULL(SUM(total_venta),0) AS ingresos FROM ventas");
+            $stmtIngresos->execute();
+            $resVentas = $stmtIngresos->fetch(PDO::FETCH_ASSOC);
+
+            // 2. Obtener Egresos (Basado en la tabla de tu imagen)
+            $stmtEgresos = $con->prepare("SELECT IFNULL(SUM(cantidad * precio_unitario),0) AS egresos FROM detalle_compra");
+            $stmtEgresos->execute();
+            $egresos = $stmtEgresos->fetchColumn();
+
+            return [
+                "total_tickets" => $resVentas['total_tickets'],
+                "ingresos" => $resVentas['ingresos'],
+                "egresos" => $egresos // Ahora ya no será 0
+            ];
+
+        } catch (PDOException $e) {
+            return ["total_tickets" => 0, "ingresos" => 0, "egresos" => 0];
+        }
+    }
+
 }

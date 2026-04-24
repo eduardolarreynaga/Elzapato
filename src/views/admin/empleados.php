@@ -55,9 +55,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <option value="activo">Activo</option>
                     <option value="inactivo">Inactivo</option>
                 </select>
-                <button class="btn-outline-primary" id="btnResetEmpleadoFiltros" type="button" title="Limpiar filtros">
-                    <i class="fas fa-times"></i> Limpiar
-                </button>
+
             </div>
         </div>
         <div class="actions-right">
@@ -69,7 +67,7 @@ require __DIR__ . '/../layouts/admin-header.php';
     <div class="table-card">
         <div class="table-header">
             <h3>Listado de Empleados (Tabla usuarios)</h3>
-            <a href="#" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+            <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
         </div>
         <div class="table-responsive">
             <table class="data-table" id="empleadosTable">
