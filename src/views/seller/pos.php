@@ -196,7 +196,8 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                             
                             $imagenFinal = "/ElZapato/Assets/img/zapa.jpeg"; 
                             $pathImg = "/Assets/img/productos/" . $v_id_v . ".jpg";
-                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . "/ElZapato" . $pathImg)) {
+                            $fullPath = __DIR__ . '/../../../Assets/img/productos/' . $v_id_v . '.jpg';
+                            if (file_exists($fullPath)) {
                                 $imagenFinal = "/ElZapato" . $pathImg;
                             }
 

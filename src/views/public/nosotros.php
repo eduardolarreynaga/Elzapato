@@ -22,6 +22,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta name="description" content="<?php echo $nombreSistema; ?> - Calzado salvadoreño de calidad. Conoce nuestra historia, misión y valores.">
     <title>Nosotros | <?php echo $nombreSistema; ?></title>
+    <link rel="icon" type="image/jpeg" href="/ElZapato/Assets/img/zapa.jpeg">
 
     <link rel="stylesheet" href="/ElZapato/Assets/css/nosotros.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="/ElZapato/Assets/css/components/dev-modal.css?v=20260423">
@@ -29,7 +30,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
 </head>
 <body>
 
-    <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/header.php'; ?>
+    <?php include __DIR__ . '/../layouts/header.php'; ?>
 
     <main class="about-page">
         <section class="about-hero">
@@ -216,7 +217,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
         <button type="button" onclick="openDevModal()" class="btn-devs">Desarrollado por</button>
     </footer>
 
-    <?php include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/layouts/dev-team-modal.php'; ?>
+    <?php include __DIR__ . '/../layouts/dev-team-modal.php'; ?>
     <script src="/ElZapato/Assets/js/dev-modal.js?v=20260423"></script>
 
     <script>

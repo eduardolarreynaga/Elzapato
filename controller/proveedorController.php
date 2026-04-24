@@ -15,37 +15,51 @@ class ControladorProveedor {
 
     public function ctrCrearProveedor() {
         if (isset($_POST["nuevoNombreEmpresa"])) {
+            $email = trim((string)($_POST["nuevoEmail"] ?? ''));
+            if ($email === '') {
+                return 'email_requerido';
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return 'email_invalido';
+            }
             
             $tabla = "proveedores";
             $datos = array(
                 "nombre_empresa" => $_POST["nuevoNombreEmpresa"],
                 "contacto_nombre" => $_POST["nuevoContacto"],
                 "telefono" => $_POST["nuevoTelefono"],
-                "email" => $_POST["nuevoEmail"]
+                "email" => $email
             );
 
             $respuesta = ModeloProveedor::mdlIngresarProveedor($tabla, $datos);
-
-            if ($respuesta == "ok") {
-                echo '<script>alert("Proveedor guardado correctamente");</script>';
-            }
+            return $respuesta;
         }
+        return null;
     }
 
     public function ctrEditarProveedor() {
     if (isset($_POST["editarIdProveedor"])) {
+        $email = trim((string)($_POST["editarEmail"] ?? ''));
+        if ($email === '') {
+            return 'email_requerido';
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'email_invalido';
+        }
+
         $tabla = "proveedores";
         $datos = array(
             "id_proveedor" => $_POST["editarIdProveedor"],
             "nombre_empresa" => $_POST["editarEmpresa"],
             "contacto_nombre" => $_POST["editarContacto"],
             "telefono" => $_POST["editarTelefono"],
-            "email" => $_POST["editarEmail"]
+            "email" => $email
         );
 
         $respuesta = ModeloProveedor::mdlEditarProveedor($tabla, $datos);
         return $respuesta;
     }
+    return null;
 }
 public function ctrEliminarProveedor(){
 

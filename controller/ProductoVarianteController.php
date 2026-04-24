@@ -59,7 +59,19 @@ class ProductoVarianteController {
         return ProductoVarianteModel::mdlTopClientes();
     }
 
+    static public function ctrTodosClientesConResumen($fechaInicio = null, $fechaFin = null) {
+        return ProductoVarianteModel::mdlTodosClientesConResumen($fechaInicio, $fechaFin);
+    }
+
     static public function ctrResumenTickets() {
         return ProductoVarianteModel::mdlResumenTickets();
+    }
+
+    static public function ctrObtenerCajasReporte() {
+        return ProductoVarianteModel::mdlObtenerCajasReporte();
+    }
+
+    static public function ctrObtenerReporteCaja($fechaInicio, $fechaFin, $idCaja = 0) {
+        return ProductoVarianteModel::mdlObtenerReporteCaja($fechaInicio, $fechaFin, $idCaja);
     }
 }

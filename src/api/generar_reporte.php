@@ -7,9 +7,8 @@ require_once __DIR__ . '/../../model/conexion.php';
 require_once __DIR__ . '/../config/auth.php';
 
 $basePath = realpath(__DIR__ . '/../../../');
-// Ajuste de rutas según tu estructura
-require_once $basePath . "/ElZapato/controller/ProductoVarianteController.php";
-require_once $basePath . "/ElZapato/model/ProductoVarianteModel.php";
+require_once __DIR__ . '/../../controller/ProductoVarianteController.php';
+require_once __DIR__ . '/../../model/ProductoVarianteModel.php';
 
 use Mpdf\Mpdf;
 
@@ -27,6 +26,12 @@ $c_text          = "#000000";
 
 // --- NUEVO: Obtener nombre dinámico ---
 $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'EL ZAPATO';
+
+$logoPathPdf = realpath(__DIR__ . '/../../Assets/img/logopdf.png');
+if (!$logoPathPdf || !file_exists($logoPathPdf)) {
+    $logoPathPdf = realpath(__DIR__ . '/../../Assets/img/logo.png');
+}
+$logoPathPdf = ($logoPathPdf && file_exists($logoPathPdf)) ? str_replace('\\', '/', $logoPathPdf) : '';
 
 try {
     switch ($tipo) {
@@ -140,12 +145,28 @@ try {
         .footer { font-size: 8px; color: #95a5a6; text-align: center; border-top: 1px solid $c_primary_soft; padding-top: 5px; }
     ";
 
+    $tmpDir = realpath(__DIR__ . '/../../tmp');
+    if ($tmpDir === false) {
+        $tmpDir = __DIR__ . '/../../tmp';
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0775, true);
+        }
+    }
+    $mpdfTempDir = $tmpDir . '/mpdf';
+    if (!is_dir($mpdfTempDir)) {
+        @mkdir($mpdfTempDir, 0775, true);
+    }
+    if (!is_writable($mpdfTempDir)) {
+        $mpdfTempDir = sys_get_temp_dir();
+    }
+
     $mpdf = new Mpdf([
         'margin_left' => 15,
         'margin_right' => 15,
         'margin_top' => 45,
         'margin_bottom' => 20,
-        'format' => 'Letter'
+        'format' => 'Letter',
+        'tempDir' => $mpdfTempDir
     ]);
 
     // --- ENCABEZADO CON LOGO DINÁMICO ---
@@ -154,7 +175,7 @@ try {
         <table style="border: none; width: 100%;">
             <tr>
                 <td style="border: none; width: 15%;">
-                    <img src="'.$basePath.'/ElZapato/Assets/img/logo.png" style="width: 70px;">
+                    ' . ($logoPathPdf !== '' ? '<img src="' . $logoPathPdf . '" style="width: 70px;">' : '') . '
                 </td>
                 <td style="border: none; width: 50%; vertical-align: middle;">
                     <div class="brand">'.$nombreSistema.'</div>

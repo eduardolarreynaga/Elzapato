@@ -1,5 +1,5 @@
 <?php
-require_once "model/Conexion.php";
+require_once __DIR__ . '/../model/conexion.php';
 
 class UsuariosController {
     public function login() {
@@ -16,8 +16,13 @@ class UsuariosController {
             
             $respuesta = $stmt->fetch();
 
-            // Validación doble: por Hash (seguro) o por texto plano (para pruebas rápidas)
-            if ($respuesta && (password_verify($passwordInput, $respuesta["password_hash"]) || $passwordInput == $respuesta["password_hash"] || $passwordInput == "123")) {
+            $esValido = false;
+            if ($respuesta) {
+                $hashGuardado = (string)$respuesta["password_hash"];
+                $esValido = password_verify($passwordInput, $hashGuardado) || $passwordInput === $hashGuardado;
+            }
+
+            if ($respuesta && $esValido) {
                 
                 if (session_status() === PHP_SESSION_NONE) {
                     session_start();

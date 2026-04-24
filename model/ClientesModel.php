@@ -3,6 +3,19 @@ require_once "conexion.php";
 
 class ClientesModel {
 
+    static private function mdlAsegurarFechaRegistroClientes() {
+        try {
+            $conexion = Conexion::conectar();
+            $stmt = $conexion->query("SHOW COLUMNS FROM clientes LIKE 'fecha_registro'");
+            $col = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : false;
+
+            if (!$col) {
+                $conexion->exec("ALTER TABLE clientes ADD COLUMN fecha_registro TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP AFTER email");
+            }
+        } catch (Throwable $e) {
+        }
+    }
+
     /* =============================================
     MOSTRAR CLIENTES
     ============================================= */
@@ -36,6 +49,7 @@ class ClientesModel {
     INGRESAR CLIENTE
     ============================================= */
     static public function mdlIngresarCliente($tabla, $datos) {
+        self::mdlAsegurarFechaRegistroClientes();
         $stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, telefono, email) VALUES (:nombre, :telefono, :email)");
         
         $stmt->bindParam(":nombre",   $datos["nombre"],   PDO::PARAM_STR);

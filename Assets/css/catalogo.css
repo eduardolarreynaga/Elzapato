@@ -81,6 +81,21 @@ body {
     white-space: nowrap;
 }
 
+.trend-track .trend-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.trend-track .trend-brand img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(171, 136, 109, 0.25);
+    background: #fff;
+}
+
 .catalog-shell {
     width: min(1240px, 94%);
     margin: 30px auto 90px;

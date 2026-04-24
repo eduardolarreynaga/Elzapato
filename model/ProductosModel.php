@@ -113,8 +113,9 @@ class ProductosModel {
             // Verificar si el stock es 0, el estado debe ser inactivo
             $stock = (int)$datos["stock"];
             $estado = ($stock <= 0) ? 'inactivo' : $datos["estado"];
+            $db = Conexion::conectar();
             
-            $stmt = Conexion::conectar()->prepare("INSERT INTO producto_variante(id_producto, talla, color, codigo_barras, precio_venta, stock, estado) 
+            $stmt = $db->prepare("INSERT INTO producto_variante(id_producto, talla, color, codigo_barras, precio_venta, stock, estado) 
                                                 VALUES (:id_producto, :talla, :color, :codigo_barras, :precio, :stock, :estado)");
             
             $stmt->bindParam(":id_producto", $datos["id_producto"], PDO::PARAM_INT);
@@ -126,7 +127,7 @@ class ProductosModel {
             $stmt->bindParam(":estado", $estado, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
-                return Conexion::conectar()->lastInsertId();
+                return $db->lastInsertId();
             } else {
                 return "error";
             }

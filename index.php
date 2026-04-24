@@ -1,5 +1,3 @@
-
-
 <?php 
-include $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/public/principal.php'; 
+include __DIR__ . '/src/views/public/principal.php'; 
 ?>

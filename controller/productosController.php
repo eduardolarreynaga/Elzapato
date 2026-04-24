@@ -87,8 +87,17 @@ class ProductosController {
             $idVariante = $resultado;
             
             if(is_numeric($idVariante) && $idVariante > 0) {
-                if (isset($_FILES['imagen_producto']) && $_FILES['imagen_producto']['error'] == 0) {
-                    $this->subirImagen($idVariante, $_FILES['imagen_producto']);
+                $estadoImagen = 'sin_imagen';
+                if (isset($_FILES['imagen_producto']) && is_array($_FILES['imagen_producto'])) {
+                    $nombreImagen = trim($_FILES['imagen_producto']['name'] ?? '');
+                    if ($nombreImagen !== '') {
+                        $estadoImagen = $this->subirImagen($idVariante, $_FILES['imagen_producto']);
+                    }
+                }
+
+                if ($estadoImagen !== 'ok' && $estadoImagen !== 'sin_imagen') {
+                    echo '<script>window.location = "productos.php?res=creado_img_error&img_status=' . urlencode($estadoImagen) . '";</script>';
+                    return;
                 }
                 echo '<script>window.location = "productos.php?res=creado";</script>';
             } else {
@@ -108,8 +117,12 @@ class ProductosController {
                 return;
             }
 
-            if (isset($_FILES["imagen_producto"]) && $_FILES["imagen_producto"]["error"] == 0) {
-                $this->subirImagen($idVariante, $_FILES["imagen_producto"]);
+            $estadoImagen = 'sin_imagen';
+            if (isset($_FILES['imagen_producto']) && is_array($_FILES['imagen_producto'])) {
+                $nombreImagen = trim($_FILES['imagen_producto']['name'] ?? '');
+                if ($nombreImagen !== '') {
+                    $estadoImagen = $this->subirImagen($idVariante, $_FILES['imagen_producto']);
+                }
             }
 
             $datosProducto = array(
@@ -141,6 +154,10 @@ class ProductosController {
             }
             
             if ($respuestaVariante == "ok") {
+                if ($estadoImagen !== 'ok' && $estadoImagen !== 'sin_imagen') {
+                    echo '<script>window.location = "productos.php?res=actualizado_img_error&img_status=' . urlencode($estadoImagen) . '";</script>';
+                    return;
+                }
                 echo '<script>window.location = "productos.php?res=actualizado";</script>';
             } else {
                 echo '<script>window.location = "productos.php?res=error";</script>';
@@ -149,13 +166,56 @@ class ProductosController {
     }
 
     private function subirImagen($idVariante, $file) {
-        $directorio = $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/Assets/img/productos/';
-        
-        if (!is_dir($directorio)) {
-            mkdir($directorio, 0777, true);
+        $errorArchivo = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($errorArchivo !== UPLOAD_ERR_OK) {
+            return 'upload_' . $errorArchivo;
         }
 
-        $nombreArchivo = $idVariante . ".jpg";
+        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            return 'archivo_invalido';
+        }
+
+        $tamano = (int)($file['size'] ?? 0);
+        if ($tamano <= 0) {
+            return 'archivo_vacio';
+        }
+
+        if ($tamano > 5 * 1024 * 1024) {
+            return 'tamano';
+        }
+
+        $baseImgDir = realpath(__DIR__ . '/../Assets/img');
+        if ($baseImgDir === false) {
+            $baseImgDir = __DIR__ . '/../Assets/img';
+        }
+        $directorio = rtrim($baseImgDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'productos' . DIRECTORY_SEPARATOR;
+        
+        if (!is_dir($directorio)) {
+            if (!mkdir($directorio, 0777, true)) {
+                return 'directorio';
+            }
+        }
+
+        if (!is_writable($directorio)) {
+            return 'sin_permisos';
+        }
+
+        $mime = function_exists('mime_content_type') ? mime_content_type($file['tmp_name']) : '';
+        $mapaMime = [
+            'image/jpg' => 'jpg',
+            'image/jpeg' => 'jpg',
+            'image/pjpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/x-png' => 'png',
+            'image/webp' => 'webp'
+        ];
+
+        $extension = $mapaMime[$mime] ?? strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return 'formato';
+        }
+
+        $nombreArchivo = $idVariante . "." . $extension;
         $rutaFinal = $directorio . $nombreArchivo;
 
         $viejos = glob($directorio . $idVariante . ".*");
@@ -212,7 +272,7 @@ class ProductosController {
         if(isset($_POST["id_eliminar_v"])){ 
             $id_variante = $_POST["id_eliminar_v"];
             
-            $directorio = $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/Assets/img/productos/';
+            $directorio = realpath(__DIR__ . '/../Assets/img') . '/productos/';
             $archivos = glob($directorio . $id_variante . ".*"); 
             foreach($archivos as $archivo) {
                 if(file_exists($archivo)) @unlink($archivo); 

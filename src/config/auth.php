@@ -25,6 +25,7 @@ if (!function_exists('login_user')) {
         $_SESSION['usuario']    = $userData['username'];
         $_SESSION['rol']        = $userData['rol'];
         $_SESSION['auth']       = true;
+        $_SESSION['suppress_low_stock_alert_once'] = true;
     }
 }
 
