@@ -63,6 +63,12 @@ require __DIR__ . '/../layouts/admin-header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
+<div class="report-toolbar" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+    <a href="/ElZapato/src/api/generar_reporte.php?tipo=8" target="_blank" class="view-all" style="padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: 0.3s;">
+        <i class="fas fa-file-pdf"></i> DESCARGAR REPORTE PDF
+    </a>
+</div>
+
 <div class="dashboard-content" style="padding: 20px; background-color: #f8f9fa; min-height: 100vh;">
     
     <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-bottom: 25px;">

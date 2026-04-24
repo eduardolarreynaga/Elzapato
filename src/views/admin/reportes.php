@@ -29,7 +29,6 @@ $showSearch = true;
 require __DIR__ . '/../layouts/admin-header.php';
 ?>
 
-
 <!-- STATS -->
 <div class="stats-grid stats-list">
     <div class="stats-list-item">
@@ -68,16 +67,12 @@ require __DIR__ . '/../layouts/admin-header.php';
 <div class="table-card">
 <div class="table-header">
 <h3>Stock actual por producto</h3>
-
 <div class="botones-grupo">
 <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-
-<!-- Botón PDF -->
-<a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+<a href="/ElZapato/src/api/generar_reporte.php?tipo=1" target="_blank" class="view-all" style="color: #772c24;">
     <i class="fas fa-file-pdf"></i> PDF
 </a>
 </div>
-
 </div>
 <div class="table-responsive">
 <table class="data-table">
@@ -108,14 +103,11 @@ require __DIR__ . '/../layouts/admin-header.php';
     <h3>Alertas de stock</h3>
     <div class="botones-grupo">
         <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-        <!-- Botón PDF -->
-        <a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+        <a href="/ElZapato/src/api/generar_reporte.php?tipo=2" target="_blank" class="view-all" style="color: #772c24;">
             <i class="fas fa-file-pdf"></i> PDF
         </a>
     </div>
 </div>
-
-
 <div class="table-responsive">
 <table class="data-table">
 <thead>
@@ -124,7 +116,6 @@ require __DIR__ . '/../layouts/admin-header.php';
 </tr>
 </thead>
 <tbody>
-
 <?php if(!empty($dataAlertas)): ?>
 <?php foreach($dataAlertas as $a): ?>
 <tr>
@@ -142,7 +133,6 @@ require __DIR__ . '/../layouts/admin-header.php';
 <?php else: ?>
 <tr><td colspan="5">Sin alertas</td></tr>
 <?php endif; ?>
-
 </tbody>
 </table>
 </div>
@@ -156,13 +146,11 @@ require __DIR__ . '/../layouts/admin-header.php';
 <h3>Historial de movimientos</h3>
 <div class="botones-grupo">
     <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-    <!-- Botón PDF -->
-    <a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+    <a href="/ElZapato/src/api/generar_reporte.php?tipo=3" target="_blank" class="view-all" style="color: #772c24;">
         <i class="fas fa-file-pdf"></i> PDF
     </a>
 </div>
 </div>
-
 <div class="table-responsive">
 <table class="data-table">
 <thead>
@@ -171,11 +159,9 @@ require __DIR__ . '/../layouts/admin-header.php';
 </tr>
 </thead>
 <tbody>
-
 <?php 
 $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 ?>
-
 <?php if(!empty($movimientos)): ?>
 <?php foreach($movimientos as $m): ?>
 <tr>
@@ -193,25 +179,23 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 <?php else: ?>
 <tr><td colspan="5">Sin movimientos</td></tr>
 <?php endif; ?>
-
 </tbody>
 </table>
 </div>
 </div>
 </div>
 
-<!-- CAJA (RESPETANDO DISEÑO ORIGINAL) -->
+<!-- CAJA -->
 <div class="tabpanel" id="panel4">
 <div class="table-card">
 <div class="table-header">
 <h3>Flujo de Caja</h3>
 <div class="botones-grupo">
     <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-    <!-- Botón PDF -->
-    <a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+    <a href="/ElZapato/src/api/generar_reporte.php?tipo=4" target="_blank" class="view-all" style="color: #772c24;">
         <i class="fas fa-file-pdf"></i> PDF
     </a>
-    </div>
+</div>
 </div>
 <div class="table-responsive">
 <table class="data-table">
@@ -219,25 +203,21 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 <tr><th>Concepto</th><th>Operaciones</th><th>Monto</th></tr>
 </thead>
 <tbody>
-
 <tr>
 <td>Ingresos por ventas</td>
 <td><?= $dataCaja['total_tickets'] ?> tickets</td>
 <td>$<?= number_format($dataCaja['ingresos'],2) ?></td>
 </tr>
-
 <tr>
 <td>Egresos por compras</td>
 <td>-</td>
 <td>$<?= number_format($dataCaja['egresos'] ?? 0,2) ?></td>
 </tr>
-
-<tr>
+<tr style="font-weight: bold;">
 <td><strong>Flujo neto</strong></td>
 <td>-</td>
 <td><strong>$<?= number_format($stats['flujo_neto'],2) ?></strong></td>
 </tr>
-
 </tbody>
 </table>
 </div>
@@ -251,13 +231,11 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 <h3>Clientes con compras</h3>
 <div class="botones-grupo">
     <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-    <!-- Botón PDF -->
-    <a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+    <a href="/ElZapato/src/api/generar_reporte.php?tipo=5" target="_blank" class="view-all" style="color: #772c24;">
         <i class="fas fa-file-pdf"></i> PDF
     </a>
-    </div>
 </div>
-
+</div>
 <div class="table-responsive">
 <table class="data-table">
 <thead>
@@ -266,7 +244,6 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 </tr>
 </thead>
 <tbody>
-
 <?php if(!empty($dataClientes)): ?>
 <?php foreach($dataClientes as $c): ?>
 <tr>
@@ -279,7 +256,6 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 <?php else: ?>
 <tr><td colspan="4">Sin datos</td></tr>
 <?php endif; ?>
-
 </tbody>
 </table>
 </div>
@@ -292,14 +268,12 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 <div class="table-header">
 <h3>Resumen de tickets</h3>
 <div class="botones-grupo">
-        <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-        <!-- Botón PDF -->
-    <a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+    <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+    <a href="/ElZapato/src/api/generar_reporte.php?tipo=6" target="_blank" class="view-all" style="color: #772c24;">
         <i class="fas fa-file-pdf"></i> PDF
     </a>
-    </div>
 </div>
-
+</div>
 <div class="table-responsive">
 <table class="data-table">
 <thead>
@@ -308,7 +282,6 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 </tr>
 </thead>
 <tbody>
-
 <?php if(!empty($dataTickets)): ?>
 <?php foreach($dataTickets as $t): ?>
 <tr>
@@ -321,25 +294,23 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 <?php else: ?>
 <tr><td colspan="4">Sin datos</td></tr>
 <?php endif; ?>
-
 </tbody>
 </table>
 </div>
 </div>
 </div>
 
-<!-- COMPRAS (MISMO DISEÑO) -->
+<!-- COMPRAS -->
 <div class="tabpanel" id="panel7">
 <div class="table-card">
 <div class="table-header">
 <h3>Últimas Compras</h3>
 <div class="botones-grupo">
-        <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
-        <!-- Botón PDF -->
-    <a href="javascript:void(0)" onclick="imprimirPDF()" class="view-all" style="color: #e74c3c;">
+    <a href="javascript:location.reload()" class="view-all"><i class="fas fa-sync"></i> Actualizar</a>
+    <a href="/ElZapato/src/api/generar_reporte.php?tipo=7" target="_blank" class="view-all" style="color: #772c24;">
         <i class="fas fa-file-pdf"></i> PDF
     </a>
-    </div>
+</div>
 </div>
 <div class="table-responsive">
 <table class="data-table">
@@ -364,8 +335,6 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
 
 </div>
 
-<?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>
-
 <script>
 (function() {
     const tabs = document.querySelectorAll('.tab a');
@@ -384,39 +353,31 @@ $movimientos = ProductoVarianteController::ctrMostrarHistorialMovimientos();
     tabs[0].click();
 })();
 
-
 document.addEventListener("DOMContentLoaded", function() {
-    
     const tabs = document.querySelectorAll('.tab');
     const panels = document.querySelectorAll('.tabpanel');
 
     function activarPestana(targetId) {
-        // 1. Ocultar todos los paneles y quitar clase activa a las pestañas
         panels.forEach(p => {
             p.classList.remove('show');
             p.style.display = 'none';
         });
         tabs.forEach(t => t.classList.remove('tab-active'));
 
-        // 2. Activar la pestaña seleccionada
         const link = document.querySelector(`.tab a[href="${targetId}"]`);
         if (link) {
             const parentTab = link.parentElement;
             parentTab.classList.add('tab-active');
             
-            // 3. Mostrar el panel correspondiente
             const targetPanel = document.querySelector(targetId);
             if (targetPanel) {
                 targetPanel.classList.add('show');
                 targetPanel.style.display = 'block';
             }
-
-            // 4. Guardar en localStorage para el reload
             localStorage.setItem('reporteTabActual', targetId);
         }
     }
 
-    // Evento Click para las pestañas
     tabs.forEach(tab => {
         const link = tab.querySelector('a');
         link.addEventListener('click', function(e) {
@@ -426,24 +387,13 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // --- LÓGICA DE RESTAURACIÓN TRAS ACTUALIZAR ---
     const tabGuardada = localStorage.getItem('reporteTabActual');
-    
     if (tabGuardada && document.querySelector(tabGuardada)) {
         activarPestana(tabGuardada);
     } else {
-        // Si no hay nada, por defecto la primera (Stock)
         activarPestana('#panel1');
     }
 });
-
-// --- FUNCIÓN IMPRIMIR PDF ---
-function imprimirPDF() {
-    // Usamos el comando nativo de impresión del navegador
-    // El navegador permite "Guardar como PDF" por defecto
-    window.print();
-}
-
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-html-end.php'; ?>
