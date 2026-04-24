@@ -133,3 +133,35 @@
         border-radius: 2px;
     }
 }
+
+/*Libreria para imprimir pdf*/
+@media print {
+    /* Ocultar todo lo que no es el reporte */
+    .sidebar, .tablist, .stats-grid, .botones-grupo, .view-all, header, .search-container {
+        display: none !important;
+    }
+
+    /* Ajustar el contenido principal */
+    body { background: white !important; }
+    #reportesContent { margin: 0; padding: 0; width: 100%; }
+    
+    /* Mostrar solo el panel que está activo actualmente */
+    .tabpanel {
+        display: none !important;
+    }
+    .tabpanel.show {
+        display: block !important;
+        border: none !important;
+    }
+
+    /* Estilo de la tabla para impresión */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    .data-table th, .data-table td {
+        border: 1px solid #ddd !important;
+        padding: 8px;
+    }
+}

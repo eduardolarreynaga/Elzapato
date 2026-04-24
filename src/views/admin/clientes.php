@@ -91,7 +91,7 @@ $mailStatus = $_GET['mail'] ?? '';
                     <option value="za">Z - A</option>
                 </select>
                 <button class="btn-outline-primary" onclick="window.location.href='clientes.php'">
-                    <i class="fas fa-times"></i> Limpiar
+                    <i class="fas fa-times"></i> Actualizar
                 </button>
             </div>
         </div>
