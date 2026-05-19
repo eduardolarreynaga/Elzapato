@@ -1,0 +1,367 @@
+:root {
+    --primary-light: #E4E0E1;   
+    --primary-soft: #D6C0B3;    
+    --primary-dark: #AB886D;    
+    --text-dark: #000000;       
+    --font-family: "Roboto", sans-serif;
+    --nocolor: #772c24;         
+}
+
+/* --- Animación Inicial de Rebote para el Botón --- */
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- Animación de Ondas de Pulso Infinitas --- */
+@keyframes launcherPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(119, 44, 36, 0.6); }
+    70% { transform: scale(1); box-shadow: 0 0 0 18px rgba(119, 44, 36, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(119, 44, 36, 0); }
+}
+
+/* --- Animación de Entrada para los Mensajes --- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Animación de los Puntos Escribiendo --- */
+@keyframes typingBlink {
+    0%, 100% { opacity: 0.2; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* --- Botón Lanzador Flotante (Círculo Perfecto con el Logo) --- */
+#chatbot-launcher {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px; /* Ancho fijo igual al alto para que sea circular */
+    height: 60px; /* Alto fijo */
+    background-color: #ffffff; /* Fondo blanco para que resalte tu imagen */
+    border: 2px solid var(--nocolor); /* Borde con el color del sistema */
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    animation: bounceIn 1s ease-out, launcherPulse 2s infinite ease-in-out;
+    transition: transform 0.2s ease, border-color 0.3s ease;
+    overflow: hidden; /* Evita que la imagen se salga del círculo */
+}
+
+#chatbot-launcher:hover {
+    animation: none; 
+    transform: scale(1.08) rotate(5deg); /* Le da un giro sutil y divertido al pasar el cursor */
+    border-color: var(--text-dark);
+}
+
+/* Estilo para la imagen del logo dentro del botón */
+.launcher-brand-img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain; /* Ajusta la imagen proporcionalmente sin deformarla */
+}
+
+/* --- Contenedor Principal con Despliegue Elástico --- */
+#chatbot-container {
+    position: fixed;
+    bottom: 100px;
+    right: 25px;
+    width: 370px;
+    height: 540px;
+    background-color: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--primary-soft);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99999;
+    font-family: var(--font-family);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+}
+
+.chatbot-hidden {
+    opacity: 0;
+    transform: translateY(50px) scale(0.8);
+    pointer-events: none;
+}
+
+/* --- Encabezado del Chat --- */
+.chatbot-header {
+    background-color: var(--nocolor);
+    color: #ffffff;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 4px solid var(--primary-dark);
+}
+
+.chatbot-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chatbot-avatar {
+    background-color: #ffffff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+.avatar-brand-img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+.chatbot-title-area h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.chatbot-title-area p {
+    margin: 3px 0 0 0;
+    font-size: 11px;
+    color: var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.online-indicator-pulse {
+    width: 8px;
+    height: 8px;
+    background-color: #2ed573;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #2ed573;
+}
+
+.chatbot-close-btn {
+    background: none;
+    border: none;
+    color: var(--primary-light);
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbot-close-btn:hover {
+    color: #ffffff;
+    transform: rotate(90deg);
+}
+
+/* --- Ventana de Mensajes Fluidos --- */
+.chatbot-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background-color: var(--primary-light);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+}
+
+.message {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-dark);
+    animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.bot-message {
+    background-color: #ffffff;
+    align-self: flex-start;
+    border-top-left-radius: 2px;
+    border: 1px solid var(--primary-soft);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.02);
+}
+
+.user-message {
+    background-color: var(--primary-dark);
+    color: #ffffff;
+    align-self: flex-end;
+    border-top-right-radius: 2px;
+    box-shadow: 0 3px 8px rgba(171, 136, 109, 0.3);
+}
+
+.text-accent {
+    color: var(--nocolor);
+}
+
+/* --- Indicador de Escribiendo (...) --- */
+#chatbot-typing-indicator {
+    padding: 8px 16px;
+    background-color: var(--primary-light);
+    display: flex;
+    transition: all 0.2s ease;
+}
+
+.typing-hidden {
+    display: none !important;
+}
+
+.typing-bubble {
+    background-color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 16px;
+    border-top-left-radius: 2px;
+    border: 1px solid var(--primary-soft);
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.typing-bubble .dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--primary-dark);
+    border-radius: 50%;
+    animation: typingBlink 1.4s infinite ease-in-out;
+}
+
+.typing-bubble .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-bubble .dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* --- Menú Inferior de Opciones Interactivas --- */
+.chatbot-options {
+    padding: 12px;
+    background-color: #ffffff;
+    border-top: 1px solid var(--primary-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 190px;
+    overflow-y: auto;
+}
+
+.chat-option-btn {
+    background-color: #ffffff;
+    border: 1px solid var(--primary-soft);
+    color: var(--text-dark);
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.25s ease;
+    font-family: var(--font-family);
+}
+
+.chat-option-btn i {
+    color: var(--primary-dark);
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.chat-option-btn:hover {
+    background-color: var(--nocolor);
+    border-color: var(--nocolor);
+    color: #ffffff;
+    padding-left: 20px;
+    box-shadow: 0 4px 10px rgba(119, 44, 36, 0.15);
+}
+
+.chat-option-btn:hover i {
+    color: #ffffff; 
+}
+
+.chat-option-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #ffffff !important;
+    color: var(--text-dark) !important;
+    padding-left: 14px !important;
+}
+
+/* ==========================================================================
+   ESTILOS RESPONSIVE PARA DISPOSITIVOS MÓVILES (Pantallas menores a 480px)
+   ========================================================================== */
+@media screen and (max-width: 480px) {
+    /* Desplazar sutilmente el botón en celular para que no estorbe */
+    #chatbot-launcher {
+        bottom: 15px;
+        right: 15px;
+        width: 55px;
+        height: 55px;
+    }
+
+    /* La ventana del chat ocupará la pantalla completa de forma elegante */
+    #chatbot-container {
+        bottom: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important; /* Eliminamos bordes redondeados en móvil */
+        border: none !important;
+    }
+
+    /* Ajustar el comportamiento cuando el chat está oculto en móviles */
+    .chatbot-hidden {
+        opacity: 0 !important;
+        transform: translateY(100%) scale(1) !important; /* Se desliza completamente hacia abajo */
+        pointer-events: none;
+    }
+
+    /* Hacer que el cuerpo del chat use mejor el espacio */
+    .chatbot-body {
+        padding: 12px;
+    }
+
+    /* Ajustar las burbujas de texto para que quepan mejor */
+    .message {
+        max-width: 90%;
+        font-size: 13px;
+        padding: 10px 14px;
+    }
+
+    /* Área de opciones: Fijamos un tamaño cómodo para que el usuario haga scroll */
+    .chatbot-options {
+        padding: 10px;
+        max-height: 220px; /* Un poco más alto para tocar los botones fácilmente */
+        background-color: #ffffff;
+    }
+
+    /* Botones más grandes en móvil para que sea fácil tocarlos con el dedo */
+    .chat-option-btn {
+        padding: 12px 14px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+    
+    .chat-option-btn:hover {
+        padding-left: 14px; /* Eliminamos el efecto de desplazamiento en móvil para evitar saltos raros */
+    }
+
+    /* Agrandar el botón de cerrar para que sea fácil de presionar con el pulgar */
+    .chatbot-close-btn {
+        font-size: 24px;
+        padding: 8px;
+    }
+}

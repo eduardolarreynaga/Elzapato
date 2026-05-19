@@ -18,6 +18,7 @@ $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'ElZapato';
 <body>
 
     <?php include __DIR__ . '/../layouts/header.php'; ?>
+    <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/ElZapato/src/views/public/chatbot.php'; ?>
 
     <main class="landing-page">
 
