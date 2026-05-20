@@ -7,7 +7,7 @@
     --nocolor: #772c24;         
 }
 
-/* --- Animación Inicial de Rebote para el Botón --- */
+/* Animaciones */
 @keyframes bounceIn {
     0% { transform: scale(0.3); opacity: 0; }
     50% { transform: scale(1.1); }
@@ -15,34 +15,31 @@
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* --- Animación de Ondas de Pulso Infinitas --- */
 @keyframes launcherPulse {
     0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(119, 44, 36, 0.6); }
     70% { transform: scale(1); box-shadow: 0 0 0 18px rgba(119, 44, 36, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(119, 44, 36, 0); }
 }
 
-/* --- Animación de Entrada para los Mensajes --- */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Animación de los Puntos Escribiendo --- */
 @keyframes typingBlink {
     0%, 100% { opacity: 0.2; transform: translateY(0); }
     50% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* --- Botón Lanzador Flotante (Círculo Perfecto con el Logo) --- */
+/* Botón flotante */
 #chatbot-launcher {
     position: fixed;
     bottom: 25px;
     right: 25px;
-    width: 60px; /* Ancho fijo igual al alto para que sea circular */
-    height: 60px; /* Alto fijo */
-    background-color: #ffffff; /* Fondo blanco para que resalte tu imagen */
-    border: 2px solid var(--nocolor); /* Borde con el color del sistema */
+    width: 60px;
+    height: 60px;
+    background-color: #ffffff;
+    border: 2px solid var(--nocolor);
     border-radius: 50%;
     cursor: pointer;
     z-index: 99999;
@@ -52,23 +49,22 @@
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
     animation: bounceIn 1s ease-out, launcherPulse 2s infinite ease-in-out;
     transition: transform 0.2s ease, border-color 0.3s ease;
-    overflow: hidden; /* Evita que la imagen se salga del círculo */
+    overflow: hidden;
 }
 
 #chatbot-launcher:hover {
     animation: none; 
-    transform: scale(1.08) rotate(5deg); /* Le da un giro sutil y divertido al pasar el cursor */
+    transform: scale(1.08) rotate(5deg);
     border-color: var(--text-dark);
 }
 
-/* Estilo para la imagen del logo dentro del botón */
 .launcher-brand-img {
     width: 85%;
     height: 85%;
-    object-fit: contain; /* Ajusta la imagen proporcionalmente sin deformarla */
+    object-fit: contain;
 }
 
-/* --- Contenedor Principal con Despliegue Elástico --- */
+/* Contenedor principal */
 #chatbot-container {
     position: fixed;
     bottom: 100px;
@@ -93,7 +89,7 @@
     pointer-events: none;
 }
 
-/* --- Encabezado del Chat --- */
+/* Encabezado */
 .chatbot-header {
     background-color: var(--nocolor);
     color: #ffffff;
@@ -150,6 +146,13 @@
     border-radius: 50%;
     display: inline-block;
     box-shadow: 0 0 8px #2ed573;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
 .chatbot-close-btn {
@@ -169,7 +172,7 @@
     transform: rotate(90deg);
 }
 
-/* --- Ventana de Mensajes Fluidos --- */
+/* Ventana de mensajes */
 .chatbot-body {
     flex: 1;
     padding: 16px;
@@ -211,7 +214,7 @@
     color: var(--nocolor);
 }
 
-/* --- Indicador de Escribiendo (...) --- */
+/* Indicador de escritura */
 #chatbot-typing-indicator {
     padding: 8px 16px;
     background-color: var(--primary-light);
@@ -245,7 +248,7 @@
 .typing-bubble .dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-bubble .dot:nth-child(3) { animation-delay: 0.4s; }
 
-/* --- Menú Inferior de Opciones Interactivas --- */
+/* Botones predefinidos */
 .chatbot-options {
     padding: 12px;
     background-color: #ffffff;
@@ -300,11 +303,57 @@
     padding-left: 14px !important;
 }
 
-/* ==========================================================================
-   ESTILOS RESPONSIVE PARA DISPOSITIVOS MÓVILES (Pantallas menores a 480px)
-   ========================================================================== */
+/* Área de entrada de texto */
+.chatbot-input-area {
+    display: flex;
+    padding: 12px;
+    background-color: #ffffff;
+    border-top: 1px solid var(--primary-soft);
+    gap: 10px;
+    align-items: center;
+}
+
+#user-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--primary-soft);
+    border-radius: 40px;
+    font-family: var(--font-family);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#user-input:focus {
+    border-color: var(--nocolor);
+    box-shadow: 0 0 0 2px rgba(119, 44, 36, 0.2);
+}
+
+#send-btn {
+    background-color: var(--nocolor);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#send-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--primary-dark);
+}
+
+#send-btn i {
+    font-size: 18px;
+}
+
+/* Responsive */
 @media screen and (max-width: 480px) {
-    /* Desplazar sutilmente el botón en celular para que no estorbe */
     #chatbot-launcher {
         bottom: 15px;
         right: 15px;
@@ -312,43 +361,36 @@
         height: 55px;
     }
 
-    /* La ventana del chat ocupará la pantalla completa de forma elegante */
     #chatbot-container {
         bottom: 0 !important;
         right: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        border-radius: 0 !important; /* Eliminamos bordes redondeados en móvil */
+        border-radius: 0 !important;
         border: none !important;
     }
 
-    /* Ajustar el comportamiento cuando el chat está oculto en móviles */
     .chatbot-hidden {
         opacity: 0 !important;
-        transform: translateY(100%) scale(1) !important; /* Se desliza completamente hacia abajo */
+        transform: translateY(100%) scale(1) !important;
         pointer-events: none;
     }
 
-    /* Hacer que el cuerpo del chat use mejor el espacio */
     .chatbot-body {
         padding: 12px;
     }
 
-    /* Ajustar las burbujas de texto para que quepan mejor */
     .message {
         max-width: 90%;
         font-size: 13px;
         padding: 10px 14px;
     }
 
-    /* Área de opciones: Fijamos un tamaño cómodo para que el usuario haga scroll */
     .chatbot-options {
         padding: 10px;
-        max-height: 220px; /* Un poco más alto para tocar los botones fácilmente */
-        background-color: #ffffff;
+        max-height: 220px;
     }
 
-    /* Botones más grandes en móvil para que sea fácil tocarlos con el dedo */
     .chat-option-btn {
         padding: 12px 14px;
         font-size: 13px;
@@ -356,12 +398,25 @@
     }
     
     .chat-option-btn:hover {
-        padding-left: 14px; /* Eliminamos el efecto de desplazamiento en móvil para evitar saltos raros */
+        padding-left: 14px;
     }
 
-    /* Agrandar el botón de cerrar para que sea fácil de presionar con el pulgar */
     .chatbot-close-btn {
         font-size: 24px;
         padding: 8px;
+    }
+
+    .chatbot-input-area {
+        padding: 10px;
+    }
+    
+    #user-input {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+    
+    #send-btn {
+        width: 44px;
+        height: 44px;
     }
 }

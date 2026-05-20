@@ -4,17 +4,15 @@
 <!-- Botón flotante circular con el logo de ElZapato -->
 <div id="chatbot-launcher" onclick="toggleChatbot()">
     <div class="launcher-pulse"></div>
-    <!-- Reemplazo de texto e íconos por tu imagen oficial -->
     <img src="/ElZapato/Assets/img/logo.original.backup.png" alt="Logo ElZapato" class="launcher-brand-img">
 </div>
 
-<!-- Ventana del Chatbot Llamativa -->
+<!-- Ventana del Chatbot -->
 <div id="chatbot-container" class="chatbot-hidden">
-    <!-- Encabezado del Chat -->
+    <!-- Encabezado -->
     <div class="chatbot-header">
         <div class="chatbot-profile">
             <div class="chatbot-avatar">
-                <!-- También usamos tu logo en miniatura dentro del chat para mantener consistencia corporativa -->
                 <img src="/ElZapato/Assets/img/logo.original.backup.png" alt="Mini Logo" class="avatar-brand-img">
             </div>
             <div class="chatbot-title-area">
@@ -27,15 +25,15 @@
         </button>
     </div>
 
-    <!-- Cuerpo del chat donde fluyen los mensajes -->
+    <!-- Cuerpo del chat -->
     <div class="chatbot-body" id="chatbot-messages">
         <div class="message bot-message animate-fade-in">
             <i class="bi bi-hand-thumbs-up-fill text-accent"></i> ¡Hola! Bienvenido al asistente virtual de <strong>ElZapato</strong>. <br><br>
-            ¿En qué podemos ayudarte hoy? Selecciona una opción del menú inferior para responderte de inmediato:
+            Puedes escribir tu pregunta abajo o seleccionar una opción:
         </div>
     </div>
 
-    <!-- Contenedor dinámico de "Escribiendo..." -->
+    <!-- Indicador de escritura -->
     <div id="chatbot-typing-indicator" class="typing-hidden">
         <div class="typing-bubble">
             <span class="dot"></span>
@@ -44,7 +42,7 @@
         </div>
     </div>
 
-    <!-- Área de Opciones Precargadas con Íconos Bootstrap -->
+    <!-- Botones predefinidos -->
     <div class="chatbot-options" id="chatbot-options-container">
         <button class="chat-option-btn" onclick="sendPregunta(1, '📍 ¿Dónde están ubicados?')">
             <i class="bi bi-geo-alt-fill"></i> Ubicación de la tienda
@@ -67,6 +65,12 @@
         <button class="chat-option-btn" onclick="sendPregunta(7, '📞 ¿Cuál es su contacto?')">
             <i class="bi bi-telephone-fill"></i> Teléfono y Correo
         </button>
+    </div>
+
+    <!-- Área de entrada de texto libre -->
+    <div class="chatbot-input-area">
+        <input type="text" id="user-input" placeholder="Escribe tu pregunta aquí... Ej: ¿Tienen zapatos Nike?" autocomplete="off">
+        <button id="send-btn"><i class="bi bi-send-fill"></i></button>
     </div>
 </div>
 
