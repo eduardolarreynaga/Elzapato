@@ -3,6 +3,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Agregar la inclusión de LogHelper para que esté disponible
+if (file_exists(__DIR__ . '/../helpers/LogHelper.php')) {
+    require_once __DIR__ . '/../helpers/LogHelper.php';
+}
+
 /**
  * CARGA DE AJUSTES DEL SISTEMA
  */
@@ -59,9 +64,20 @@ if (!function_exists('require_auth')) {
  */
 if (!function_exists('logout_user')) {
     function logout_user() {
+        // Intentar registrar el logout si LogHelper está disponible
+        if (function_exists('class_exists') && class_exists('LogHelper')) {
+            if (isset($_SESSION['id_usuario']) && isset($_SESSION['usuario'])) {
+                try {
+                    LogHelper::registrar('logout', 'sesion', $_SESSION['id_usuario'], 'Cierre de sesión');
+                } catch (Exception $e) {
+                    // Ignorar errores de log
+                }
+            }
+        }
         session_unset();
         session_destroy();
         header('Location: /ElZapato/src/views/public/login.php');
         exit;
     }
 }
+?>

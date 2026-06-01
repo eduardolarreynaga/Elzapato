@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../model/ProductosModel.php';
+require_once __DIR__ . '/../model/conexion.php';
+require_once __DIR__ . '/../helpers/LogHelper.php';
 
 class ProductosController {
 
@@ -87,6 +89,10 @@ class ProductosController {
             $idVariante = $resultado;
             
             if(is_numeric($idVariante) && $idVariante > 0) {
+                // Registrar log de creación
+                $detalle = "Producto: " . $_POST["nombre_producto"] . " | Talla: " . $_POST["talla"] . " | Color: " . $_POST["color"] . " | SKU: " . $_POST["codigo_barras"] . " | Precio: $" . $_POST["precio_venta"] . " | Stock: " . $_POST["stock"];
+                LogHelper::registrar('crear', 'producto_variante', $idVariante, $detalle);
+                
                 $estadoImagen = 'sin_imagen';
                 if (isset($_FILES['imagen_producto']) && is_array($_FILES['imagen_producto'])) {
                     $nombreImagen = trim($_FILES['imagen_producto']['name'] ?? '');
@@ -154,6 +160,10 @@ class ProductosController {
             }
             
             if ($respuestaVariante == "ok") {
+                // Registrar log de edición
+                $detalle = "Producto: " . $_POST["nombre_producto"] . " | Talla: " . $_POST["talla"] . " | Color: " . $_POST["color"] . " | SKU: " . $_POST["codigo_barras"] . " | Precio: $" . $_POST["precio_venta"] . " | Stock: " . $_POST["stock"];
+                LogHelper::registrar('editar', 'producto_variante', $idVariante, $detalle);
+                
                 if ($estadoImagen !== 'ok' && $estadoImagen !== 'sin_imagen') {
                     echo '<script>window.location = "productos.php?res=actualizado_img_error&img_status=' . urlencode($estadoImagen) . '";</script>';
                     return;
@@ -271,6 +281,21 @@ class ProductosController {
     public function ctrEliminarProducto() {
         if(isset($_POST["id_eliminar_v"])){ 
             $id_variante = $_POST["id_eliminar_v"];
+            
+            // Obtener información del producto antes de eliminar para el log
+            $db = Conexion::conectar();
+            $stmt = $db->prepare("SELECT pv.id_variante, p.nombre_producto, pv.talla, pv.color, pv.codigo_barras 
+                                                   FROM producto_variante pv 
+                                                   INNER JOIN productos p ON pv.id_producto = p.id_producto 
+                                                   WHERE pv.id_variante = :id");
+            $stmt->bindParam(":id", $id_variante);
+            $stmt->execute();
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if($producto) {
+                $detalle = "Producto: " . $producto['nombre_producto'] . " | Talla: " . $producto['talla'] . " | Color: " . $producto['color'] . " | SKU: " . $producto['codigo_barras'];
+                LogHelper::registrar('eliminar', 'producto_variante', $id_variante, $detalle);
+            }
             
             $directorio = realpath(__DIR__ . '/../Assets/img') . '/productos/';
             $archivos = glob($directorio . $id_variante . ".*"); 

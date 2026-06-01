@@ -90,7 +90,7 @@
 }
 
 .badge-success {
-    background: #28a745;
+    background: #AB886D;
     color: white;
     padding: 3px 8px;
     border-radius: 3px;
@@ -98,7 +98,7 @@
 }
 
 .badge-danger {
-    background: #dc3545;
+    background: #772c24;
     color: white;
     padding: 3px 8px;
     border-radius: 3px;
@@ -108,11 +108,11 @@
 /* Alertas */
 .alert-success {
     background: #d4edda;
-    color: #155724;
+    color: #AB886D;
     padding: 12px;
     border-radius: 5px;
     margin-bottom: 20px;
-    border-left: 4px solid #28a745;
+    border-left: 4px solid #AB886D;
 }
 
 .alert-danger {
@@ -230,5 +230,62 @@
     .btn-asignar {
         padding: 3px 10px;
         font-size: 11px;
+    }
+}
+
+/* Estilos para la sección de movimientos */
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title i {
+    font-size: 1.3rem;
+}
+
+.badge-abierto {
+    background: #AB886D;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.badge-cerrado {
+    background: #D6C0B3;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.diferencia-positiva {
+    color: #AB886D;
+    font-weight: bold;
+}
+
+.diferencia-negativa {
+    color: #772c24;
+    font-weight: bold;
+}
+
+/* Responsive para tablas */
+@media (max-width: 1200px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .table-cajas {
+        min-width: 1000px;
     }
 }

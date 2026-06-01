@@ -98,6 +98,31 @@ $sql = "SELECT
 $stmt = $db->prepare($sql);
 $stmt->execute();
 $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener todos los movimientos de caja (turnos)
+$sql_movimientos = "SELECT 
+                        ca.id_apertura,
+                        ca.id_usuario,
+                        ca.id_caja,
+                        ca.monto_inicial,
+                        ca.monto_cierre,
+                        ca.total_ventas,
+                        ca.total_ingresos,
+                        ca.total_vuelto,
+                        ca.fecha_apertura,
+                        ca.fecha_cierre,
+                        ca.estado,
+                        u.nombre_usuario,
+                        c.nombre_caja
+                    FROM caja_aperturas ca
+                    INNER JOIN usuarios u ON ca.id_usuario = u.id_usuario
+                    LEFT JOIN cajas c ON ca.id_caja = c.id_caja
+                    WHERE u.rol = 'cajero'
+                    ORDER BY ca.fecha_apertura DESC
+                    LIMIT 50";
+$stmt_movimientos = $db->prepare($sql_movimientos);
+$stmt_movimientos->execute();
+$movimientos = $stmt_movimientos->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <style>
@@ -142,6 +167,7 @@ $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         width: 100%;
         border-collapse: collapse;
+        margin-bottom: 30px;
     }
     .table-cajas thead th {
         background: #AB886D;
@@ -166,13 +192,37 @@ $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
         color: #AB886D;
         font-size: 1.1em;
     }
+    .badge-abierto {
+        background: #AB886D;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .badge-cerrado {
+        background: #6c757d;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .diferencia-positiva {
+        color: #AB886D;
+        font-weight: bold;
+    }
+    .diferencia-negativa {
+        color: #721c24;
+        font-weight: bold;
+    }
     .alert-success {
         background: #d4edda;
-        color: #155724;
+        color: #AB886D;
         padding: 12px;
         border-radius: 5px;
         margin-bottom: 20px;
-        border-left: 4px solid #28a745;
+        border-left: 4px solid #AB886D;
     }
     .alert-danger {
         background: #f8d7da;
@@ -181,6 +231,20 @@ $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
         border-radius: 5px;
         margin-bottom: 20px;
         border-left: 4px solid #dc3545;
+    }
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #AB886D;
+        margin: 25px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #AB886D;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .section-title i {
+        font-size: 1.3rem;
     }
     .modal {
         position: fixed;
@@ -305,6 +369,10 @@ $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
     
+    <!-- Tabla de Empleados y su Dinero -->
+    <div class="section-title">
+        <i class="fas fa-users"></i> Empleados y su Caja
+    </div>
     <div class="table-responsive">
         <table class="table-cajas">
             <thead>
@@ -312,7 +380,7 @@ $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>ID</th>
                     <th>Empleado</th>
                     <th>Caja Física Asignada</th>
-                    <th>💰 Dinero en su Caja</th>
+                    <th>Dinero en su Caja</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -345,6 +413,67 @@ $cajeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         onclick="abrirModalAsignar(<?php echo $cajero['id_usuario']; ?>, '<?php echo htmlspecialchars($cajero['nombre_usuario']); ?>', <?php echo $cajero['monto_caja'] ?? 0; ?>)">
                                     <i class="fas fa-money-bill-wave"></i> Asignar Dinero
                                 </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tabla de Movimientos de Caja (Turnos) -->
+    <div class="section-title">
+        <i class="fas fa-history"></i> Historial de Turnos de Caja
+    </div>
+    <div class="table-responsive">
+        <table class="table-cajas">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Empleado</th>
+                    <th>Caja</th>
+                    <th>Fecha Apertura</th>
+                    <th>Fecha Cierre</th>
+                    <th>Monto Inicial</th>
+                    <th>Monto Cierre</th>
+                    <th>Ventas</th>
+                    <th>Ingresos</th>
+                    <th>Vuelto</th>
+                    <th>Diferencia</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($movimientos)): ?>
+                    <tr class="text-center">
+                        <td colspan="12">No hay turnos de caja registrados</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($movimientos as $mov): 
+                        $diferencia = ($mov['monto_cierre'] - $mov['monto_inicial'] - $mov['total_ingresos'] + $mov['total_vuelto']);
+                        $diferenciaClase = $diferencia >= 0 ? 'diferencia-positiva' : 'diferencia-negativa';
+                        $diferenciaTexto = ($diferencia >= 0 ? '+' : '') . '$' . number_format(abs($diferencia), 2);
+                    ?>
+                        <tr>
+                            <td>#<?php echo $mov['id_apertura']; ?></td>
+                            <td><strong><?php echo htmlspecialchars($mov['nombre_usuario']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($mov['nombre_caja'] ?? 'N/A'); ?></td>
+                            <td><?php echo date('d/m/Y H:i', strtotime($mov['fecha_apertura'])); ?></td>
+                            <td>
+                                <?php echo $mov['fecha_cierre'] ? date('d/m/Y H:i', strtotime($mov['fecha_cierre'])) : '-'; ?>
+                            </td>
+                            <td class="monto-usuario">$<?php echo number_format($mov['monto_inicial'], 2); ?></td>
+                            <td>$<?php echo number_format($mov['monto_cierre'] ?? 0, 2); ?></td>
+                            <td><?php echo $mov['total_ventas']; ?></td>
+                            <td>$<?php echo number_format($mov['total_ingresos'], 2); ?></td>
+                            <td>$<?php echo number_format($mov['total_vuelto'], 2); ?></td>
+                            <td class="<?php echo $diferenciaClase; ?>"><?php echo $diferenciaTexto; ?></td>
+                            <td>
+                                <?php if ($mov['estado'] == 'abierta'): ?>
+                                    <span class="badge-abierto">Abierta</span>
+                                <?php else: ?>
+                                    <span class="badge-cerrado">Cerrada</span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

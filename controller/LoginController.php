@@ -9,6 +9,7 @@ try {
     require_once $base . '/src/config/auth.php';
     require_once $base . '/model/UsuarioModel.php';
     require_once $base . '/model/conexion.php';
+    require_once $base . '/helpers/LogHelper.php';
 
     $u_in = isset($_POST['username']) ? trim((string)$_POST['username']) : '';
     $p_in = isset($_POST['password']) ? trim((string)$_POST['password']) : '';
@@ -47,8 +48,17 @@ try {
                     'rol'        => $userData['rol']
                 ]);
                 
+                // Registrar login exitoso
+                LogHelper::registrar('login', 'usuarios', $userData['id_usuario'], 'Inicio de sesión exitoso');
+                
                 $response = ['success' => true];
+            } else {
+                // Registrar login fallido
+                LogHelper::registrar('login_fallido', 'usuarios', null, "Intento fallido de login para usuario: $u_in");
             }
+        } else {
+            // Registrar login fallido (usuario no existe)
+            LogHelper::registrar('login_fallido', 'usuarios', null, "Intento fallido de login para usuario inexistente: $u_in");
         }
     }
 } catch (Throwable $e) {
