@@ -23,7 +23,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-   <title>POS - <?= htmlspecialchars($nombreSistema) ?></title>
+    <title>POS - <?= htmlspecialchars($nombreSistema) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/ElZapato/Assets/css/pos.css?v=<?php echo time(); ?>">
@@ -31,13 +31,28 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
 <body>
 
     <nav class="top-nav">
-        <div class="user-info">
+        <div class="user-info" style="position: relative;">
             <i class="fa-solid fa-circle-user"></i>
             <span><strong><?= htmlspecialchars($nombreUsuario) ?></strong> (<?= strtoupper($rolActual) ?>)</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem; cursor: pointer;" onclick="toggleCajaDropdown()"></i>
+            
+            <!-- Dropdown de Caja -->
+            <div id="cajaDropdown" class="caja-dropdown">
+                <div id="cajaEstadoContent">
+                    <div class="loading-text">Verificando estado de caja...</div>
+                </div>
+            </div>
         </div>
+        
         <div class="brand-logo">SISTEMA DE VENTAS <?= strtoupper(htmlspecialchars($nombreSistema)) ?></div>
+        
         <div class="nav-icons">
+            <div class="caja-info" id="cajaInfo" style="display: none;">
+                <i class="fa-solid fa-cash-register"></i>
+                <span id="cajaMonto">$0.00</span>
+            </div>
             <i class="fa-solid fa-house" title="Inicio" onclick="goMenuGeneralTransition()"></i>
+            <i class="fa-solid fa-rotate-left" title="Devoluciones" onclick="abrirModalDevoluciones()" style="cursor: pointer;"></i>
             <div class="notification-container">
                 <i class="fa-solid fa-bell" id="bellIcon" onclick="toggleNotifications()"></i>
                 <span class="badge" id="notificationBadge">0</span>
@@ -113,7 +128,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                     <span id="subTotal">$0.00</span>
                 </div>
                 <div class="total-row">
-                    <span>Descuento:</span>
+                    <span>Descuento:<\/span>
                     <span id="descuentoMonto" style="color:var(--nocolor)">-$0.00</span>
                 </div>
                 <div class="total-row total-highlight">
@@ -327,7 +342,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </div>
     </div>
 
-    <!-- Modal de Pago MODIFICADO -->
+    <!-- Modal de Pago -->
     <div id="modalPago" class="modal">
         <div class="modal-content" style="width: 450px;">
             <span class="close-modal" onclick="cerrarModal('modalPago')">&times;</span>
@@ -355,7 +370,6 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                 </div>
             </div>
             
-            <!-- Contenedor para Dinero Recibido y Cambio (se oculta con tarjeta) -->
             <div id="efectivoFieldsContainer">
                 <div class="form-group">
                     <label><i class="fa-solid fa-money-bill"></i> Dinero Recibido:</label>
@@ -389,8 +403,94 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
         </div>
     </div>
 
-    <div id="toast-container"></div>
+    <!-- Modal de Cierre de Caja -->
+    <div id="modalCerrarCaja" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <span class="close-modal" onclick="cerrarModal('modalCerrarCaja')">&times;</span>
+            <h3 style="margin-bottom:20px; color:var(--primary-dark)">
+                <i class="fa-solid fa-lock"></i> Cerrar Caja
+            </h3>
+            <div id="cierreCajaContent">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-chart-line"></i> Estadísticas del Turno:</label>
+                    <div id="estadisticasTurno" style="background: var(--primary-light); padding: 15px; border-radius: 8px; margin-top: 5px;">
+                        <div><strong>💰 Monto Inicial:</strong> <span id="estMontoInicial">$0.00</span></div>
+                        <div><strong>📊 Número de Ventas:</strong> <span id="estTotalVentas">0</span></div>
+                        <div><strong>💵 Ingresos por Ventas:</strong> <span id="estIngresos">$0.00</span></div>
+                        <div><strong>🔄 Vuelto Entregado:</strong> <span id="estVuelto">$0.00</span></div>
+                        <div><strong>💰 Saldo Esperado:</strong> <span id="estSaldoEsperado">$0.00</span></div>
+                    </div>
+                </div>
+                <div class="alert alert-info" style="background: #E4E0E1; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                    <i class="fa-solid fa-calculator"></i> El saldo se calcula automáticamente como:<br>
+                    <strong>Monto Inicial + Ventas - Vuelto = Saldo Esperado</strong>
+                </div>
+                <button class="btn-action btn-sell" style="width:100%; margin-top:20px;" onclick="confirmarCerrarCaja()">
+                    <i class="fa-solid fa-check"></i> CERRAR CAJA
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <!-- MODAL DE SELECCIÓN DE VENTA PARA DEVOLUCIÓN -->
+    <div id="modalSeleccionVentaDevolucion" class="modal">
+        <div class="modal-content" style="width: 650px; max-width: 90%;">
+            <span class="close-modal" onclick="cerrarModalDevolucion('modalSeleccionVentaDevolucion')">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--primary-dark);">
+                <i class="fa-solid fa-rotate-left"></i> Seleccionar Venta para Devolución
+            </h3>
+            
+            <div class="form-group">
+                <div class="search-container" style="margin-bottom: 15px;">
+                    <i class="fa fa-search"></i>
+                    <input type="text" id="buscarVentaDevolucion" placeholder="Buscar por # venta o usuario..." style="width: 100%; padding: 10px 15px 10px 40px;">
+                </div>
+            </div>
+            
+            <div id="listaVentasDevolucion" style="max-height: 400px; overflow-y: auto;">
+                <div class="loading-text">
+                    <i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...
+                </div>
+            </div>
+            
+            <div id="paginacionVentasDevolucion" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE SELECCIÓN DE PRODUCTOS A DEVOLVER -->
+    <div id="modalSeleccionProductosDevolucion" class="modal">
+        <div class="modal-content" style="width: 700px; max-width: 95%; max-height: 80vh; overflow-y: auto;">
+            <span class="close-modal" onclick="cerrarModalDevolucion('modalSeleccionProductosDevolucion')">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--primary-dark);">
+                <i class="fa-solid fa-boxes"></i> Seleccionar Productos a Devolver
+                <span id="ventaSeleccionadaInfo" style="font-size: 0.8rem; display: block; color: #666; margin-top: 5px;"></span>
+            </h3>
+            
+            <div id="listaProductosDevolucion" style="max-height: 400px; overflow-y: auto;">
+                <div class="loading-text">
+                    <i class="fa-solid fa-spinner fa-pulse"></i> Cargando productos...
+                </div>
+            </div>
+            
+            <div class="totals-section" style="margin-top: 20px;">
+                <div class="total-row">
+                    <span>Total a devolver:</span>
+                    <span id="totalDevolucion" style="font-weight: bold; color: var(--nocolor);">$0.00</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-action btn-discount" onclick="cerrarModalDevolucion('modalSeleccionProductosDevolucion')" style="flex: 1;">
+                    <i class="fa-solid fa-times"></i> Cancelar
+                </button>
+                <button class="btn-action btn-sell" onclick="confirmarDevolucion()" style="flex: 1;">
+                    <i class="fa-solid fa-check"></i> Procesar Devolución
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
     <div id="pageTransitionPos" class="page-transition" aria-hidden="true">
         <div class="page-transition-loader"></div>
     </div>

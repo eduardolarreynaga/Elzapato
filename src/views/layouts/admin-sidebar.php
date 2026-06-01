@@ -41,6 +41,9 @@ $userRole = $_SESSION['rol'] ?? 'Sin Rol';
             <li class="<?= $activeMenu === 'reportes' ? 'active' : '' ?>">
                 <a href="reportes.php"><i class="fas fa-chart-line"></i><span>Reportes</span></a>
             </li>
+            <li class="<?= $activeMenu === 'caja' ? 'active' : '' ?>">
+                <a href="caja.php"><i class="fas fa-cash-register"></i><span>Caja</span></a>
+            </li>
             <li class="<?= $activeMenu === 'configuracion' ? 'active' : '' ?>">
                 <a href="configuracion.php"><i class="fas fa-cog"></i><span>Configuracion</span></a>
             </li>

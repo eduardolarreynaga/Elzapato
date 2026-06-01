@@ -1,0 +1,234 @@
+/* Estilos para la administración de cajas */
+:root {
+    --primary-light: #E4E0E1;
+    --primary-soft: #D6C0B3;
+    --primary-dark: #AB886D;
+    --text-dark: #000000;
+    --font-family: "Roboto", sans-serif;
+    --nocolor: #772c24;
+}
+
+* {
+    font-family: var(--font-family);
+}
+
+.caja-container {
+    padding: 20px;
+    background: #f8f9fa;
+    min-height: calc(100vh - 200px);
+}
+
+/* Botones */
+.btn-crear {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-crear:hover {
+    background: #8B6B4F;
+    transform: translateY(-2px);
+}
+
+.btn-asignar {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-asignar:hover {
+    background: #8B6B4F;
+    transform: translateY(-1px);
+}
+
+/* Tabla */
+.table-cajas {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-cajas thead th {
+    background: var(--primary-dark);
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+}
+
+.table-cajas tbody tr {
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.table-cajas tbody tr:hover {
+    background: var(--primary-light);
+}
+
+.table-cajas tbody td {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+/* Estados */
+.monto-disponible {
+    font-weight: bold;
+    color: var(--primary-dark);
+    font-size: 1.1em;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.badge-danger {
+    background: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Alertas */
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #dc3545;
+}
+
+/* Modales */
+.modal-content {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 1;
+}
+
+.modal-header .close:hover {
+    color: var(--primary-light);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-dark);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(171,136,109,0.2);
+}
+
+.form-control[readonly] {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    background: #f9f9f9;
+    border-top: 1px solid #eee;
+}
+
+.btn-primary {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #8B6B4F;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .caja-container {
+        padding: 10px;
+    }
+    
+    .table-cajas {
+        font-size: 12px;
+    }
+    
+    .table-cajas thead th,
+    .table-cajas tbody td {
+        padding: 8px;
+    }
+    
+    .btn-asignar {
+        padding: 3px 10px;
+        font-size: 11px;
+    }
+}

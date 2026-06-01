@@ -82,6 +82,151 @@ require __DIR__ . '/../layouts/admin-header.php';
     .swal2-actions {
         gap: 12px !important;
     }
+
+    /* Estilos para la selección de productos en devolución */
+    .producto-devolucion-item {
+        background: #ffffff;
+        border: 1px solid #E4E0E1;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: 0.2s;
+    }
+
+    .producto-devolucion-item:hover {
+        border-color: #AB886D;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .producto-devolucion-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .producto-devolucion-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #AB886D;
+    }
+
+    .producto-devolucion-info {
+        flex: 1;
+    }
+
+    .producto-devolucion-nombre {
+        font-weight: bold;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+    }
+
+    .producto-devolucion-detalle {
+        font-size: 0.75rem;
+        color: #666;
+        display: flex;
+        gap: 15px;
+    }
+
+    .producto-devolucion-cantidad {
+        font-size: 0.8rem;
+        color: #AB886D;
+        margin-top: 5px;
+    }
+
+    .cantidad-devolucion-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #E4E0E1;
+    }
+
+    .cantidad-devolucion-control label {
+        font-size: 0.75rem;
+        color: #666;
+    }
+
+    .cantidad-range {
+        flex: 1;
+        accent-color: #AB886D;
+    }
+
+    .cantidad-value {
+        width: 50px;
+        text-align: center;
+        font-weight: bold;
+        color: #772c24;
+        background: #E4E0E1;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #D6C0B3;
+    }
+
+    .producto-devolucion-item.disabled {
+        opacity: 0.5;
+        filter: grayscale(0.3);
+    }
+
+    .btn-devolver-venta {
+        background: #772C24;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+    }
+
+    .btn-devolver-venta:hover {
+        background: #5a1f19;
+        transform: scale(1.02);
+    }
+
+    /* Estilos para la lista de ventas en devolución */
+    .ventas-lista-item {
+        border: 1px solid #E4E0E1;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: 0.2s;
+    }
+
+    .ventas-lista-item:hover {
+        border-color: #AB886D;
+    }
+
+    .paginacion-devolucion {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .btn-pagina {
+        background: #E4E0E1;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-pagina.active {
+        background: #AB886D;
+        color: white;
+    }
+
+    .btn-pagina:hover {
+        background: #D6C0B3;
+    }
 </style>
 
 <div class="ventas-page">
@@ -121,6 +266,9 @@ require __DIR__ . '/../layouts/admin-header.php';
                 <button class="btn-outline-primary" id="btnResetVentaFiltros" type="button">
                     <i class="fas fa-times"></i> Limpiar
                 </button>
+                <button class="btn-outline-primary" id="btnDevoluciones" type="button" style="background: #AB886D; color: white; border-color: #AB886D;">
+                    <i class="fas fa-undo-alt"></i> Devoluciones
+                </button>
             </div>
         </div>
     </div>
@@ -149,7 +297,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                 </thead>
                 <tbody>
                     <?php if(empty($ventas)): ?>
-                    <tr>
+                    <tr class="empty-row">
                         <td colspan="8" style="text-align: center; padding: 40px; color: #999;">No se encontraron registros de ventas.</td>
                     </tr>
                     <?php else: ?>
@@ -179,6 +327,64 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE SELECCIÓN DE VENTA PARA DEVOLUCIÓN -->
+<div id="modalSeleccionVentaDevolucion" class="modal">
+    <div class="modal-content" style="width: 650px; max-width: 90%;">
+        <span class="close-modal" onclick="cerrarModalDevolucion('modalSeleccionVentaDevolucion')">&times;</span>
+        <h3 style="margin-bottom: 20px; color: var(--primary-dark);">
+            <i class="fa-solid fa-rotate-left"></i> Seleccionar Venta para Devolución
+        </h3>
+        
+        <div class="form-group">
+            <div class="search-container" style="margin-bottom: 15px;">
+                <i class="fa fa-search"></i>
+                <input type="text" id="buscarVentaDevolucion" placeholder="Buscar por # venta o usuario..." style="width: 100%; padding: 10px 15px 10px 40px;">
+            </div>
+        </div>
+        
+        <div id="listaVentasDevolucion" style="max-height: 400px; overflow-y: auto;">
+            <div class="loading-text">
+                <i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...
+            </div>
+        </div>
+        
+        <div id="paginacionVentasDevolucion" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;"></div>
+    </div>
+</div>
+
+<!-- MODAL DE SELECCIÓN DE PRODUCTOS A DEVOLVER -->
+<div id="modalSeleccionProductosDevolucion" class="modal">
+    <div class="modal-content" style="width: 700px; max-width: 95%; max-height: 80vh; overflow-y: auto;">
+        <span class="close-modal" onclick="cerrarModalDevolucion('modalSeleccionProductosDevolucion')">&times;</span>
+        <h3 style="margin-bottom: 20px; color: var(--primary-dark);">
+            <i class="fa-solid fa-boxes"></i> Seleccionar Productos a Devolver
+            <span id="ventaSeleccionadaInfo" style="font-size: 0.8rem; display: block; color: #666; margin-top: 5px;"></span>
+        </h3>
+        
+        <div id="listaProductosDevolucion" style="max-height: 400px; overflow-y: auto;">
+            <div class="loading-text">
+                <i class="fa-solid fa-spinner fa-pulse"></i> Cargando productos...
+            </div>
+        </div>
+        
+        <div class="totals-section" style="margin-top: 20px;">
+            <div class="total-row">
+                <span>Total a devolver:</span>
+                <span id="totalDevolucion" style="font-weight: bold; color: var(--nocolor);">$0.00</span>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn-action btn-discount" onclick="cerrarModalDevolucion('modalSeleccionProductosDevolucion')" style="flex: 1;">
+                <i class="fa-solid fa-times"></i> Cancelar
+            </button>
+            <button class="btn-action btn-sell" onclick="confirmarDevolucion()" style="flex: 1;">
+                <i class="fa-solid fa-check"></i> Procesar Devolución
+            </button>
         </div>
     </div>
 </div>
@@ -480,6 +686,400 @@ require __DIR__ . '/../layouts/admin-header.php';
         }
     }
 
+    // ==================== DEVOLUCIONES ====================
+    let ventaSeleccionadaDevolucion = null;
+    let productosDevolucionData = [];
+    let paginaActualDevolucion = 1;
+    let totalPaginasDevolucion = 1;
+
+    function abrirModalDevoluciones() {
+        paginaActualDevolucion = 1;
+        cargarVentasParaDevolucion();
+        var modal = document.getElementById('modalSeleccionVentaDevolucion');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(function() { modal.classList.add('active'); }, 10);
+        }
+    }
+
+    function cerrarModalDevolucion(id) {
+        var modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(function() { modal.style.display = 'none'; }, 300);
+        }
+    }
+
+    async function cargarVentasParaDevolucion() {
+        var container = document.getElementById('listaVentasDevolucion');
+        if (!container) return;
+        
+        var buscar = document.getElementById('buscarVentaDevolucion')?.value || '';
+        
+        try {
+            container.innerHTML = '<div class="loading-text"><i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...</div>';
+            
+            var url = '/ElZapato/src/api/obtener_ventas_devolucion.php?pagina=' + paginaActualDevolucion + '&limite=5';
+            if (buscar) {
+                url += '&buscar=' + encodeURIComponent(buscar);
+            }
+            
+            var resp = await fetch(url);
+            var data = await resp.json();
+            
+            if (data.error) {
+                container.innerHTML = '<div class="loading-text">Error: ' + data.error + '</div>';
+                return;
+            }
+            
+            if (!data.ventas || data.ventas.length === 0) {
+                container.innerHTML = '<div class="loading-text">No hay ventas disponibles para devolución</div>';
+                return;
+            }
+            
+            totalPaginasDevolucion = data.total_paginas;
+            
+            var html = '';
+            for (var i = 0; i < data.ventas.length; i++) {
+                var venta = data.ventas[i];
+                var fecha = new Date(venta.fecha_venta);
+                var fechaFormateada = fecha.toLocaleString('es-MX');
+                
+                html += `
+                    <div class="ventas-lista-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div>
+                                <div style="font-weight: bold; color: #AB886D;">Venta #${venta.id_venta}</div>
+                                <div style="font-size: 0.7rem; color: #888;">${fechaFormateada}</div>
+                                <div style="font-size: 0.7rem;">Usuario: ${venta.usuario}</div>
+                                <div style="font-size: 0.8rem; font-weight: bold;">Total: $${parseFloat(venta.total_venta).toFixed(2)}</div>
+                                <div style="font-size: 0.7rem;">Método: ${venta.metodo_pago || 'Efectivo'}</div>
+                            </div>
+                            <button class="btn-devolver-venta" onclick="seleccionarVentaParaDevolucion(${venta.id_venta})">
+                                <i class="fa-solid fa-undo-alt"></i> Seleccionar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            actualizarPaginacionDevolucion();
+            
+        } catch (error) {
+            console.error('Error al cargar ventas:', error);
+            container.innerHTML = '<div class="loading-text">Error al cargar las ventas</div>';
+        }
+    }
+
+    function actualizarPaginacionDevolucion() {
+        var paginacionDiv = document.getElementById('paginacionVentasDevolucion');
+        if (!paginacionDiv) return;
+        
+        if (totalPaginasDevolucion <= 1) {
+            paginacionDiv.innerHTML = '';
+            return;
+        }
+        
+        var html = '';
+        for (var i = 1; i <= totalPaginasDevolucion; i++) {
+            var activeClass = (i === paginaActualDevolucion) ? 'active' : '';
+            html += `<button class="btn-pagina ${activeClass}" onclick="irPaginaDevolucion(${i})">${i}</button>`;
+        }
+        paginacionDiv.innerHTML = html;
+    }
+
+    function irPaginaDevolucion(pagina) {
+        paginaActualDevolucion = pagina;
+        cargarVentasParaDevolucion();
+    }
+
+    async function seleccionarVentaParaDevolucion(idVenta) {
+        cerrarModalDevolucion('modalSeleccionVentaDevolucion');
+        
+        mostrarAlertaSistema({
+            titulo: 'Cargando...',
+            mensaje: 'Cargando productos de la venta...',
+            icono: 'info',
+            color: '#AB886D'
+        });
+        
+        try {
+            var resp = await fetch('/ElZapato/src/api/obtener_detalle_venta_devolucion.php?id=' + idVenta);
+            var data = await resp.json();
+            
+            if (data.error) {
+                mostrarAlertaSistema({
+                    titulo: 'Error',
+                    mensaje: data.error,
+                    icono: 'error',
+                    color: '#772C24'
+                });
+                return;
+            }
+            
+            if (!data.detalles || data.detalles.length === 0) {
+                mostrarAlertaSistema({
+                    titulo: 'Sin productos',
+                    mensaje: 'No se encontraron productos en esta venta',
+                    icono: 'warning',
+                    color: '#AB886D'
+                });
+                return;
+            }
+            
+            ventaSeleccionadaDevolucion = idVenta;
+            productosDevolucionData = data.detalles.map(function(d) {
+                return {
+                    id_detalle: d.id_detalle_venta,
+                    id_variante: d.id_variante,
+                    nombre: d.nombre_producto,
+                    talla: d.talla,
+                    color: d.color,
+                    cantidad_original: d.cantidad_original,
+                    cantidad_maxima: d.cantidad_maxima,
+                    cantidad_a_devolver: 0,
+                    precio_unitario: parseFloat(d.precio_unitario)
+                };
+            });
+            
+            Swal.close();
+            mostrarModalProductosDevolucion();
+            
+        } catch (error) {
+            console.error('Error al cargar detalles:', error);
+            mostrarAlertaSistema({
+                titulo: 'Error',
+                mensaje: 'Error al cargar los productos',
+                icono: 'error',
+                color: '#772C24'
+            });
+        }
+    }
+
+    function mostrarModalProductosDevolucion() {
+        var container = document.getElementById('listaProductosDevolucion');
+        var ventaInfo = document.getElementById('ventaSeleccionadaInfo');
+        
+        if (!container) return;
+        
+        if (ventaInfo) {
+            ventaInfo.innerHTML = 'Venta #' + ventaSeleccionadaDevolucion;
+        }
+        
+        var html = '';
+        for (var i = 0; i < productosDevolucionData.length; i++) {
+            var p = productosDevolucionData[i];
+            
+            html += `
+                <div class="producto-devolucion-item" id="item_${i}">
+                    <div class="producto-devolucion-header">
+                        <input type="checkbox" class="producto-devolucion-checkbox" id="chk_${i}" onchange="toggleProductoDevolucion(${i})">
+                        <div class="producto-devolucion-info">
+                            <div class="producto-devolucion-nombre">${p.nombre}</div>
+                            <div class="producto-devolucion-detalle">
+                                <span><i class="fas fa-ruler"></i> Talla: ${p.talla || 'N/A'}</span>
+                                <span><i class="fas fa-palette"></i> Color: ${p.color || 'N/A'}</span>
+                            </div>
+                            <div class="producto-devolucion-cantidad">
+                                <i class="fas fa-box"></i> Vendido: ${p.cantidad_original} unidades | <i class="fas fa-dollar-sign"></i> Precio: $${p.precio_unitario.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cantidad-devolucion-control" id="control_${i}" style="display: none;">
+                        <label><i class="fa-solid fa-arrow-left"></i> Cantidad a devolver:</label>
+                        <input type="range" class="cantidad-range" id="range_${i}" min="0" max="${p.cantidad_maxima}" value="0" step="1" onchange="actualizarCantidadDevolucion(${i})">
+                        <input type="number" class="cantidad-value" id="value_${i}" min="0" max="${p.cantidad_maxima}" value="0" step="1" onchange="actualizarRangeDevolucion(${i})">
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+        actualizarTotalDevolucion();
+        
+        var modal = document.getElementById('modalSeleccionProductosDevolucion');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(function() { modal.classList.add('active'); }, 10);
+        }
+    }
+
+    function toggleProductoDevolucion(index) {
+        var checkbox = document.getElementById('chk_' + index);
+        var control = document.getElementById('control_' + index);
+        
+        if (checkbox.checked) {
+            control.style.display = 'flex';
+            if (productosDevolucionData[index].cantidad_a_devolver === 0) {
+                productosDevolucionData[index].cantidad_a_devolver = productosDevolucionData[index].cantidad_maxima;
+                actualizarControlesDevolucion(index);
+            }
+        } else {
+            control.style.display = 'none';
+            productosDevolucionData[index].cantidad_a_devolver = 0;
+            var rangeInput = document.getElementById('range_' + index);
+            var valueInput = document.getElementById('value_' + index);
+            if (rangeInput) rangeInput.value = 0;
+            if (valueInput) valueInput.value = 0;
+        }
+        
+        actualizarTotalDevolucion();
+    }
+
+    function actualizarCantidadDevolucion(index) {
+        var rangeInput = document.getElementById('range_' + index);
+        var valueInput = document.getElementById('value_' + index);
+        var cantidad = parseInt(rangeInput.value);
+        
+        valueInput.value = cantidad;
+        productosDevolucionData[index].cantidad_a_devolver = cantidad;
+        
+        actualizarTotalDevolucion();
+    }
+
+    function actualizarRangeDevolucion(index) {
+        var valueInput = document.getElementById('value_' + index);
+        var rangeInput = document.getElementById('range_' + index);
+        var cantidad = parseInt(valueInput.value);
+        var maximo = productosDevolucionData[index].cantidad_maxima;
+        
+        if (isNaN(cantidad)) cantidad = 0;
+        if (cantidad < 0) cantidad = 0;
+        if (cantidad > maximo) cantidad = maximo;
+        
+        valueInput.value = cantidad;
+        rangeInput.value = cantidad;
+        productosDevolucionData[index].cantidad_a_devolver = cantidad;
+        
+        actualizarTotalDevolucion();
+    }
+
+    function actualizarControlesDevolucion(index) {
+        var rangeInput = document.getElementById('range_' + index);
+        var valueInput = document.getElementById('value_' + index);
+        var cantidad = productosDevolucionData[index].cantidad_a_devolver;
+        
+        if (rangeInput) rangeInput.value = cantidad;
+        if (valueInput) valueInput.value = cantidad;
+    }
+
+    function actualizarTotalDevolucion() {
+        var total = 0;
+        for (var i = 0; i < productosDevolucionData.length; i++) {
+            var p = productosDevolucionData[i];
+            var checkbox = document.getElementById('chk_' + i);
+            if (checkbox && checkbox.checked) {
+                total += p.cantidad_a_devolver * p.precio_unitario;
+            }
+        }
+        
+        var totalSpan = document.getElementById('totalDevolucion');
+        if (totalSpan) {
+            totalSpan.innerText = '$' + total.toFixed(2);
+        }
+    }
+
+    async function confirmarDevolucion() {
+        var productosADevolver = [];
+        var tieneProductos = false;
+        
+        for (var i = 0; i < productosDevolucionData.length; i++) {
+            var p = productosDevolucionData[i];
+            var checkbox = document.getElementById('chk_' + i);
+            
+            if (checkbox && checkbox.checked && p.cantidad_a_devolver > 0) {
+                tieneProductos = true;
+                productosADevolver.push({
+                    id_detalle: p.id_detalle,
+                    id_variante: p.id_variante,
+                    cantidad: p.cantidad_a_devolver,
+                    nombre: p.nombre
+                });
+            }
+        }
+        
+        if (!tieneProductos) {
+            mostrarAlertaSistema({
+                titulo: 'Sin productos',
+                mensaje: 'Seleccione al menos un producto para devolver',
+                icono: 'warning',
+                color: '#AB886D'
+            });
+            return;
+        }
+        
+        const confirmacion = await Swal.fire({
+            title: '¿Confirmar devolución?',
+            html: 'Se reincorporará el stock y se ajustará el total de la venta.',
+            icon: 'warning',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn-modal-primary',
+                cancelButton: 'btn-modal-cancel'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Sí, devolver',
+            cancelButtonText: 'Cancelar'
+        });
+        
+        if (!confirmacion.isConfirmed) return;
+        
+        try {
+            var resp = await fetch('/ElZapato/src/api/procesar_devolucion.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_venta: ventaSeleccionadaDevolucion,
+                    productos: productosADevolver
+                })
+            });
+            
+            var data = await resp.json();
+            
+            if (data.success) {
+                var resumen = 'Devolución realizada:\n';
+                for (var j = 0; j < data.productos_devueltos.length; j++) {
+                    var prod = data.productos_devueltos[j];
+                    resumen += '\n• ' + prod.nombre + ': ' + prod.cantidad + ' unidades ($' + prod.total.toFixed(2) + ')';
+                }
+                resumen += '\n\nTotal devuelto: $' + data.total_devuelto.toFixed(2);
+                
+                mostrarAlertaSistema({
+                    titulo: 'Devolución exitosa',
+                    mensaje: resumen,
+                    icono: 'success',
+                    color: '#AB886D'
+                });
+                
+                cerrarModalDevolucion('modalSeleccionProductosDevolucion');
+                
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+                
+            } else {
+                mostrarAlertaSistema({
+                    titulo: 'Error',
+                    mensaje: data.error || 'No se pudo procesar la devolución',
+                    icono: 'error',
+                    color: '#772C24'
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error al procesar devolución:', error);
+            mostrarAlertaSistema({
+                titulo: 'Error',
+                mensaje: 'Error al procesar la devolución',
+                icono: 'error',
+                color: '#772C24'
+            });
+        }
+    }
+
     // Filtrado JS
     const searchVenta = document.getElementById('searchVenta');
     const filterMetodo = document.getElementById('filterVentaMetodo');
@@ -519,9 +1119,9 @@ require __DIR__ . '/../layouts/admin-header.php';
         actualizarStatsVentas();
     }
 
-    searchVenta?.addEventListener('input', applyVentasFilters);
-    filterMetodo?.addEventListener('change', applyVentasFilters);
-    filterVentaFecha?.addEventListener('change', applyVentasFilters);
+    if (searchVenta) searchVenta.addEventListener('input', applyVentasFilters);
+    if (filterMetodo) filterMetodo.addEventListener('change', applyVentasFilters);
+    if (filterVentaFecha) filterVentaFecha.addEventListener('change', applyVentasFilters);
 
     document.getElementById('btnResetVentaFiltros')?.addEventListener('click', function () {
         if (filterMetodo) filterMetodo.value = '';
@@ -529,10 +1129,22 @@ require __DIR__ . '/../layouts/admin-header.php';
         if (filterVentaFecha) filterVentaFecha.value = '';
         applyVentasFilters();
     });
+    
+    if (document.getElementById('btnDevoluciones')) {
+        document.getElementById('btnDevoluciones').addEventListener('click', abrirModalDevoluciones);
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
         cargarVentasSiTablaVacia();
         actualizarStatsVentas();
+        
+        var buscarInput = document.getElementById('buscarVentaDevolucion');
+        if (buscarInput) {
+            buscarInput.addEventListener('input', function() {
+                paginaActualDevolucion = 1;
+                cargarVentasParaDevolucion();
+            });
+        }
     });
 </script>
 
