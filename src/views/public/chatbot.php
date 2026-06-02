@@ -29,7 +29,7 @@
     <div class="chatbot-body" id="chatbot-messages">
         <div class="message bot-message animate-fade-in">
             <i class="bi bi-hand-thumbs-up-fill text-accent"></i> ¡Hola! Bienvenido al asistente virtual de <strong>ElZapato</strong>. <br><br>
-            Puedes escribir tu pregunta abajo o seleccionar una opción:
+            Puedes escribir tu pregunta abajo:
         </div>
     </div>
 
@@ -42,30 +42,7 @@
         </div>
     </div>
 
-    <!-- Botones predefinidos -->
-    <div class="chatbot-options" id="chatbot-options-container">
-        <button class="chat-option-btn" onclick="sendPregunta(1, '📍 ¿Dónde están ubicados?')">
-            <i class="bi bi-geo-alt-fill"></i> Ubicación de la tienda
-        </button>
-        <button class="chat-option-btn" onclick="sendPregunta(2, '🕒 ¿Cuáles son sus horarios?')">
-            <i class="bi bi-clock-fill"></i> Horarios de atención
-        </button>
-        <button class="chat-option-btn" onclick="sendPregunta(3, '💳 ¿Qué métodos de pago aceptan?')">
-            <i class="bi bi-credit-card-2-front-fill"></i> Métodos de pago
-        </button>
-        <button class="chat-option-btn" onclick="sendPregunta(4, '👟 ¿Qué tipos de zapatos venden?')">
-            <i class="bi bi-layers-fill"></i> Tipos de calzado
-        </button>
-        <button class="chat-option-btn" onclick="sendPregunta(5, '🔥 ¿Qué marcas tienen disponibles?')">
-            <i class="bi bi-patch-check-fill"></i> Marcas disponibles
-        </button>
-        <button class="chat-option-btn" onclick="sendPregunta(6, '🚚 ¿Hacen envíos a domicilio?')">
-            <i class="bi bi-exclamation-triangle-fill"></i> Envíos y ventas en línea
-        </button>
-        <button class="chat-option-btn" onclick="sendPregunta(7, '📞 ¿Cuál es su contacto?')">
-            <i class="bi bi-telephone-fill"></i> Teléfono y Correo
-        </button>
-    </div>
+   
 
     <!-- Área de entrada de texto libre -->
     <div class="chatbot-input-area">

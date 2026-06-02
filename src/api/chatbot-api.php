@@ -1,433 +1,435 @@
 <?php
-header('Content-Type: application/json');
+/**
+ * Chatbot El Zapato - v3.0
+ * Arquitectura: BD → contexto completo → IA como motor principal → fallback local
+ */
+
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
 
 require_once __DIR__ . '/../../model/conexion.php';
 
-function sanitizeInput($input) {
+// ── Configuración ──────────────────────────────────────────────────────────────
+define('OPENROUTER_API_KEY', $_ENV['OPENROUTER_API_KEY']);
+define('OPENROUTER_URL',     'https://openrouter.ai/api/v1/chat/completions');
+define('AI_MODEL',           'openai/gpt-4o-mini');   // Modelo estable y económico
+define('AI_TIMEOUT',         12);
+
+// ── Utilidades ─────────────────────────────────────────────────────────────────
+
+function sanitize(string $input): string {
     return trim(htmlspecialchars(strip_tags($input)));
 }
 
-function getConnection() {
-    return Conexion::conectar();
-}
+// ── Respuestas instantáneas (sin BD ni IA) ─────────────────────────────────────
 
-// Función para normalizar texto (tolerante a errores)
-function normalizeText($text) {
-    $text = strtolower($text);
-    // Remover tildes
-    $text = preg_replace('/[áä]/u', 'a', $text);
-    $text = preg_replace('/[éë]/u', 'e', $text);
-    $text = preg_replace('/[íï]/u', 'i', $text);
-    $text = preg_replace('/[óö]/u', 'o', $text);
-    $text = preg_replace('/[úü]/u', 'u', $text);
-    // Remover caracteres especiales y números sueltos
-    $text = preg_replace('/[^a-z\s]/u', '', $text);
-    // Reemplazar múltiples espacios por uno solo
-    $text = preg_replace('/\s+/', ' ', $text);
-    return trim($text);
-}
+function respuestaRapida(string $q): ?string {
+    $t = strtolower($q);
+    $mapa = [
+        '/^(hola|buenas|hey|saludos|buenos dia|buenas tarde|buenas noche)/i'
+            => "👋 ¡Hola! Soy el asistente virtual de <strong>El Zapato</strong>. Puedo ayudarte con productos, precios, tallas, marcas y más. ¿Qué necesitas?",
+        '/(gracias|adios|chao|bye|hasta luego)/i'
+            => "👋 ¡Gracias a ti! Te esperamos en El Zapato. 😊",
+        '/(horario|cuando abren|hora|atienden)/i'
+            => "🕒 <strong>Horario:</strong> Lunes–Sábado 8AM–5PM · Domingos 8AM–12PM",
+        '/(donde estan|ubicacion|direccion|como llegar|donde queda)/i'
+            => "📍 Km 51, Cantón Agua Zarca, Ilobasco, El Salvador.",
+        '/(telefono|contacto|whatsapp|numero|llamar)/i'
+            => "📞 <strong>(503) 2378-1500</strong> — También por WhatsApp.",
+        '/(envio|delivery|domicilio|envian)/i'
+            => "🚚 Por el momento <strong>no hacemos envíos</strong>. Las compras son en tienda física.",
+        '/(devolucion|cambio|garantia|reembolso)/i'
+            => "🔄 <strong>15 días</strong> para devoluciones. El producto debe estar sin usar y con empaque original.",
+        '/(como pagan|forma de pago|tarjeta|efectivo|transferencia)/i'
+            => "💳 Aceptamos <strong>Efectivo, Tarjeta</strong> (Visa/MasterCard) y <strong>Transferencia</strong>. ¡Damos factura!",
+        '/(ayuda|que puedes|que sabes|que haces)/i'
+            => "🤖 Puedo ayudarte con:<br>• Buscar zapatos por marca, color, talla o categoría<br>• Ver precios y disponibilidad<br>• Los más vendidos o mejores ofertas<br>• Información de la tienda<br><br>¡Solo pregúntame con tus palabras! 😊",
+    ];
 
-// Diccionario de palabras coloquiales salvadoreñas
-$colloquialMap = [
-    // Saludos y expresiones
-    'que onda' => 'hola',
-    'que pedo' => 'hola',
-    'que tal' => 'hola',
-    'como estas' => 'hola',
-    'buenas' => 'hola',
-    'maje' => 'amigo',
-    'cerote' => 'amigo',
-    'bicho' => 'joven',
-    'chivo' => 'bueno',
-    'pisto' => 'dinero',
-    'chumpa' => 'chaqueta',
-    
-    // Preguntas comunes mal escritas
-    'donde esta' => 'ubicacion',
-    'donde queda' => 'ubicacion',
-    'como llegar' => 'ubicacion',
-    'que vende' => 'que_venden',
-    'que venden' => 'que_venden',
-    'que ofrecen' => 'que_venden',
-    'que hay' => 'que_venden',
-    'que horario' => 'horarios',
-    'a que hora' => 'horarios',
-    'cuando abren' => 'horarios',
-    'cuando cierran' => 'horarios',
-    'como pagar' => 'pagos',
-    'forma de pago' => 'pagos',
-    'numero de telefono' => 'contacto',
-    'como contacto' => 'contacto',
-    'envian a casa' => 'envios',
-    'envian a domicilio' => 'envios',
-    'quienes son' => 'nosotros',
-    'cuenten de ustedes' => 'nosotros',
-    'que marca' => 'marcas',
-    'que marcas' => 'marcas',
-    'cual es el precio' => 'precios',
-    'cuanto vale' => 'precios',
-    'cuanto esta' => 'precios',
-    'hay stock' => 'stock',
-    'tiene disponible' => 'stock',
-    'que talla' => 'tallas',
-    'tiene color' => 'colores'
-];
-
-// Función para traducir lenguaje coloquial
-function translateColloquial($text) {
-    global $colloquialMap;
-    foreach ($colloquialMap as $colq => $translation) {
-        if (strpos($text, $colq) !== false) {
-            $text = str_replace($colq, $translation, $text);
-        }
+    foreach ($mapa as $patron => $resp) {
+        if (preg_match($patron, $t)) return $resp;
     }
-    return $text;
+    return null;
 }
 
-// Función para detectar si la pregunta tiene sentido (mínimo 3 caracteres significativos)
-function isValidQuestion($text) {
-    $commonWords = ['hola', 'buenas', 'que', 'como', 'donde', 'cuando', 'porque', 'para que', 'cual', 'quien'];
-    $words = explode(' ', $text);
-    $meaningful = 0;
-    foreach ($words as $word) {
-        if (strlen($word) > 2 && !in_array($word, $commonWords)) {
-            $meaningful++;
-        }
+// ── Construcción del contexto desde la BD ──────────────────────────────────────
+
+/**
+ * Extrae todos los parámetros de filtro de la pregunta del usuario:
+ * marca, categoría, color, talla, precio máximo, precio mínimo, intención.
+ */
+function extraerFiltros(string $pregunta): array {
+    $t = strtolower($pregunta);
+
+    // Marcas
+    $marcas_conocidas = ['nike','adidas','puma','converse','vans','skechers','new balance','reebok'];
+    $marca_detectada = null;
+    foreach ($marcas_conocidas as $m) {
+        if (str_contains($t, $m)) { $marca_detectada = $m; break; }
     }
-    return $meaningful >= 1 || strpos($text, 'hola') !== false || strpos($text, 'buenas') !== false;
+
+    // Categorías
+    $cat_detectada = null;
+    $cats = [
+        'deportivo' => 'Deportivos', 'deporte' => 'Deportivos', 'running' => 'Deportivos',
+        'correr' => 'Deportivos', 'gym' => 'Deportivos', 'ejercicio' => 'Deportivos',
+        'casual' => 'Casuales', 'cotidiano' => 'Casuales', 'diario' => 'Casuales',
+        'formal' => 'Formales', 'boda' => 'Formales', 'elegante' => 'Formales',
+        'oficina' => 'Formales', 'graduacion' => 'Formales', 'traje' => 'Formales',
+        'sandalia' => 'Sandalias', 'chancla' => 'Sandalias', 'playa' => 'Sandalias',
+        'bota' => 'Botas', 'botines' => 'Botas',
+        'urbano' => 'Urbanos', 'skate' => 'Urbanos', 'street' => 'Urbanos',
+    ];
+    foreach ($cats as $kw => $cat) {
+        if (str_contains($t, $kw)) { $cat_detectada = $cat; break; }
+    }
+
+    // Colores (singular y plural)
+    $colores_map = [
+        'negr' => 'Negro', 'blanc' => 'Blanco', 'roj' => 'Rojo', 'azul' => 'Azul',
+        'verde' => 'Verde', 'gris' => 'Gris', 'cafe' => 'Café', 'café' => 'Café',
+        'beige' => 'Beige', 'marron' => 'Café', 'marrón' => 'Café',
+    ];
+    $color_detectado = null;
+    foreach ($colores_map as $kw => $color) {
+        if (str_contains($t, $kw)) { $color_detectado = $color; break; }
+    }
+
+    // Talla (acepta: talla 40, número 40, talle 40, solo el número aislado)
+    $talla_detectada = null;
+    if (preg_match('/(?:talla|numero|n[uú]mero|talle)[^\d]*(\d{2})/i', $t, $m)) {
+        $talla_detectada = $m[1];
+    } elseif (preg_match('/\b(3[6-9]|4[0-6])\b/', $t, $m)) {
+        $talla_detectada = $m[1];
+    }
+
+    // Intención de precio
+    $intencion_precio = null;
+    if (preg_match('/barato|económi|menor precio|precio bajo|accesible|ganga|oferta/i', $t))  $intencion_precio = 'barato';
+    if (preg_match('/caro|costoso|premium|lujo|exclusivo|mayor precio/i', $t))                $intencion_precio = 'caro';
+
+    // Rango de precio
+    $precio_max = null;
+    $precio_min = null;
+    if (preg_match('/menos de \$?(\d+)/i', $t, $m))    $precio_max = (float)$m[1];
+    if (preg_match('/m[aá]s de \$?(\d+)/i', $t, $m))   $precio_min = (float)$m[1];
+    if (preg_match('/hasta \$?(\d+)/i', $t, $m))        $precio_max = (float)$m[1];
+    if (preg_match('/desde \$?(\d+)/i', $t, $m))        $precio_min = (float)$m[1];
+
+    // Popularidad
+    $popular = preg_match('/mas vendido|popular|top|favorito|recomendado|moda/i', $t);
+
+    // Nombre de producto
+    $nombre_producto = null;
+    if (preg_match('/(air max|grand court|velocity nitro|chuck taylor|old skool|arch fit|club c|oxford|botin urban|sandalia comfort|runner street|new slides)/i', $t, $m)) {
+        $nombre_producto = $m[1];
+    }
+
+    return compact(
+        'marca_detectada','cat_detectada','color_detectado','talla_detectada',
+        'intencion_precio','precio_max','precio_min','popular','nombre_producto'
+    );
 }
 
-// Recibir la pregunta
-$rawInput = file_get_contents('php://input');
-$data = json_decode($rawInput, true);
-$pregunta = sanitizeInput($data['pregunta'] ?? '');
+/**
+ * Consulta la BD con todos los filtros detectados y devuelve contexto estructurado.
+ */
+function obtenerContextoBD(string $pregunta): array {
+    $db  = Conexion::conectar();
+    $f   = extraerFiltros($pregunta);
+    $ctx = ['filtros' => $f, 'productos' => [], 'marcas' => [], 'categorias' => []];
 
-if (empty($pregunta)) {
-    echo json_encode(['respuesta' => 'Por favor, escribe una pregunta.']);
+    // Siempre cargar lista de marcas y categorías disponibles
+    $ctx['marcas']     = $db->query("SELECT nombre_marca FROM marcas ORDER BY nombre_marca")->fetchAll(PDO::FETCH_COLUMN);
+    $ctx['categorias'] = $db->query("SELECT nombre_categoria FROM categorias ORDER BY nombre_categoria")->fetchAll(PDO::FETCH_COLUMN);
+
+    // ── Construir query dinámica ──────────────────────────────────────────────
+    $where  = ["p.estado = 'activo'", "pv.estado = 'activo'"];
+    $params = [];
+    $order  = "p.nombre_producto ASC";
+
+    if ($f['marca_detectada']) {
+        $where[]         = "LOWER(m.nombre_marca) LIKE :marca";
+        $params[':marca'] = '%' . $f['marca_detectada'] . '%';
+    }
+    if ($f['cat_detectada']) {
+        $where[]           = "c.nombre_categoria = :cat";
+        $params[':cat']     = $f['cat_detectada'];
+    }
+    if ($f['color_detectado']) {
+        $where[]             = "LOWER(pv.color) LIKE :color";
+        $params[':color']     = '%' . strtolower($f['color_detectado']) . '%';
+    }
+    if ($f['talla_detectada']) {
+        $where[]             = "pv.talla = :talla";
+        $params[':talla']     = $f['talla_detectada'];
+    }
+    if ($f['precio_max'] !== null) {
+        $where[]                 = "pv.precio_venta <= :pmax";
+        $params[':pmax']          = $f['precio_max'];
+    }
+    if ($f['precio_min'] !== null) {
+        $where[]                 = "pv.precio_venta >= :pmin";
+        $params[':pmin']          = $f['precio_min'];
+    }
+    if ($f['nombre_producto']) {
+        $where[]                        = "LOWER(p.nombre_producto) LIKE :nombre";
+        $params[':nombre']               = '%' . strtolower($f['nombre_producto']) . '%';
+    }
+
+    if ($f['intencion_precio'] === 'barato') $order = "MIN(pv.precio_venta) ASC";
+    if ($f['intencion_precio'] === 'caro')   $order = "MIN(pv.precio_venta) DESC";
+    if ($f['popular'])                        $order = "vendidos DESC";
+
+    $whereStr = implode(' AND ', $where);
+
+    $sql = "
+        SELECT
+            p.nombre_producto,
+            m.nombre_marca,
+            c.nombre_categoria,
+            MIN(pv.precio_venta)                                              AS precio_desde,
+            MAX(pv.precio_venta)                                              AS precio_hasta,
+            SUM(pv.stock)                                                     AS stock_total,
+            GROUP_CONCAT(DISTINCT pv.talla  ORDER BY CAST(pv.talla AS UNSIGNED) SEPARATOR ', ') AS tallas,
+            GROUP_CONCAT(DISTINCT pv.color  ORDER BY pv.color  SEPARATOR ', ')                  AS colores,
+            COUNT(DISTINCT dv.id_detalle_venta)                               AS vendidos
+        FROM productos p
+        JOIN marcas m           ON p.id_marca     = m.id_marca
+        JOIN categorias c       ON p.id_categoria = c.id_categoria
+        JOIN producto_variante pv ON p.id_producto = pv.id_producto
+        LEFT JOIN detalle_venta dv ON pv.id_variante = dv.id_variante
+        WHERE {$whereStr}
+        GROUP BY p.id_producto
+        ORDER BY {$order}
+        LIMIT 8
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $ctx['productos'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Si no hubo filtros específicos → trae top ventas como sugerencia
+    if (empty($ctx['productos']) && empty($params)) {
+        $ctx['productos'] = $db->query("
+            SELECT p.nombre_producto, m.nombre_marca, c.nombre_categoria,
+                   MIN(pv.precio_venta) AS precio_desde, MAX(pv.precio_venta) AS precio_hasta,
+                   SUM(pv.stock) AS stock_total,
+                   GROUP_CONCAT(DISTINCT pv.talla  ORDER BY CAST(pv.talla AS UNSIGNED) SEPARATOR ', ') AS tallas,
+                   GROUP_CONCAT(DISTINCT pv.color  ORDER BY pv.color  SEPARATOR ', ') AS colores,
+                   COUNT(DISTINCT dv.id_detalle_venta) AS vendidos
+            FROM productos p
+            JOIN marcas m         ON p.id_marca = m.id_marca
+            JOIN categorias c     ON p.id_categoria = c.id_categoria
+            JOIN producto_variante pv ON p.id_producto = pv.id_producto AND pv.estado = 'activo'
+            LEFT JOIN detalle_venta dv ON pv.id_variante = dv.id_variante
+            WHERE p.estado = 'activo'
+            GROUP BY p.id_producto
+            ORDER BY vendidos DESC
+            LIMIT 6
+        ")->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    return $ctx;
+}
+
+// ── System prompt para la IA ───────────────────────────────────────────────────
+
+function construirSystemPrompt(array $ctx): string {
+    $filtros = $ctx['filtros'];
+
+    $sys  = "Eres el asistente virtual de **El Zapato**, zapatería en El Salvador.\n";
+    $sys .= "📍 Km 51, Cantón Agua Zarca, Ilobasco | 📞 (503) 2378-1500\n";
+    $sys .= "🕒 Lun–Sáb 8AM–5PM | Dom 8AM–12PM\n";
+    $sys .= "💳 Pagos: Efectivo, Tarjeta, Transferencia\n\n";
+
+    $sys .= "🏷️ **Marcas disponibles:** " . implode(', ', $ctx['marcas']) . "\n";
+    $sys .= "📂 **Categorías:** " . implode(', ', $ctx['categorias']) . "\n\n";
+
+    // Filtros detectados
+    $filtros_activos = array_filter([
+        'Marca'    => $filtros['marca_detectada'],
+        'Categoría'=> $filtros['cat_detectada'],
+        'Color'    => $filtros['color_detectado'],
+        'Talla'    => $filtros['talla_detectada'],
+        'Precio ≤' => $filtros['precio_max'] ? '$'.$filtros['precio_max'] : null,
+        'Precio ≥' => $filtros['precio_min'] ? '$'.$filtros['precio_min'] : null,
+    ]);
+    if (!empty($filtros_activos)) {
+        $sys .= "🔍 **Filtros aplicados:** ";
+        foreach ($filtros_activos as $k => $v) $sys .= "{$k}: {$v}  ";
+        $sys .= "\n\n";
+    }
+
+    // Inventario real
+    if (!empty($ctx['productos'])) {
+        $sys .= "📦 **INVENTARIO REAL (usa SOLO estos datos, no inventes precios ni productos):**\n";
+        foreach ($ctx['productos'] as $p) {
+            $precio = ($p['precio_desde'] == $p['precio_hasta'])
+                ? '$' . number_format($p['precio_desde'], 2)
+                : '$' . number_format($p['precio_desde'], 2) . ' – $' . number_format($p['precio_hasta'], 2);
+
+            $sys .= "• **{$p['nombre_producto']}** | {$p['nombre_marca']} | {$p['nombre_categoria']}\n";
+            $sys .= "  Precio: {$precio} | Stock: {$p['stock_total']} | Tallas: {$p['tallas']} | Colores: {$p['colores']} | Vendidos: {$p['vendidos']}\n";
+        }
+    } else {
+        $sys .= "⚠️ No se encontraron productos con esos filtros. Indícale al usuario que puede probar con otros criterios.\n";
+    }
+
+    $sys .= "\n**REGLAS:**\n";
+    $sys .= "- Responde siempre en español, amigable y conciso.\n";
+    $sys .= "- Usa emojis con moderación para hacer la respuesta visual.\n";
+    $sys .= "- Usa los precios y datos exactos del inventario. NUNCA inventes datos.\n";
+    $sys .= "- Si hay pocos resultados, mencionalo y sugiere ampliar la búsqueda.\n";
+    $sys .= "- Si el usuario pregunta algo fuera del catálogo (clima, recetas, etc.), responde solo sobre la tienda.\n";
+    $sys .= "- Formato: usa <br> para saltos de línea y <strong> para negritas (es HTML).\n";
+
+    return $sys;
+}
+
+// ── Llamada a la IA ────────────────────────────────────────────────────────────
+
+function llamarIA(string $pregunta, string $systemPrompt): array {
+    $body = json_encode([
+        'model'    => AI_MODEL,
+        'messages' => [
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user',   'content' => $pregunta],
+        ],
+        'max_tokens'  => 350,
+        'temperature' => 0.3,
+    ]);
+
+    $ch = curl_init(OPENROUTER_URL);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $body,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . OPENROUTER_API_KEY,
+            'HTTP-Referer: http://localhost',
+            'X-Title: ElZapato-v3',
+        ],
+        CURLOPT_TIMEOUT        => AI_TIMEOUT,
+        CURLOPT_SSL_VERIFYPEER => false,
+    ]);
+
+    $resp     = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlErr) {
+        error_log("[El Zapato Chatbot] cURL error: {$curlErr}");
+        return ['ok' => false, 'error' => 'curl_error', 'detail' => $curlErr];
+    }
+    if ($httpCode !== 200) {
+        error_log("[El Zapato Chatbot] HTTP {$httpCode}: {$resp}");
+        return ['ok' => false, 'error' => "http_{$httpCode}", 'detail' => $resp];
+    }
+
+    $data = json_decode($resp, true);
+    $texto = trim($data['choices'][0]['message']['content'] ?? '');
+
+    if (empty($texto)) {
+        return ['ok' => false, 'error' => 'empty_response'];
+    }
+
+    return ['ok' => true, 'texto' => $texto];
+}
+
+// ── Fallback local (sin IA) ────────────────────────────────────────────────────
+
+function fallbackLocal(array $ctx): string {
+    $productos = $ctx['productos'];
+
+    if (empty($productos)) {
+        return "😕 No encontré productos con esos criterios.<br><br>"
+            . "Puedes buscar por:<br>"
+            . "• <strong>Marca:</strong> " . implode(', ', $ctx['marcas']) . "<br>"
+            . "• <strong>Categoría:</strong> " . implode(', ', $ctx['categorias']) . "<br>"
+            . "• <strong>Color, talla o precio</strong><br><br>"
+            . "¿Cómo te puedo ayudar? 🤔";
+    }
+
+    $resp = "📦 <strong>Encontré estos productos:</strong><br><br>";
+    foreach ($productos as $p) {
+        $precio = ($p['precio_desde'] == $p['precio_hasta'])
+            ? '$' . number_format($p['precio_desde'], 2)
+            : '$' . number_format($p['precio_desde'], 2) . ' – $' . number_format($p['precio_hasta'], 2);
+
+        $resp .= "👟 <strong>{$p['nombre_producto']}</strong> ({$p['nombre_marca']})<br>";
+        $resp .= "&nbsp;&nbsp;💰 {$precio} | 📦 Stock: {$p['stock_total']}<br>";
+        $resp .= "&nbsp;&nbsp;📏 Tallas: {$p['tallas']} | 🎨 {$p['colores']}<br><br>";
+    }
+    return $resp;
+}
+
+// ── ENDPOINT PRINCIPAL ─────────────────────────────────────────────────────────
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'respuesta' => 'Método no permitido.']);
     exit;
 }
 
-// Normalizar y procesar
-$originalQ = $pregunta;
-$q = normalizeText($originalQ);
-$q = translateColloquial($q);
+try {
+    $input    = json_decode(file_get_contents('php://input'), true);
+    $pregunta = sanitize($input['pregunta'] ?? '');
 
-// ====================== VERIFICAR SI ES PREGUNTA VÁLIDA ======================
-if (!isValidQuestion($q) || strlen($q) < 3) {
-    echo json_encode(['respuesta' => '😓 Lo sentimos, no contamos con la información que solicitaste.']);
-    exit;
-}
-
-// ====================== SALUDOS Y EXPRESIONES COLOQUIALES ======================
-if (preg_match('/^(hola|buenas|que onda|que tal|saludos|hey|holi)/i', $q)) {
-    echo json_encode(['respuesta' => '👋 ¡Hola! ¿En qué puedo ayudarte hoy? Puedes preguntarme sobre horarios, ubicación, productos, marcas y más.']);
-    exit;
-}
-
-if (preg_match('/gracias|merci|thx|thanks/i', $q)) {
-    echo json_encode(['respuesta' => '🙌 ¡De nada! Estoy aquí para ayudarte. ¿Necesitas algo más?']);
-    exit;
-}
-
-if (preg_match('/adios|chao|bye|hasta luego|nos vemos/i', $q)) {
-    echo json_encode(['respuesta' => '👋 ¡Hasta luego! Que tengas un excelente día. ¡Vuelve pronto!']);
-    exit;
-}
-
-if (preg_match('/como estas|como andas|que tal estas|que pedo|que onda contigo/i', $q)) {
-    echo json_encode(['respuesta' => '🤖 ¡Todo bien por aquí! Listo para ayudarte con lo que necesites sobre ElZapato.']);
-    exit;
-}
-
-// ====================== DETECCIÓN DE INTENCIÓN MEJORADA ======================
-$intent = null;
-$params = [];
-
-// Palabras clave para cada intención (orden de prioridad)
-$intentsMap = [
-    'que_venden' => [
-        'keywords' => ['que venden', 'que ofrecen', 'que productos tienen', 'que hay', 'que clase de zapatos', 'que tipos', 'que vende', 'que comercializan', 'que oferta', 'que tienen', 'que manejan'],
-        'priority' => 1
-    ],
-    'horarios' => [
-        'keywords' => ['horario', 'hora', 'abren', 'cierran', 'atencion', 'cuando abren', 'cuando cierran', 'que horario', 'horas de atencion', 'a que hora abren', 'a que hora cierran'],
-        'priority' => 2
-    ],
-    'ubicacion' => [
-        'keywords' => ['ubicacion', 'donde queda', 'direccion', 'sucursal', 'lugar', 'local', 'como llegar', 'mapa', 'waze', 'google maps', 'donde esta', 'donde estan', 'en que calle'],
-        'priority' => 2
-    ],
-    'pagos' => [
-        'keywords' => ['pago', 'pagar', 'tarjeta', 'efectivo', 'credito', 'debito', 'transferencia', 'metodo de pago', 'como pago', 'formas de pago', 'con que se paga'],
-        'priority' => 2
-    ],
-    'contacto' => [
-        'keywords' => ['contacto', 'telefono', 'correo', 'email', 'llamar', 'whatsapp', 'comunicarse', 'numero', 'telefonico', 'llamada', 'numero de telefono'],
-        'priority' => 2
-    ],
-    'envios' => [
-        'keywords' => ['envio', 'domicilio', 'delivery', 'entregas', 'envian', 'envios a domicilio', 'envian a casa', 'mandan a casa', 'traen a casa'],
-        'priority' => 2
-    ],
-    'nosotros' => [
-        'keywords' => ['nosotros', 'historia', 'quienes somos', 'mision', 'vision', 'valores', 'sobre la empresa', 'quienes son', 'cuenten de ustedes'],
-        'priority' => 2
-    ],
-    'categorias' => [
-        'keywords' => ['categorias', 'tipos', 'clases', 'tipos de zapatos', 'clases de calzado', 'variedad', 'lineas', 'estilos', 'que clase', 'que tipos'],
-        'priority' => 1
-    ],
-    'marcas' => [
-        'keywords' => ['marcas', 'que marcas', 'que marca', 'marcas disponibles', 'marcas venden', 'que marcas tienen', 'cuales marcas'],
-        'priority' => 1
-    ],
-    'precios_generales' => [
-        'keywords' => ['precio promedio', 'rango de precios', 'precios generales', 'cuanto cuesta un zapato', 'que precio tienen', 'costos', 'cuanto cuestan aproximadamente'],
-        'priority' => 2
-    ],
-    'tallas' => [
-        'keywords' => ['talla', 'tallas', 'que tallas', 'tallas disponibles', 'numeracion', 'que numero', 'que talla manejan'],
-        'priority' => 2
-    ],
-    'colores' => [
-        'keywords' => ['color', 'colores', 'que colores', 'colores disponibles', 'de que color', 'tonos'],
-        'priority' => 2
-    ],
-    'productos_especificos' => [
-        'keywords' => ['zapato', 'modelo', 'producto', 'calzado', 'tienen de', 'busco', 'necesito', 'quiero comprar', 'precio de', 'cuanto cuesta el', 'cuesta el', 'un zapato', 'un par', 'zapatos de'],
-        'priority' => 3
-    ],
-    'stock' => [
-        'keywords' => ['stock', 'disponible', 'queda', 'inventario', 'hay stock', 'tienen disponible', 'en existencia', 'agotado', 'cuantos quedan'],
-        'priority' => 3
-    ]
-];
-
-// Detectar la intención
-foreach ($intentsMap as $intentName => $config) {
-    foreach ($config['keywords'] as $keyword) {
-        if (strpos($q, $keyword) !== false) {
-            $intent = $intentName;
-            break 2;
-        }
+    if (strlen($pregunta) < 2) {
+        echo json_encode(['success' => false, 'respuesta' => 'Escribe tu pregunta.']);
+        exit;
     }
+
+    // ── Paso 1: Respuestas instantáneas ──
+    $rapida = respuestaRapida($pregunta);
+    if ($rapida) {
+        echo json_encode(['success' => true, 'respuesta' => $rapida, 'fuente' => 'rapida']);
+        exit;
+    }
+
+    // ── Paso 2: Obtener contexto completo de la BD ──
+    $ctx = obtenerContextoBD($pregunta);
+
+    // ── Paso 3: IA como motor principal ──
+    $systemPrompt = construirSystemPrompt($ctx);
+    $iaResult     = llamarIA($pregunta, $systemPrompt);
+
+    if ($iaResult['ok']) {
+        echo json_encode([
+            'success'  => true,
+            'respuesta' => $iaResult['texto'],
+            'fuente'   => 'ia',
+        ]);
+        exit;
+    }
+
+    // ── Paso 4: Fallback local si la IA falla ──
+    error_log("[El Zapato Chatbot] IA no disponible ({$iaResult['error']}), usando fallback local.");
+    echo json_encode([
+        'success'  => true,
+        'respuesta' => fallbackLocal($ctx),
+        'fuente'   => 'local',
+    ]);
+
+} catch (Throwable $e) {
+    error_log("[El Zapato Chatbot] Excepción: " . $e->getMessage());
+    echo json_encode([
+        'success'  => false,
+        'respuesta' => '❌ Error interno. Por favor intenta de nuevo.',
+    ]);
 }
-
-// Si no se detectó intención, buscar por palabras sueltas
-if (!$intent) {
-    if (preg_match('/\b(nike|adidas|puma|converse|vans|skechers|new balance|reebok|newbalance)\b/i', $originalQ)) {
-        $intent = 'productos_especificos';
-        preg_match('/\b(nike|adidas|puma|converse|vans|skechers|new balance|reebok|newbalance)\b/i', $originalQ, $match);
-        $params['marca'] = strtolower(str_replace(' ', '', $match[0]));
-    }
-    elseif (preg_match('/\b(3[5-9]|[4-4][0-9]|50)\b/', $originalQ, $match)) {
-        $intent = 'productos_especificos';
-        $params['talla'] = $match[0];
-    }
-    elseif (preg_match('/\b(negro|blanco|rojo|azul|gris|verde|cafe|marron|beige|rosado|amarillo|morado)\b/i', $originalQ, $match)) {
-        $intent = 'productos_especificos';
-        $params['color'] = strtolower($match[0]);
-    }
-    else {
-        $intent = 'no_encontrado';
-    }
-}
-
-// ====================== PROCESAR SEGÚN INTENCIÓN ======================
-$respuesta = '';
-
-switch ($intent) {
-    case 'que_venden':
-        $conn = getConnection();
-        $sql = "SELECT nombre_categoria FROM categorias ORDER BY id_categoria";
-        $stmt = $conn->query($sql);
-        $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-grid-fill text-accent'></i> <strong>👟 En ElZapato vendemos:</strong><br><br>";
-        foreach ($categorias as $cat) {
-            $respuesta .= "• <strong>{$cat['nombre_categoria']}</strong><br>";
-        }
-        break;
-    
-    case 'categorias':
-        $conn = getConnection();
-        $sql = "SELECT nombre_categoria FROM categorias ORDER BY id_categoria";
-        $stmt = $conn->query($sql);
-        $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-grid-fill text-accent'></i> <strong>📂 Tipos de calzado disponibles:</strong><br><br>";
-        foreach ($categorias as $cat) {
-            $respuesta .= "• {$cat['nombre_categoria']}<br>";
-        }
-        break;
-    
-    case 'marcas':
-        $conn = getConnection();
-        $sql = "SELECT nombre_marca FROM marcas ORDER BY nombre_marca";
-        $stmt = $conn->query($sql);
-        $marcas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-tags-fill text-accent'></i> <strong>🏷️ Marcas disponibles:</strong><br><br>";
-        foreach ($marcas as $marca) {
-            $respuesta .= "• {$marca['nombre_marca']}<br>";
-        }
-        break;
-    
-    case 'tallas':
-        $conn = getConnection();
-        $sql = "SELECT DISTINCT talla FROM producto_variante WHERE estado = 'activo' ORDER BY CAST(talla AS UNSIGNED)";
-        $stmt = $conn->query($sql);
-        $tallas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-rulers text-accent'></i> <strong>📏 Tallas disponibles:</strong><br><br>";
-        foreach ($tallas as $t) {
-            $respuesta .= "• Talla {$t['talla']}<br>";
-        }
-        break;
-    
-    case 'colores':
-        $conn = getConnection();
-        $sql = "SELECT DISTINCT color FROM producto_variante WHERE estado = 'activo' AND color IS NOT NULL ORDER BY color";
-        $stmt = $conn->query($sql);
-        $colores = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-palette-fill text-accent'></i> <strong>🎨 Colores disponibles:</strong><br><br>";
-        foreach ($colores as $c) {
-            $respuesta .= "• " . ucfirst($c['color']) . "<br>";
-        }
-        break;
-    
-    case 'productos_especificos':
-        $conn = getConnection();
-        
-        $sql = "SELECT DISTINCT p.nombre_producto, m.nombre_marca, c.nombre_categoria,
-                       pv.talla, pv.color, pv.precio_venta, pv.stock
-                FROM productos p
-                JOIN marcas m ON p.id_marca = m.id_marca
-                JOIN categorias c ON p.id_categoria = c.id_categoria
-                JOIN producto_variante pv ON p.id_producto = pv.id_producto
-                WHERE p.estado = 'activo' AND pv.stock > 0";
-        
-        $hasFilter = false;
-        
-        if (isset($params['marca'])) {
-            $sql .= " AND LOWER(m.nombre_marca) = :marca";
-            $hasFilter = true;
-        }
-        if (isset($params['talla'])) {
-            $sql .= " AND pv.talla = :talla";
-            $hasFilter = true;
-        }
-        if (isset($params['color'])) {
-            $sql .= " AND LOWER(pv.color) = :color";
-            $hasFilter = true;
-        }
-        
-        if ($hasFilter) {
-            $sql .= " LIMIT 5";
-            $stmt = $conn->prepare($sql);
-            if (isset($params['marca'])) $stmt->bindValue(':marca', $params['marca']);
-            if (isset($params['talla'])) $stmt->bindValue(':talla', $params['talla']);
-            if (isset($params['color'])) $stmt->bindValue(':color', $params['color']);
-            $stmt->execute();
-            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            if (!empty($productos)) {
-                $respuesta = "<i class='bi bi-search text-accent'></i> <strong>🔍 Productos encontrados:</strong><br><br>";
-                foreach ($productos as $prod) {
-                    $stockTexto = ($prod['stock'] > 0) ? "✅ Stock: {$prod['stock']}" : "❌ Agotado";
-                    $respuesta .= "• <strong>{$prod['nombre_producto']}</strong><br>";
-                    $respuesta .= "  {$prod['nombre_marca']} - {$prod['nombre_categoria']}<br>";
-                    $respuesta .= "  💰 \${$prod['precio_venta']} | Talla {$prod['talla']} | Color: {$prod['color']}<br>";
-                    $respuesta .= "  {$stockTexto}<br><br>";
-                }
-            } else {
-                $busqueda = "";
-                if (isset($params['marca'])) $busqueda .= " de la marca " . ucfirst($params['marca']);
-                if (isset($params['talla'])) $busqueda .= " en talla {$params['talla']}";
-                if (isset($params['color'])) $busqueda .= " de color {$params['color']}";
-                
-                $respuesta = "😓 Lo sentimos, no contamos con la información que solicitaste.";
-            }
-        } else {
-            // Si preguntó por productos sin filtros, mostrar categorías
-            $sqlCat = "SELECT nombre_categoria FROM categorias ORDER BY id_categoria";
-            $stmtCat = $conn->query($sqlCat);
-            $categorias = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
-            
-            $respuesta = "<i class='bi bi-grid-fill text-accent'></i> <strong>👟 En ElZapato vendemos:</strong><br><br>";
-            foreach ($categorias as $cat) {
-                $respuesta .= "• <strong>{$cat['nombre_categoria']}</strong><br>";
-            }
-            $respuesta .= "<br><br>💡 ¿Buscas algo específico? Dime la marca, talla o color que te interesa.";
-        }
-        break;
-    
-    case 'precios_generales':
-        $conn = getConnection();
-        $sql = "SELECT MIN(precio_venta) as min, MAX(precio_venta) as max FROM producto_variante WHERE estado = 'activo'";
-        $stmt = $conn->query($sql);
-        $precios = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-currency-dollar text-accent'></i> <strong>💰 Rango de precios:</strong><br><br>
-                      • Precio mínimo: $" . number_format($precios['min'], 2) . "<br>
-                      • Precio máximo: $" . number_format($precios['max'], 2);
-        break;
-    
-    case 'horarios':
-        $respuesta = "<i class='bi bi-clock-fill text-accent'></i> <strong>🕒 Horarios:</strong><br><br>
-                      • Lunes a Sábado: 8:00 AM - 5:00 PM<br>
-                      • Domingos: 8:00 AM - 12:00 PM";
-        break;
-    
-    case 'ubicacion':
-        $respuesta = "<i class='bi bi-geo-alt-fill text-accent'></i> <strong>📍 Ubicación:</strong><br><br>
-                      <strong>Km 51, Cantón Agua Zarca, Ilobasco, El Salvador</strong><br><br>
-                      <i class='fab fa-waze'></i> <a href='https://waze.com/ul?ll=13.8152576,-88.8626189&navigate=yes' target='_blank' style='color: var(--nocolor);'>Abrir en Waze</a> | 
-                      <a href='https://maps.google.com/?q=13.8152576,-88.8626189' target='_blank' style='color: var(--nocolor);'>Google Maps</a>";
-        break;
-    
-    case 'pagos':
-        $respuesta = "<i class='bi bi-credit-card-2-front-fill text-accent'></i> <strong>💳 Métodos de pago:</strong><br><br>
-                      • Efectivo<br>
-                      • Tarjeta de Débito/Crédito (Visa, MasterCard)<br>
-                      • Transferencia bancaria";
-        break;
-    
-    case 'contacto':
-        $respuesta = "<i class='bi bi-telephone-fill text-accent'></i> <strong>📞 Contacto:</strong><br><br>
-                      • Teléfono: (503) 2378-1500<br>
-                      • Email: contacto@elzapato.com";
-        break;
-    
-    case 'envios':
-        $respuesta = "<i class='bi bi-truck text-accent'></i> <strong>🚚 Envíos:</strong><br><br>
-                      ⚠️ No realizamos envíos a domicilio. Las compras son solo en tienda física.";
-        break;
-    
-    case 'nosotros':
-        $respuesta = "<i class='bi bi-buildings-fill text-accent'></i> <strong>👟 Sobre ElZapato:</strong><br><br>
-                      Zapatería salvadoreña con más de 12 años de experiencia. Calidad y estilo para toda la familia.";
-        break;
-    
-    case 'stock':
-        $conn = getConnection();
-        $sql = "SELECT SUM(stock) as total FROM producto_variante WHERE estado = 'activo'";
-        $stmt = $conn->query($sql);
-        $total = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        $respuesta = "<i class='bi bi-box-seam-fill text-accent'></i> <strong>📦 Stock general:</strong><br><br>
-                      Contamos con un amplio inventario de calzado. Para consultar disponibilidad de un modelo específico, indícame la marca y talla.";
-        break;
-    
-    case 'no_encontrado':
-    default:
-        $respuesta = "😓 Lo sentimos, no contamos con la información que solicitaste.";
-        break;
-}
-
-echo json_encode(['respuesta' => $respuesta]);
-?>

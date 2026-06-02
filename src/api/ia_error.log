@@ -1,0 +1,214 @@
+2026-06-01 20:16:47 | HTTP: 400 | Error:  | Response: {"error":{"message":"google/gemma-3b-it:free is not a valid model ID","code":400},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:16:51 | HTTP: 400 | Error:  | Response: {"error":{"message":"google/gemma-3b-it:free is not a valid model ID","code":400},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:16:58 | HTTP: 400 | Error:  | Response: {"error":{"message":"google/gemma-3b-it:free is not a valid model ID","code":400},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:18:16 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for mistralai/mistral-7b-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:18:20 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for mistralai/mistral-7b-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:18:27 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for mistralai/mistral-7b-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:18:31 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for mistralai/mistral-7b-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:19:23 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for microsoft/phi-3-mini-128k-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:19:28 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for microsoft/phi-3-mini-128k-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:19:46 | HTTP: 404 | Error:  | Response: {"error":{"message":"No endpoints found for microsoft/phi-3-mini-128k-instruct:free.","code":404},"user_id":"user_3EY61iny1ePGrDUXAFW5BDJ0QuQ"}
+
+2026-06-01 20:30:30 | HTTP: 200 | Error:  | Response: 
+         
+
+         
+
+         
+{"id":"gen-1780345829-UFulaI76YY93UNtods2W","object":"chat.completion","created":1780345829,"model":"openai/gpt-oss-20b:free","provider":"OpenInference","system_fingerprint":null,"service_tier":null,"choices":[{"index":0,"logprobs":null,"finish_reason":"stop","native
+
+2026-06-01 20:30:54 | HTTP: 200 | Error: Operation timed out after 15005 milliseconds with 385 bytes received | Response: 
+
+2026-06-01 20:31:24 | HTTP: 200 | Error:  | Response: 
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+{"id":"gen-1780345875-niFuaukLjPVw7Kob5IEA","object":"chat.completion","created":1780345875
+
+2026-06-01 20:31:46 | HTTP: 429 | Error:  | Response: {"error":{"message":"Provider returned error","code":429,"metadata":{"raw":"openai/gpt-oss-20b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations","provider_name":"OpenInference","is_byok":f
+
+2026-06-01 20:32:13 | HTTP: 200 | Error:  | Response: 
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+{"id":"gen-1780345927-Lf8LKUj34G34wvuOgisy","object":"chat.completion","created":1780345927,"model":"openai/gpt-oss-20b:free","provider
+
+2026-06-01 20:32:47 | HTTP: 200 | Error:  | Response: 
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+{"id":"gen-1780345960-7LbwFcA0jdM10vJS4KdQ","object":"chat.completion","created":1780345960,"model":"openai/gpt-o
+
+2026-06-01 20:33:03 | HTTP: 429 | Error:  | Response: {"error":{"message":"Provider returned error","code":429,"metadata":{"raw":"openai/gpt-oss-20b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations","provider_name":"OpenInference","is_byok":f
+
+2026-06-01 20:33:29 | HTTP: 200 | Error:  | Response: 
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+{"id":"gen-1780345999-pKUs61Ij1pY3xR
+
+2026-06-01 20:34:08 | HTTP: 200 | Error: Operation timed out after 15008 milliseconds with 385 bytes received | Response: 
+
+2026-06-01 20:34:41 | HTTP: 200 | Error:  | Response: 
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+
+         
+{"id":"gen-1780346078-aH8n36UpbmRWe8eNhNXe","object":"chat.completion","created":1780346078,"model":"openai/gpt-oss-20b:free","provider":"OpenInference","system_fingerprint":null,"service_tier":null,"c
+
