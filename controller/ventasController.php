@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../model/VentasModel.php';
 require_once __DIR__ . '/../model/CajaUsuario.php';
+require_once __DIR__ . '/../model/ClientesModel.php';
 
 class VentasController {
     
@@ -33,6 +34,28 @@ class VentasController {
             // Registrar en caja
             $cajaUsuario = new CajaUsuario();
             $cajaUsuario->registrarVenta($idUsuario, $result['id_venta'], $total, $cambio);
+            
+            // ACTUALIZAR ESTADÍSTICAS DEL CLIENTE (si tiene cliente)
+            if ($idCliente && $idCliente > 0) {
+                $actualizado = ClientesModel::mdlActualizarEstadisticasCliente($idCliente, $total);
+                
+                // Debug: escribir en log
+                error_log("=== ACTUALIZACIÓN CLIENTE ===");
+                error_log("Cliente ID: $idCliente");
+                error_log("Monto: $$total");
+                error_log("Resultado: " . ($actualizado ? 'EXITO' : 'FALLO'));
+                
+                // Verificar si se actualizó correctamente
+                if ($actualizado) {
+                    // Obtener datos actualizados para debug
+                    $db = Conexion::conectar();
+                    $stmt = $db->prepare("SELECT total_compras, total_gastado, ultima_compra FROM clientes WHERE id_cliente = :id");
+                    $stmt->bindParam(':id', $idCliente);
+                    $stmt->execute();
+                    $clienteActualizado = $stmt->fetch(PDO::FETCH_ASSOC);
+                    error_log("Nuevos valores: Compras={$clienteActualizado['total_compras']}, Gastado={$clienteActualizado['total_gastado']}");
+                }
+            }
             
             echo json_encode(["success" => true, "id_venta" => $result['id_venta']]);
         } else {

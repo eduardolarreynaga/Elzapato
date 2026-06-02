@@ -319,7 +319,24 @@ require __DIR__ . '/../layouts/admin-header.php';
         background: #8B6B4F;
     }
     
-    /* Badges - usando SOLO tus colores */
+    /* Botón enviar correo */
+    .btn-enviar-correo {
+        background: var(--primary-dark);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    .btn-enviar-correo:hover {
+        background: #8B6B4F;
+        transform: translateY(-2px);
+    }
+    
+    /* Badges */
     .badge {
         display: inline-flex;
         align-items: center;
@@ -443,10 +460,114 @@ require __DIR__ . '/../layouts/admin-header.php';
         animation: fadeIn 0.3s ease;
     }
     
+    /* Modal */
+    .modal {
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        width: 450px;
+        margin: 0 auto;
+    }
+    .modal-header {
+        background: var(--primary-dark);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-header .close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    .modal-body {
+        padding: 20px;
+    }
+    .modal-footer {
+        padding: 15px 20px;
+        background: #f9f9f9;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--primary-soft);
+        border-radius: 8px;
+    }
+    .form-control:focus {
+        border-color: var(--primary-dark);
+        outline: none;
+    }
+    .btn-primary {
+        background: var(--primary-dark);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .btn-primary:hover {
+        background: #8B6B4F;
+    }
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    .text-muted {
+        font-size: 11px;
+        color: #666;
+        margin-top: 5px;
+        display: block;
+    }
+    
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    
+    /* Toast notifications */
+    .toast {
+        background: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(120%);
+        transition: 0.3s;
+    }
+    .toast.show {
+        transform: translateX(0);
+    }
+    .toast-success { border-left: 4px solid var(--primary-dark); }
+    .toast-warning { border-left: 4px solid var(--nocolor); }
+    .toast-info { border-left: 4px solid var(--primary-soft); }
     
     @media (max-width: 1200px) {
         .stats-grid {
@@ -485,6 +606,10 @@ require __DIR__ . '/../layouts/admin-header.php';
         .tab a {
             padding: 8px 12px;
             font-size: 12px;
+        }
+        .modal-content {
+            width: 90%;
+            margin: 30px auto;
         }
     }
 </style>
@@ -560,6 +685,43 @@ require __DIR__ . '/../layouts/admin-header.php';
     </div>
     <div class="filtro-group">
         <button id="btnFiltrar"><i class="fas fa-filter"></i> Aplicar</button>
+    </div>
+</div>
+
+<!-- Botón para enviar por correo -->
+<div style="margin-bottom: 20px; text-align: right;">
+    <button class="btn-enviar-correo" onclick="abrirModalEnviarCorreo()">
+        <i class="fas fa-envelope"></i> Enviar Historial por Correo
+    </button>
+</div>
+
+<!-- Modal para enviar correo -->
+<div id="modalEnviarCorreo" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin: 0;"><i class="fas fa-envelope"></i> Enviar Historial por Correo</h3>
+            <button type="button" class="close" onclick="cerrarModalEnviarCorreo()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Correo del Administrador:</label>
+                <input type="email" id="email_destino" class="form-control" placeholder="admin@ejemplo.com" required>
+                <small class="text-muted">Se enviará el historial con los filtros actuales</small>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-chart-line"></i> Resumen a enviar:</label>
+                <div style="background: var(--primary-light); padding: 10px; border-radius: 8px; font-size: 13px;">
+                    <div><strong>📅 Período:</strong> <span id="resumen_fecha_desde"><?= $fechaDesde ?></span> - <span id="resumen_fecha_hasta"><?= $fechaHasta ?></span></div>
+                    <div><strong>👤 Usuario filtrado:</strong> <span id="resumen_usuario"><?= $usuarioFiltro > 0 ? htmlspecialchars($usuarios[array_search($usuarioFiltro, array_column($usuarios, 'id_usuario'))]['nombre_usuario'] ?? 'Todos') : 'Todos' ?></span></div>
+                    <div><strong>🏷️ Tipo:</strong> <span id="resumen_tipo"><?= $tiposAccion[$tipoAccion] ?? 'Todos' ?></span></div>
+                    <div><strong>📊 Registros:</strong> <span id="resumen_total"><?= $totalRegistros ?></span></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="cerrarModalEnviarCorreo()">Cancelar</button>
+            <button type="button" class="btn-primary" onclick="enviarHistorialCorreo()">Enviar Correo</button>
+        </div>
     </div>
 </div>
 
@@ -640,7 +802,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                             <td>#<?= $item['registro_id'] ?></td>
                             <td><?= htmlspecialchars($item['metodo_pago'] ?? 'N/A') ?></td>
                             <td class="text-success">$<?= number_format($item['monto'] ?? 0, 2) ?></td>
-                            <td><span class="text-success"><?= ucfirst($item['estado'] ?? 'completada') ?></span></td>
+                            <td class="text-success"><?= ucfirst($item['estado'] ?? 'completada') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -714,7 +876,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                             <td><?= getTipoBadge($item['accion']) ?></td>
                             <td><?= htmlspecialchars($item['detalle']) ?></td>
                             <td class="text-success">$<?= number_format($item['monto'] ?? 0, 2) ?></td>
-                            <td><span class="text-info"><?= ucfirst($item['estado'] ?? 'completada') ?></span></td>
+                            <td class="text-info"><?= ucfirst($item['estado'] ?? 'completada') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -875,6 +1037,103 @@ require __DIR__ . '/../layouts/admin-header.php';
         });
     }
 })();
+
+// ==================== FUNCIONES PARA ENVÍO DE CORREO ====================
+function abrirModalEnviarCorreo() {
+    document.getElementById('modalEnviarCorreo').style.display = 'flex';
+}
+
+function cerrarModalEnviarCorreo() {
+    document.getElementById('modalEnviarCorreo').style.display = 'none';
+}
+
+async function enviarHistorialCorreo() {
+    const email = document.getElementById('email_destino').value;
+    
+    if (!email) {
+        mostrarNotificacion('Por favor ingrese un correo electrónico', 'warning');
+        return;
+    }
+    
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        mostrarNotificacion('Correo electrónico inválido', 'warning');
+        return;
+    }
+    
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const usuarioId = document.getElementById('usuario_id').value;
+    const tipoAccion = document.getElementById('tipo_accion').value;
+    const nombreUsuario = '<?= $_SESSION['usuario'] ?>';
+    
+    // Mostrar loading
+    const btnEnviar = document.querySelector('#modalEnviarCorreo .btn-primary');
+    const textoOriginal = btnEnviar.innerHTML;
+    btnEnviar.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Enviando...';
+    btnEnviar.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('nombre', nombreUsuario);
+    formData.append('fecha_desde', fechaDesde);
+    formData.append('fecha_hasta', fechaHasta);
+    formData.append('usuario_id', usuarioId);
+    formData.append('tipo_accion', tipoAccion);
+    
+    try {
+        const response = await fetch('/ElZapato/src/api/enviar_historial.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarNotificacion('Correo enviado exitosamente', 'success');
+            cerrarModalEnviarCorreo();
+            document.getElementById('email_destino').value = '';
+        } else {
+            mostrarNotificacion(data.message || 'Error al enviar el correo', 'warning');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al enviar el correo', 'warning');
+    } finally {
+        btnEnviar.innerHTML = textoOriginal;
+        btnEnviar.disabled = false;
+    }
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999;';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast show toast-' + tipo;
+    
+    let icono = '';
+    if (tipo === 'warning') icono = '⚠️ ';
+    else if (tipo === 'success') icono = '✅ ';
+    else icono = 'ℹ️ ';
+    
+    toast.innerHTML = icono + mensaje;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(120%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 </script>
 
 <?php require __DIR__ . '/../layouts/admin-shell-end.php'; ?>

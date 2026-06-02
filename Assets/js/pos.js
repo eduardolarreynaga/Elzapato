@@ -2,6 +2,9 @@
 let carrito = [];
 let descuentosAplicados = [];
 let cajaActual = null;
+let descuentoFidelidad = 0;
+let nivelFidelidad = '';
+let clienteSeleccionado = null;
 
 function goMenuGeneralTransition() {
     var transition = document.getElementById('pageTransitionPos');
@@ -52,15 +55,15 @@ async function verificarEstadoCaja() {
             dropdownContent.innerHTML = `
                 <div style="padding: 10px;">
                     <div class="caja-dropdown-item">
-                        <span class="label">📅 Fecha Apertura:</span>
+                        <span class="label">Fecha Apertura:</span>
                         <span class="value">${new Date(data.fecha_apertura).toLocaleString()}</span>
                     </div>
                     <div class="caja-dropdown-item">
-                        <span class="label">💰 Monto Inicial:</span>
+                        <span class="label">Monto Inicial:</span>
                         <span class="value">$${parseFloat(data.monto_inicial).toFixed(2)}</span>
                     </div>
                     <div class="caja-dropdown-item">
-                        <span class="label">💵 Saldo Actual:</span>
+                        <span class="label">Saldo Actual:</span>
                         <span class="value caja-abierta">$${parseFloat(data.saldo_actual).toFixed(2)}</span>
                     </div>
                     <div class="caja-dropdown-footer">
@@ -76,11 +79,11 @@ async function verificarEstadoCaja() {
             dropdownContent.innerHTML = `
                 <div style="padding: 10px;">
                     <div class="caja-dropdown-item">
-                        <span class="label">📌 Estado:</span>
+                        <span class="label">Estado:</span>
                         <span class="value" style="color: #999;">Caja Cerrada</span>
                     </div>
                     <div class="caja-dropdown-item">
-                        <span class="label">💰 Dinero Asignado:</span>
+                        <span class="label">Dinero Asignado:</span>
                         <span class="value">$${parseFloat(montoAsignado).toFixed(2)}</span>
                     </div>
                     <div class="caja-dropdown-footer">
@@ -433,7 +436,7 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
     tablaHTML += '<th style="padding: 10px; text-align: right;">Precio Unit.</th>';
     tablaHTML += '<th style="padding: 10px; text-align: right;">Descuento</th>';
     tablaHTML += '<th style="padding: 10px; text-align: right;">Subtotal</th>';
-    tablaHTML += '</tr></thead><tbody>';
+    tablaHTML += '</table></thead><tbody>';
     
     for (var i = 0; i < detalles.length; i++) {
         var item = detalles[i];
@@ -496,7 +499,7 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
     tablaHTML += '<tr style="border-top: 2px solid var(--primary-dark); background: var(--primary-light);">';
     tablaHTML += '<td colspan="4" style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1rem;">TOTAL A PAGAR:</td>';
     tablaHTML += '<td style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1.2rem; color: var(--nocolor);">$' + totalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr></tfoot></table>';
+    tablaHTML += '</tr></tfoot></tr>';
     
     var botonesHTML = '<div style="display: flex; gap: 10px; margin-top: 20px;">';
     botonesHTML += '<button class="btn-action btn-discount" onclick="cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-check"></i> Cerrar</button>';
@@ -772,7 +775,6 @@ function actualizarTablaResumen() {
     if (!tVenta || !tDesc) return;
     
     tVenta.innerHTML = '';
-    tDesc.innerHTML = '';
     
     var subtotalGlobal = 0;
     var descuentoGlobal = 0;
@@ -782,27 +784,68 @@ function actualizarTablaResumen() {
         subtotalGlobal += p.subtotal;
         tVenta.innerHTML += '<tr>' +
             '<td class="col-cant">' + p.cantidad + '</td>' +
-            '<td class="col-prod">' + p.nombre + '</td>' +
+            '<td class="col-prod">' + p.nombre + '<tr>' +
             '<td class="col-subt">$' + p.subtotal.toFixed(2) + '</td>' +
             '</tr>';
     }
 
     if (carrito.length === 0) {
-        tVenta.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">No hay productos seleccionados</td></tr>';
+        tVenta.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">No hay productos seleccionados<\/td><\/tr>';
     }
 
-    for (var j = 0; j < descuentosAplicados.length; j++) {
-        var d = descuentosAplicados[j];
-        descuentoGlobal += d.ahorroTotal;
-        tDesc.innerHTML += '<tr>' +
-            '<td class="col-prod-desc">' + d.nombre + '</td>' +
-            '<td class="col-icon-desc">' + d.cantAplicada + '</td>' +
-            '<td class="col-price-desc">-$' + d.ahorroTotal.toFixed(2) + '</td>' +
-            '</tr>';
+    // Calcular descuentos de productos
+    var descuentosExistentes = 0;
+    var filasDescuentos = tDesc.querySelectorAll('tr:not([data-tipo="fidelidad"])');
+    for (var j = 0; j < filasDescuentos.length; j++) {
+        var fila = filasDescuentos[j];
+        var texto = fila.querySelector('.col-price-desc')?.innerText || '';
+        var monto = parseFloat(texto.replace('-$', '').replace(',', '')) || 0;
+        descuentosExistentes += monto;
+    }
+    
+    // Calcular descuento por fidelidad
+    var descuentoFidelidadMonto = 0;
+    if (descuentoFidelidad > 0 && clienteSeleccionado) {
+        descuentoFidelidadMonto = subtotalGlobal * (descuentoFidelidad / 100);
+    }
+    
+    descuentoGlobal = descuentosExistentes + descuentoFidelidadMonto;
+    
+    // Actualizar o crear la fila de fidelidad
+    let filaFidelidad = tDesc.querySelector('tr[data-tipo="fidelidad"]');
+    if (descuentoFidelidad > 0 && clienteSeleccionado) {
+        if (filaFidelidad) {
+            filaFidelidad.innerHTML = `
+                <td class="col-prod-desc">FIDELIDAD (${descuentoFidelidad}%)</td>
+                <td class="col-icon-desc">-</td>
+                <td class="col-price-desc">-$${descuentoFidelidadMonto.toFixed(2)}</td>
+            `;
+        } else {
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.setAttribute('data-tipo', 'fidelidad');
+            nuevaFila.innerHTML = `
+                <td class="col-prod-desc">FIDELIDAD (${descuentoFidelidad}%)</td>
+                <td class="col-icon-desc">-</td>
+                <td class="col-price-desc">-$${descuentoFidelidadMonto.toFixed(2)}</td>
+            `;
+            if (tDesc.firstChild) {
+                tDesc.insertBefore(nuevaFila, tDesc.firstChild);
+            } else {
+                tDesc.appendChild(nuevaFila);
+            }
+        }
+    } else if (filaFidelidad) {
+        filaFidelidad.remove();
     }
 
-    if (descuentosAplicados.length === 0) {
-        tDesc.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">Sin descuentos aplicados</td></tr>';
+    // Si no hay descuentos en la tabla, mostrar mensaje
+    const otrasFilas = tDesc.querySelectorAll('tr:not([data-tipo="fidelidad"])');
+    if (descuentosExistentes === 0 && (!clienteSeleccionado || descuentoFidelidad === 0)) {
+        if (tDesc.querySelector('.empty-row') === null && tDesc.children.length === 0) {
+            tDesc.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">Sin descuentos aplicados<\/td><\/tr>';
+        }
+    } else if (tDesc.querySelector('.empty-row')) {
+        tDesc.querySelector('.empty-row').remove();
     }
 
     var subTotalEl = document.getElementById('subTotal');
@@ -1024,7 +1067,8 @@ async function confirmarPago() {
         metodo_pago: parseInt(metodoPago),
         cambio: cambio,
         dinero_recibido: dineroRecibido,
-        descuentos: descuentosAplicados
+        descuentos: descuentosAplicados,
+        id_cliente: clienteSeleccionado ? clienteSeleccionado.id_cliente : null
     };
     
     try {
@@ -1110,6 +1154,488 @@ function toggleCamposPorMetodoPago() {
         if (dineroRecibido) {
             dineroRecibido.disabled = false;
         }
+    }
+}
+
+// ==================== VALIDACIONES DE BÚSQUEDA DE CLIENTE ====================
+function cambiarCriterioBusqueda() {
+    const criterio = document.getElementById('criterioBusqueda').value;
+    const input = document.getElementById('valorBusqueda');
+    
+    input.value = '';
+    input.classList.remove('input-telefono', 'input-nombre', 'input-error', 'input-valid');
+    
+    if (criterio === 'telefono') {
+        input.placeholder = 'Ej: 23323453 (8 dígitos)';
+        input.classList.add('input-telefono');
+    } else {
+        input.placeholder = 'Ej: Juan Pérez (solo letras)';
+        input.classList.add('input-nombre');
+    }
+    
+    const btnBuscar = document.getElementById('btnBuscarCliente');
+    btnBuscar.disabled = true;
+    btnBuscar.style.opacity = '0.6';
+    btnBuscar.style.cursor = 'not-allowed';
+    
+    document.getElementById('resultadoBusqueda').style.display = 'none';
+    document.getElementById('listaResultados').innerHTML = '';
+}
+
+function validarInputBusqueda() {
+    const criterio = document.getElementById('criterioBusqueda').value;
+    const input = document.getElementById('valorBusqueda');
+    let valor = input.value;
+    const btnBuscar = document.getElementById('btnBuscarCliente');
+    let esValido = false;
+    
+    if (criterio === 'telefono') {
+        let nuevoValor = valor.replace(/[^0-9]/g, '');
+        if (nuevoValor.length > 8) nuevoValor = nuevoValor.substring(0, 8);
+        
+        if (valor !== nuevoValor) {
+            input.value = nuevoValor;
+            valor = nuevoValor;
+        }
+        
+        let valorFormateado = '';
+        if (valor.length > 0) {
+            if (valor.length <= 4) {
+                valorFormateado = valor;
+            } else {
+                valorFormateado = valor.substring(0, 4) + '-' + valor.substring(4);
+            }
+            input.value = valorFormateado;
+        }
+        
+        const valorLimpio = valor.replace(/-/g, '');
+        const longitudCorrecta = valorLimpio.length === 8;
+        
+        if (valorLimpio.length === 0) {
+            input.classList.remove('input-error', 'input-valid');
+            input.classList.add('input-telefono');
+            esValido = false;
+        } else if (longitudCorrecta) {
+            input.classList.remove('input-error');
+            input.classList.add('input-valid');
+            esValido = true;
+        } else {
+            input.classList.remove('input-valid');
+            input.classList.add('input-error');
+            esValido = false;
+        }
+    } else {
+        let nuevoValor = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        if (nuevoValor.length > 50) nuevoValor = nuevoValor.substring(0, 50);
+        
+        if (valor !== nuevoValor) {
+            input.value = nuevoValor;
+            valor = nuevoValor;
+        }
+        
+        let palabras = nuevoValor.toLowerCase().split(' ');
+        for (let i = 0; i < palabras.length; i++) {
+            if (palabras[i].length > 0) {
+                palabras[i] = palabras[i].charAt(0).toUpperCase() + palabras[i].slice(1);
+            }
+        }
+        let nombreFormateado = palabras.join(' ');
+        if (valor !== nombreFormateado && valor.length > 0) {
+            input.value = nombreFormateado;
+            valor = nombreFormateado;
+        }
+        
+        const tieneLetras = /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(valor);
+        const longitudValida = valor.length >= 2;
+        
+        if (valor.length === 0) {
+            input.classList.remove('input-error', 'input-valid');
+            input.classList.add('input-nombre');
+            esValido = false;
+        } else if (tieneLetras && longitudValida) {
+            input.classList.remove('input-error');
+            input.classList.add('input-valid');
+            esValido = true;
+        } else {
+            input.classList.remove('input-valid');
+            input.classList.add('input-error');
+            esValido = false;
+        }
+    }
+    
+    btnBuscar.disabled = !esValido;
+    btnBuscar.style.opacity = esValido ? '1' : '0.6';
+    btnBuscar.style.cursor = esValido ? 'pointer' : 'not-allowed';
+}
+
+function abrirModalBuscarCliente() {
+    document.getElementById('modalBuscarCliente').style.display = 'flex';
+    setTimeout(function() { document.getElementById('modalBuscarCliente').classList.add('active'); }, 10);
+    
+    const input = document.getElementById('valorBusqueda');
+    const btnBuscar = document.getElementById('btnBuscarCliente');
+    const criterioSelect = document.getElementById('criterioBusqueda');
+    
+    input.value = '';
+    document.getElementById('resultadoBusqueda').style.display = 'none';
+    document.getElementById('listaResultados').innerHTML = '';
+    criterioSelect.value = 'telefono';
+    
+    input.classList.remove('input-error', 'input-valid', 'input-nombre');
+    input.classList.add('input-telefono');
+    input.placeholder = 'Ej: 23323453 (8 dígitos)';
+    
+    btnBuscar.disabled = true;
+    btnBuscar.style.opacity = '0.6';
+    btnBuscar.style.cursor = 'not-allowed';
+}
+
+async function buscarClienteModal() {
+    const criterio = document.getElementById('criterioBusqueda').value;
+    let valor = document.getElementById('valorBusqueda').value.trim();
+    const btnBuscar = document.getElementById('btnBuscarCliente');
+    
+    if (criterio === 'telefono') {
+        valor = valor.replace(/-/g, '');
+        const soloNumeros = /^\d*$/.test(valor);
+        if (!soloNumeros || valor.length !== 8) {
+            mostrarNotificacion('Ingrese un número de teléfono válido (8 dígitos)', 'warning');
+            return;
+        }
+    } else {
+        const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(valor);
+        if (!soloLetras || valor.length < 2) {
+            mostrarNotificacion('Ingrese un nombre válido (mínimo 2 letras)', 'warning');
+            return;
+        }
+    }
+    
+    mostrarNotificacion('Buscando cliente...', 'info');
+    
+    const textoOriginal = btnBuscar.innerHTML;
+    btnBuscar.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Buscando...';
+    btnBuscar.disabled = true;
+    
+    try {
+        const response = await fetch('/ElZapato/src/api/buscar_cliente.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ criterio: criterio, valor: valor })
+        });
+        
+        const data = await response.json();
+        const resultadoDiv = document.getElementById('resultadoBusqueda');
+        const listaDiv = document.getElementById('listaResultados');
+        
+        if (data.success && data.clientes && data.clientes.length > 0) {
+            let html = '';
+            for (let i = 0; i < data.clientes.length; i++) {
+                const c = data.clientes[i];
+                const telefonoFormateado = c.telefono.replace(/(\d{4})(\d{4})/, '$1-$2');
+                html += `
+                    <div class="dropdown-item" style="cursor: pointer; margin: 5px; border-radius: 8px;" onclick="seleccionarCliente(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+                        <div style="flex:1;">
+                            <div><strong>${c.nombre}</strong></div>
+                            <div><small>Tel: ${telefonoFormateado} | ${c.nivel} (${c.descuento}% desc)</small></div>
+                        </div>
+                        <button class="btn-view-sale">Seleccionar</button>
+                    </div>
+                `;
+            }
+            listaDiv.innerHTML = html;
+            resultadoDiv.style.display = 'block';
+        } else {
+            listaDiv.innerHTML = '<div style="padding: 15px; text-align: center; color: #999;">No se encontraron clientes</div>';
+            resultadoDiv.style.display = 'block';
+            abrirModalRegistrarCliente();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al buscar cliente', 'warning');
+    } finally {
+        btnBuscar.innerHTML = textoOriginal;
+        btnBuscar.disabled = false;
+    }
+}
+
+// ==================== MODAL REGISTRAR CLIENTE ====================
+function abrirModalRegistrarCliente() {
+    document.getElementById('modalRegistrarCliente').style.display = 'flex';
+    setTimeout(function() { document.getElementById('modalRegistrarCliente').classList.add('active'); }, 10);
+    
+    document.getElementById('regNombre').value = '';
+    document.getElementById('regTelefono').value = '';
+    document.getElementById('regEmail').value = '';
+    
+    document.getElementById('regNombre').classList.remove('input-error', 'input-valid');
+    document.getElementById('regTelefono').classList.remove('input-error', 'input-valid');
+    
+    const btnRegistrar = document.getElementById('btnRegistrarCliente');
+    btnRegistrar.disabled = true;
+    btnRegistrar.style.opacity = '0.6';
+    btnRegistrar.style.cursor = 'not-allowed';
+}
+
+function validarRegistroCliente() {
+    const inputNombre = document.getElementById('regNombre');
+    const inputTelefono = document.getElementById('regTelefono');
+    let nombre = inputNombre.value;
+    let telefono = inputTelefono.value;
+    const btnRegistrar = document.getElementById('btnRegistrarCliente');
+    let esValido = false;
+    
+    let nuevoNombre = nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    if (nuevoNombre.length > 50) nuevoNombre = nuevoNombre.substring(0, 50);
+    
+    let palabras = nuevoNombre.toLowerCase().split(' ');
+    for (let i = 0; i < palabras.length; i++) {
+        if (palabras[i].length > 0) {
+            palabras[i] = palabras[i].charAt(0).toUpperCase() + palabras[i].slice(1);
+        }
+    }
+    let nombreFormateado = palabras.join(' ');
+    if (nombre !== nombreFormateado && nombre.length > 0) {
+        inputNombre.value = nombreFormateado;
+        nombre = nombreFormateado;
+    }
+    
+    const nombreValido = /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(nombre) && nombre.length >= 2;
+    
+    let nuevoTelefono = telefono.replace(/[^0-9]/g, '');
+    if (nuevoTelefono.length > 8) nuevoTelefono = nuevoTelefono.substring(0, 8);
+    
+    let telefonoFormateado = '';
+    if (nuevoTelefono.length > 0) {
+        if (nuevoTelefono.length <= 4) {
+            telefonoFormateado = nuevoTelefono;
+        } else {
+            telefonoFormateado = nuevoTelefono.substring(0, 4) + '-' + nuevoTelefono.substring(4);
+        }
+    }
+    
+    if (telefono !== telefonoFormateado) {
+        inputTelefono.value = telefonoFormateado;
+        telefono = telefonoFormateado;
+    }
+    
+    const telefonoLimpio = nuevoTelefono;
+    const telefonoValido = telefonoLimpio.length === 8;
+    
+    if (nombre.length === 0) {
+        inputNombre.classList.remove('input-error', 'input-valid');
+    } else if (nombreValido) {
+        inputNombre.classList.add('input-valid');
+        inputNombre.classList.remove('input-error');
+    } else {
+        inputNombre.classList.add('input-error');
+        inputNombre.classList.remove('input-valid');
+    }
+    
+    if (telefono.length === 0) {
+        inputTelefono.classList.remove('input-error', 'input-valid');
+    } else if (telefonoValido) {
+        inputTelefono.classList.add('input-valid');
+        inputTelefono.classList.remove('input-error');
+    } else {
+        inputTelefono.classList.add('input-error');
+        inputTelefono.classList.remove('input-valid');
+    }
+    
+    esValido = nombreValido && telefonoValido;
+    
+    btnRegistrar.disabled = !esValido;
+    btnRegistrar.style.opacity = esValido ? '1' : '0.6';
+    btnRegistrar.style.cursor = esValido ? 'pointer' : 'not-allowed';
+}
+
+async function confirmarRegistrarCliente() {
+    let nombre = document.getElementById('regNombre').value.trim();
+    let telefono = document.getElementById('regTelefono').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    
+    telefono = telefono.replace(/-/g, '');
+    
+    const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,}$/.test(nombre);
+    const soloNumeros = /^\d{8}$/.test(telefono);
+    
+    if (!soloLetras) {
+        mostrarNotificacion('Nombre inválido (mínimo 2 letras)', 'warning');
+        return;
+    }
+    
+    if (!soloNumeros) {
+        mostrarNotificacion('Teléfono inválido (debe tener 8 dígitos)', 'warning');
+        return;
+    }
+    
+    const btnRegistrar = document.getElementById('btnRegistrarCliente');
+    const textoOriginal = btnRegistrar.innerHTML;
+    btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Registrando...';
+    btnRegistrar.disabled = true;
+    
+    try {
+        const response = await fetch('/ElZapato/src/api/registrar_cliente.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: nombre, telefono: telefono, email: email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarNotificacion('Cliente registrado exitosamente', 'success');
+            cerrarModal('modalRegistrarCliente');
+            cerrarModal('modalBuscarCliente');
+            
+            setTimeout(() => {
+                abrirModalBuscarCliente();
+                const telefonoFormateado = telefono.replace(/(\d{4})(\d{4})/, '$1-$2');
+                document.getElementById('valorBusqueda').value = telefonoFormateado;
+                validarInputBusqueda();
+                setTimeout(() => buscarClienteModal(), 500);
+            }, 500);
+        } else {
+            mostrarNotificacion(data.message || 'Error al registrar cliente', 'warning');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al registrar cliente', 'warning');
+    } finally {
+        btnRegistrar.innerHTML = textoOriginal;
+        btnRegistrar.disabled = false;
+    }
+}
+
+function seleccionarCliente(cliente) {
+    clienteSeleccionado = cliente;
+    descuentoFidelidad = cliente.descuento;
+    nivelFidelidad = cliente.nivel;
+    
+    const telefonoFormateado = cliente.telefono.replace(/(\d{4})(\d{4})/, '$1-$2');
+    
+    mostrarNotificacion(
+        `Cliente: ${cliente.nombre} | Tel: ${telefonoFormateado} | Nivel: ${cliente.nivel} | Descuento: ${cliente.descuento}%`, 
+        'success'
+    );
+    
+    mostrarDescuentoFidelidadEnResumen();
+    cerrarModal('modalBuscarCliente');
+}
+
+function mostrarDescuentoFidelidadEnResumen() {
+    let container = document.getElementById('descuentoFidelidadContainer');
+    
+    const modalPago = document.getElementById('modalPago');
+    if (!modalPago) {
+        console.error('Modal de pago no encontrado');
+        return;
+    }
+    
+    const modalContent = modalPago.querySelector('.modal-content');
+    if (!modalContent) {
+        console.error('Modal content no encontrado');
+        return;
+    }
+    
+    const modalBody = modalContent.querySelector('.modal-body');
+    if (!modalBody) {
+        console.error('Modal body no encontrado');
+        return;
+    }
+    
+    if (!container) {
+        const html = `
+            <div id="descuentoFidelidadContainer" class="form-group" style="border-top: 1px solid #E4E0E1; padding-top: 15px; margin-top: 15px;">
+                <label style="color: #AB886D; font-weight: bold;"><i class="fas fa-crown"></i> Descuento por Fidelidad:</label>
+                <div style="background: #E4E0E1; padding: 12px; border-radius: 8px; margin-top: 5px;">
+                    <div><strong>Cliente:</strong> <span id="clienteNombre">${clienteSeleccionado?.nombre || 'Ninguno'}</span></div>
+                    <div><strong>Nivel:</strong> <span id="clienteNivel">${nivelFidelidad || 'Sin nivel'}</span></div>
+                    <div><strong>Descuento:</strong> <span id="clienteDescuento">${descuentoFidelidad || 0}%</span></div>
+                    <div><strong>Teléfono:</strong> <span id="clienteTelefono">${clienteSeleccionado?.telefono ? clienteSeleccionado.telefono.replace(/(\d{4})(\d{4})/, '$1-$2') : '-'}</span></div>
+                    <div id="descuentoAplicadoInfo" style="color: #28a745; font-weight: bold; margin-top: 8px;"></div>
+                </div>
+                <button type="button" class="btn-action btn-discount" style="margin-top: 10px; width: 100%;" onclick="quitarDescuentoFidelidad()">
+                    <i class="fas fa-times"></i> Quitar descuento
+                </button>
+            </div>
+        `;
+        
+        modalBody.insertAdjacentHTML('beforeend', html);
+        container = document.getElementById('descuentoFidelidadContainer');
+    } else {
+        document.getElementById('clienteNombre').innerText = clienteSeleccionado?.nombre || 'Ninguno';
+        document.getElementById('clienteNivel').innerText = nivelFidelidad || 'Sin nivel';
+        document.getElementById('clienteDescuento').innerText = descuentoFidelidad + '%';
+        const telefonoSpan = document.getElementById('clienteTelefono');
+        if (telefonoSpan) {
+            telefonoSpan.innerText = clienteSeleccionado?.telefono ? clienteSeleccionado.telefono.replace(/(\d{4})(\d{4})/, '$1-$2') : '-';
+        }
+        container.style.display = 'block';
+    }
+    
+    actualizarTablaResumen();
+    actualizarTotalConDescuentoFidelidad();
+}
+
+function quitarDescuentoFidelidad() {
+    clienteSeleccionado = null;
+    descuentoFidelidad = 0;
+    nivelFidelidad = '';
+    
+    const filaFidelidad = document.querySelector('#listaDescuentos tr[data-tipo="fidelidad"]');
+    if (filaFidelidad) {
+        filaFidelidad.remove();
+    }
+    
+    const container = document.getElementById('descuentoFidelidadContainer');
+    if (container) {
+        container.style.display = 'none';
+    }
+    
+    actualizarTablaResumen();
+    
+    const subtotalSpan = document.getElementById('modalSubtotal');
+    if (subtotalSpan) {
+        let subtotalGlobal = 0;
+        for (var i = 0; i < carrito.length; i++) {
+            subtotalGlobal += carrito[i].subtotal;
+        }
+        const totalSpan = document.getElementById('modalTotalPago');
+        if (totalSpan) {
+            totalSpan.innerText = '$' + subtotalGlobal.toFixed(2);
+        }
+    }
+    
+    mostrarNotificacion('Descuento por fidelidad eliminado', 'info');
+}
+
+function actualizarTotalConDescuentoFidelidad() {
+    const subtotalSpan = document.getElementById('modalSubtotal');
+    if (!subtotalSpan) return;
+    
+    const subtotalTexto = subtotalSpan.innerText;
+    let subtotal = parseFloat(subtotalTexto.replace('$', ''));
+    
+    const totalSpan = document.getElementById('modalTotalPago');
+    if (!totalSpan) return;
+    
+    let descuentoGlobal = 0;
+    for (var i = 0; i < descuentosAplicados.length; i++) {
+        descuentoGlobal += descuentosAplicados[i].ahorroTotal;
+    }
+    
+    if (descuentoFidelidad > 0 && clienteSeleccionado) {
+        const descuentoFidelidadMonto = subtotal * (descuentoFidelidad / 100);
+        const nuevoTotal = subtotal - descuentoGlobal - descuentoFidelidadMonto;
+        
+        const descuentoInfo = document.getElementById('descuentoAplicadoInfo');
+        if (descuentoInfo) {
+            descuentoInfo.innerHTML = `Descuento fidelidad ${descuentoFidelidad}%: -$${descuentoFidelidadMonto.toFixed(2)}`;
+        }
+        
+        totalSpan.innerText = '$' + nuevoTotal.toFixed(2);
+    } else {
+        totalSpan.innerText = '$' + (subtotal - descuentoGlobal).toFixed(2);
     }
 }
 

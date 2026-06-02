@@ -128,7 +128,7 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                     <span id="subTotal">$0.00</span>
                 </div>
                 <div class="total-row">
-                    <span>Descuento:<\/span>
+                    <span>Descuento:</span>
                     <span id="descuentoMonto" style="color:var(--nocolor)">-$0.00</span>
                 </div>
                 <div class="total-row total-highlight">
@@ -142,6 +142,9 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
             <div class="action-buttons-row">
                 <button class="btn-action btn-discount" onclick="abrirModalDescuento()">
                     <i class="fa-solid fa-tag"></i> Descuento
+                </button>
+                <button class="btn-action" onclick="abrirModalBuscarCliente()" style="background: #AB886D; color: white;">
+                    <i class="fas fa-crown"></i> Cliente Fidelidad
                 </button>
                 <button class="btn-action btn-sell" onclick="realizarVenta()">
                     <i class="fa-solid fa-cart-shopping"></i> Vender
@@ -350,49 +353,51 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                 <i class="fa-solid fa-cash-register"></i> Finalizar Venta
             </h3>
             
-            <div class="form-group">
-                <label><i class="fa-solid fa-receipt"></i> Subtotal:</label>
-                <div style="font-size: 1.2rem; text-align: right; padding: 5px; background: #f5f5f5; border-radius: 8px;" id="modalSubtotal">
-                    $0.00
-                </div>
-            </div>
-            
-            <div class="form-group" id="descuentosResumenContainer" style="display: none;">
-                <label><i class="fa-solid fa-tag"></i> Descuentos Aplicados:</label>
-                <div id="descuentosResumen" style="font-size: 0.9rem; text-align: right; padding: 5px; background: #fff3e0; border-radius: 8px; color: var(--success);">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fa-solid fa-calculator"></i> Total a Pagar:</label>
-                <div style="font-size: 2rem; font-weight: bold; color: var(--nocolor); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="modalTotalPago">
-                    $0.00
-                </div>
-            </div>
-            
-            <div id="efectivoFieldsContainer">
+            <div class="modal-body">
                 <div class="form-group">
-                    <label><i class="fa-solid fa-money-bill"></i> Dinero Recibido:</label>
-                    <input type="number" id="dineroRecibido" class="input-modal" step="0.01" min="0" placeholder="Ingrese el monto recibido" style="font-size: 1.2rem; text-align: right;">
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fa-solid fa-coins"></i> Cambio:</label>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="cambioDisplay">
+                    <label><i class="fa-solid fa-receipt"></i> Subtotal:</label>
+                    <div style="font-size: 1.2rem; text-align: right; padding: 5px; background: #f5f5f5; border-radius: 8px;" id="modalSubtotal">
                         $0.00
                     </div>
                 </div>
+                
+                <div class="form-group" id="descuentosResumenContainer" style="display: none;">
+                    <label><i class="fa-solid fa-tag"></i> Descuentos Aplicados:</label>
+                    <div id="descuentosResumen" style="font-size: 0.9rem; text-align: right; padding: 5px; background: #fff3e0; border-radius: 8px; color: var(--success);">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa-solid fa-calculator"></i> Total a Pagar:</label>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--nocolor); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="modalTotalPago">
+                        $0.00
+                    </div>
+                </div>
+                
+                <div id="efectivoFieldsContainer">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-money-bill"></i> Dinero Recibido:</label>
+                        <input type="number" id="dineroRecibido" class="input-modal" step="0.01" min="0" placeholder="Ingrese el monto recibido" style="font-size: 1.2rem; text-align: right;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-coins"></i> Cambio:</label>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); text-align: center; padding: 10px; background: var(--primary-light); border-radius: 8px;" id="cambioDisplay">
+                            $0.00
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa-solid fa-credit-card"></i> Método de Pago:</label>
+                    <select id="metodoPago" class="input-modal" onchange="toggleCamposPorMetodoPago()">
+                        <option value="1">Efectivo</option>
+                        <option value="2">Tarjeta</option>
+                    </select>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label><i class="fa-solid fa-credit-card"></i> Método de Pago:</label>
-                <select id="metodoPago" class="input-modal" onchange="toggleCamposPorMetodoPago()">
-                    <option value="1">Efectivo</option>
-                    <option value="2">Tarjeta</option>
-                </select>
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <div class="modal-footer">
                 <button class="btn-action btn-discount" onclick="cerrarModal('modalPago')" style="flex: 1;">
                     <i class="fa-solid fa-times"></i> Cancelar
                 </button>
@@ -414,11 +419,11 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                 <div class="form-group">
                     <label><i class="fa-solid fa-chart-line"></i> Estadísticas del Turno:</label>
                     <div id="estadisticasTurno" style="background: var(--primary-light); padding: 15px; border-radius: 8px; margin-top: 5px;">
-                        <div><strong>💰 Monto Inicial:</strong> <span id="estMontoInicial">$0.00</span></div>
-                        <div><strong>📊 Número de Ventas:</strong> <span id="estTotalVentas">0</span></div>
-                        <div><strong>💵 Ingresos por Ventas:</strong> <span id="estIngresos">$0.00</span></div>
-                        <div><strong>🔄 Vuelto Entregado:</strong> <span id="estVuelto">$0.00</span></div>
-                        <div><strong>💰 Saldo Esperado:</strong> <span id="estSaldoEsperado">$0.00</span></div>
+                        <div><strong>Monto Inicial:</strong> <span id="estMontoInicial">$0.00</span></div>
+                        <div><strong>Número de Ventas:</strong> <span id="estTotalVentas">0</span></div>
+                        <div><strong>Ingresos por Ventas:</strong> <span id="estIngresos">$0.00</span></div>
+                        <div><strong>Vuelto Entregado:</strong> <span id="estVuelto">$0.00</span></div>
+                        <div><strong>Saldo Esperado:</strong> <span id="estSaldoEsperado">$0.00</span></div>
                     </div>
                 </div>
                 <div class="alert alert-info" style="background: #E4E0E1; padding: 10px; border-radius: 8px; margin-top: 10px;">
@@ -429,6 +434,63 @@ $nombreUsuario = $_SESSION['usuario'] ?? 'Usuario';
                     <i class="fa-solid fa-check"></i> CERRAR CAJA
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de Búsqueda de Cliente -->
+    <div id="modalBuscarCliente" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <span class="close-modal" onclick="cerrarModal('modalBuscarCliente')">&times;</span>
+            <h3 style="margin-bottom:20px; color:var(--primary-dark)">
+                <i class="fas fa-crown"></i> Buscar Cliente por Fidelidad
+            </h3>
+            <div class="form-group">
+                <label><i class="fas fa-search"></i> Buscar por:</label>
+                <select id="criterioBusqueda" class="input-modal" onchange="cambiarCriterioBusqueda()">
+                    <option value="telefono">Teléfono</option>
+                    <option value="nombre">Nombre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-edit"></i> Ingrese el valor:</label>
+                <input type="text" id="valorBusqueda" class="input-modal" placeholder="Ej: 23323453 o Juan" oninput="validarInputBusqueda()">
+                <small id="validezMensaje" class="validez-mensaje"></small>
+            </div>
+            <button class="btn-action btn-sell" style="width:100%; margin-top:10px;" id="btnBuscarCliente" onclick="buscarClienteModal()" disabled>
+                <i class="fas fa-search"></i> Buscar Cliente
+            </button>
+            
+            <div id="resultadoBusqueda" style="margin-top: 20px; display: none;">
+                <label><i class="fas fa-users"></i> Resultados:</label>
+                <div id="listaResultados" style="max-height: 200px; overflow-y: auto; background: var(--primary-light); border-radius: 8px; margin-top: 5px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro de Cliente -->
+    <div id="modalRegistrarCliente" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <span class="close-modal" onclick="cerrarModal('modalRegistrarCliente')">&times;</span>
+            <h3 style="margin-bottom:20px; color:var(--primary-dark)">
+                <i class="fas fa-user-plus"></i> Registrar Nuevo Cliente
+            </h3>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Nombre Completo *</label>
+                <input type="text" id="regNombre" class="input-modal" placeholder="Ej: Juan Pérez" oninput="validarRegistroCliente()">
+                <small>Solo letras y espacios (mínimo 2 caracteres)</small>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Teléfono *</label>
+                <input type="text" id="regTelefono" class="input-modal" placeholder="Ej: 23323453" oninput="validarRegistroCliente()">
+                <small>8 dígitos (se formateará como 0000-0000)</small>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email (opcional)</label>
+                <input type="email" id="regEmail" class="input-modal" placeholder="cliente@ejemplo.com">
+            </div>
+            <button class="btn-action btn-sell" style="width:100%; margin-top:10px;" id="btnRegistrarCliente" onclick="confirmarRegistrarCliente()" disabled>
+                <i class="fas fa-save"></i> Registrar Cliente
+            </button>
         </div>
     </div>
 

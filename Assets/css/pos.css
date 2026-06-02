@@ -1138,6 +1138,85 @@ input:disabled + .slider {
     }
 }
 
+/* =========================================
+   VALIDACIONES PARA MODALES DE CLIENTES
+   ========================================= */
+
+/* Estilos para inputs con validación */
+.input-telefono {
+    border: 2px solid #28a745;
+    box-shadow: 0 0 5px rgba(40,167,69,0.3);
+}
+
+.input-nombre {
+    border: 2px solid #17a2b8;
+    box-shadow: 0 0 5px rgba(23,162,184,0.3);
+}
+
+.input-error {
+    border: 2px solid #dc3545 !important;
+    box-shadow: 0 0 5px rgba(220,53,69,0.3) !important;
+}
+
+.input-valid {
+    border: 2px solid #28a745 !important;
+    box-shadow: 0 0 5px rgba(40,167,69,0.3) !important;
+}
+
+.validez-mensaje {
+    font-size: 0.7rem;
+    margin-top: 5px;
+    display: block;
+}
+
+.validez-exito {
+    color: #28a745;
+}
+
+.validez-error {
+    color: #dc3545;
+}
+
+/* Estilos para dropdown de resultados */
+.dropdown-item {
+    transition: background 0.2s;
+    border-radius: 8px !important;
+}
+
+.dropdown-item:hover {
+    background: var(--primary-light) !important;
+}
+
+/* Ajustes para modales de cliente */
+#modalBuscarCliente .modal-content,
+#modalRegistrarCliente .modal-content {
+    width: 450px;
+}
+
+#modalBuscarCliente .btn-action,
+#modalRegistrarCliente .btn-action {
+    width: 100%;
+    margin-top: 10px;
+}
+
+#modalBuscarCliente .input-modal:disabled,
+#modalRegistrarCliente .btn-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#resultadoBusqueda {
+    margin-top: 20px;
+}
+
+#listaResultados {
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--primary-light);
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .products-grid { 
@@ -1172,5 +1251,10 @@ input:disabled + .slider {
     }
     .select-group {
         width: 100%;
+    }
+    #modalBuscarCliente .modal-content,
+    #modalRegistrarCliente .modal-content {
+        width: 90%;
+        margin: 30px auto;
     }
 }
