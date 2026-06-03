@@ -166,7 +166,7 @@ require __DIR__ . '/../layouts/admin-header.php';
             <i class="fas fa-plus"></i> Nuevo Producto
         </button>
         <button class="btn-csv btn-outline-primary" id="btnCargarCSV" type="button">
-            <i class="fas fa-file-csv"></i> Cargar CSV (Múltiple)
+            <i class="fas fa-file-csv"></i> Cargar CSV
         </button>
 
         <div class="filters">
