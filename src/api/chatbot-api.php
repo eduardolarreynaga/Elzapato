@@ -38,6 +38,23 @@ function sanitize(string $input): string {
     return trim(htmlspecialchars(strip_tags($input)));
 }
 
+function markdownAHTML(string $texto): string {
+    // **texto** → <strong>texto</strong>
+    $texto = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $texto);
+    // *texto* → <em>texto</em>
+    $texto = preg_replace('/\*(.+?)\*/s', '<em>$1</em>', $texto);
+    // Listas numeradas: "1. texto" → "• texto<br>"
+    $texto = preg_replace('/^\s*\d+\.\s+(.+)$/m', '• $1<br>', $texto);
+    // Listas con guión o bullet: "- texto" / "• texto" → "• texto<br>"
+    $texto = preg_replace('/^\s*[-•]\s+(.+)$/m', '• $1<br>', $texto);
+    // Saltos de línea dobles → <br><br>
+    $texto = preg_replace('/\n{2,}/', '<br><br>', $texto);
+    // Saltos simples restantes → <br>
+    $texto = preg_replace('/\n/', '<br>', $texto);
+
+    return trim($texto);
+}
+
 // ── Respuestas instantáneas (sin BD ni IA) ─────────────────────────────────────
 
 function respuestaRapida(string $q): ?string {
@@ -71,15 +88,11 @@ function respuestaRapida(string $q): ?string {
 
 // ── Construcción del contexto desde la BD ──────────────────────────────────────
 
-/**
- * Extrae todos los parámetros de filtro de la pregunta del usuario:
- * marca, categoría, color, talla, precio máximo, precio mínimo, intención.
- */
 function extraerFiltros(string $pregunta): array {
     $t = strtolower($pregunta);
 
     // Marcas
-    $marcas_conocidas = ['nike','adidas','puma','converse','vans','skechers','new balance','reebok'];
+    $marcas_conocidas = ['nike','adidas','puma','converse','vans','skechers','new balance','reebok','timberland'];
     $marca_detectada = null;
     foreach ($marcas_conocidas as $m) {
         if (str_contains($t, $m)) { $marca_detectada = $m; break; }
@@ -101,7 +114,7 @@ function extraerFiltros(string $pregunta): array {
         if (str_contains($t, $kw)) { $cat_detectada = $cat; break; }
     }
 
-    // Colores (singular y plural)
+    // Colores
     $colores_map = [
         'negr' => 'Negro', 'blanc' => 'Blanco', 'roj' => 'Rojo', 'azul' => 'Azul',
         'verde' => 'Verde', 'gris' => 'Gris', 'cafe' => 'Café', 'café' => 'Café',
@@ -112,7 +125,7 @@ function extraerFiltros(string $pregunta): array {
         if (str_contains($t, $kw)) { $color_detectado = $color; break; }
     }
 
-    // Talla (acepta: talla 40, número 40, talle 40, solo el número aislado)
+    // Talla
     $talla_detectada = null;
     if (preg_match('/(?:talla|numero|n[uú]mero|talle)[^\d]*(\d{2})/i', $t, $m)) {
         $talla_detectada = $m[1];
@@ -138,7 +151,7 @@ function extraerFiltros(string $pregunta): array {
 
     // Nombre de producto
     $nombre_producto = null;
-    if (preg_match('/(air max|grand court|velocity nitro|chuck taylor|old skool|arch fit|club c|oxford|botin urban|sandalia comfort|runner street|new slides)/i', $t, $m)) {
+    if (preg_match('/(air max pulse|air zoom pegasus|air max|grand court|ultraboost|velocity nitro|chuck taylor|all star|old skool|sk8.hi|arch fit|d\'lites|dlites|club c|nano x3|574|327|oxford|botin urban|sandalia comfort|sandalia teva|teva hurricane|runner street|new slides|puma cali|cali sport|timberland)/i', $t, $m)) {
         $nombre_producto = $m[1];
     }
 
@@ -148,50 +161,45 @@ function extraerFiltros(string $pregunta): array {
     );
 }
 
-/**
- * Consulta la BD con todos los filtros detectados y devuelve contexto estructurado.
- */
 function obtenerContextoBD(string $pregunta): array {
     $db  = Conexion::conectar();
     $f   = extraerFiltros($pregunta);
     $ctx = ['filtros' => $f, 'productos' => [], 'marcas' => [], 'categorias' => []];
 
-    // Siempre cargar lista de marcas y categorías disponibles
     $ctx['marcas']     = $db->query("SELECT nombre_marca FROM marcas ORDER BY nombre_marca")->fetchAll(PDO::FETCH_COLUMN);
     $ctx['categorias'] = $db->query("SELECT nombre_categoria FROM categorias ORDER BY nombre_categoria")->fetchAll(PDO::FETCH_COLUMN);
 
-    // ── Construir query dinámica ──────────────────────────────────────────────
     $where  = ["p.estado = 'activo'", "pv.estado = 'activo'"];
     $params = [];
     $order  = "p.nombre_producto ASC";
 
     if ($f['marca_detectada']) {
-        $where[]         = "LOWER(m.nombre_marca) LIKE :marca";
-        $params[':marca'] = '%' . $f['marca_detectada'] . '%';
+        $where[]          = "LOWER(m.nombre_marca) LIKE :marca";
+        $params[':marca']  = '%' . $f['marca_detectada'] . '%';
     }
     if ($f['cat_detectada']) {
-        $where[]           = "c.nombre_categoria = :cat";
-        $params[':cat']     = $f['cat_detectada'];
+        $where[]          = "c.nombre_categoria = :cat";
+        $params[':cat']    = $f['cat_detectada'];
     }
     if ($f['color_detectado']) {
-        $where[]             = "LOWER(pv.color) LIKE :color";
-        $params[':color']     = '%' . strtolower($f['color_detectado']) . '%';
+        $where[]          = "LOWER(pv.color) LIKE :color";
+        $params[':color']  = '%' . strtolower($f['color_detectado']) . '%';
     }
     if ($f['talla_detectada']) {
-        $where[]             = "pv.talla = :talla";
-        $params[':talla']     = $f['talla_detectada'];
+        $where[]          = "pv.talla = :talla";
+        $params[':talla']  = $f['talla_detectada'];
     }
     if ($f['precio_max'] !== null) {
-        $where[]                 = "pv.precio_venta <= :pmax";
-        $params[':pmax']          = $f['precio_max'];
+        $where[]          = "pv.precio_venta <= :pmax";
+        $params[':pmax']   = $f['precio_max'];
     }
     if ($f['precio_min'] !== null) {
-        $where[]                 = "pv.precio_venta >= :pmin";
-        $params[':pmin']          = $f['precio_min'];
+        $where[]          = "pv.precio_venta >= :pmin";
+        $params[':pmin']   = $f['precio_min'];
     }
     if ($f['nombre_producto']) {
-        $where[]                        = "LOWER(p.nombre_producto) LIKE :nombre";
-        $params[':nombre']               = '%' . strtolower($f['nombre_producto']) . '%';
+        $where[]           = "LOWER(p.nombre_producto) LIKE :nombre";
+        $params[':nombre']  = '%' . strtolower($f['nombre_producto']) . '%';
     }
 
     if ($f['intencion_precio'] === 'barato') $order = "MIN(pv.precio_venta) ASC";
@@ -205,17 +213,16 @@ function obtenerContextoBD(string $pregunta): array {
             p.nombre_producto,
             m.nombre_marca,
             c.nombre_categoria,
-            MIN(pv.precio_venta)                                              AS precio_desde,
-            MAX(pv.precio_venta)                                              AS precio_hasta,
-            SUM(pv.stock)                                                     AS stock_total,
-            GROUP_CONCAT(DISTINCT pv.talla  ORDER BY CAST(pv.talla AS UNSIGNED) SEPARATOR ', ') AS tallas,
-            GROUP_CONCAT(DISTINCT pv.color  ORDER BY pv.color  SEPARATOR ', ')                  AS colores,
-            COUNT(DISTINCT dv.id_detalle_venta)                               AS vendidos
+            MIN(pv.precio_venta) AS precio_desde,
+            MAX(pv.precio_venta) AS precio_hasta,
+            (SELECT COALESCE(SUM(pv2.stock),0) FROM producto_variante pv2 WHERE pv2.id_producto = p.id_producto AND pv2.estado = 'activo') AS stock_total,
+            GROUP_CONCAT(DISTINCT pv.talla ORDER BY CAST(pv.talla AS UNSIGNED) SEPARATOR ', ') AS tallas,
+            GROUP_CONCAT(DISTINCT pv.color ORDER BY pv.color SEPARATOR ', ') AS colores,
+            (SELECT COALESCE(SUM(dv2.cantidad),0) FROM detalle_venta dv2 INNER JOIN producto_variante pv3 ON dv2.id_variante = pv3.id_variante WHERE pv3.id_producto = p.id_producto) AS vendidos
         FROM productos p
-        JOIN marcas m           ON p.id_marca     = m.id_marca
-        JOIN categorias c       ON p.id_categoria = c.id_categoria
-        JOIN producto_variante pv ON p.id_producto = pv.id_producto
-        LEFT JOIN detalle_venta dv ON pv.id_variante = dv.id_variante
+        JOIN marcas m             ON p.id_marca     = m.id_marca
+        JOIN categorias c         ON p.id_categoria = c.id_categoria
+        JOIN producto_variante pv ON p.id_producto  = pv.id_producto
         WHERE {$whereStr}
         GROUP BY p.id_producto
         ORDER BY {$order}
@@ -226,20 +233,19 @@ function obtenerContextoBD(string $pregunta): array {
     $stmt->execute($params);
     $ctx['productos'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Si no hubo filtros específicos → trae top ventas como sugerencia
+    // Sin filtros → top ventas como sugerencia
     if (empty($ctx['productos']) && empty($params)) {
         $ctx['productos'] = $db->query("
             SELECT p.nombre_producto, m.nombre_marca, c.nombre_categoria,
                    MIN(pv.precio_venta) AS precio_desde, MAX(pv.precio_venta) AS precio_hasta,
-                   SUM(pv.stock) AS stock_total,
-                   GROUP_CONCAT(DISTINCT pv.talla  ORDER BY CAST(pv.talla AS UNSIGNED) SEPARATOR ', ') AS tallas,
-                   GROUP_CONCAT(DISTINCT pv.color  ORDER BY pv.color  SEPARATOR ', ') AS colores,
-                   COUNT(DISTINCT dv.id_detalle_venta) AS vendidos
+                   (SELECT COALESCE(SUM(pv2.stock),0) FROM producto_variante pv2 WHERE pv2.id_producto = p.id_producto AND pv2.estado = 'activo') AS stock_total,
+                   GROUP_CONCAT(DISTINCT pv.talla ORDER BY CAST(pv.talla AS UNSIGNED) SEPARATOR ', ') AS tallas,
+                   GROUP_CONCAT(DISTINCT pv.color ORDER BY pv.color SEPARATOR ', ') AS colores,
+                   (SELECT COALESCE(SUM(dv2.cantidad),0) FROM detalle_venta dv2 INNER JOIN producto_variante pv3 ON dv2.id_variante = pv3.id_variante WHERE pv3.id_producto = p.id_producto) AS vendidos
             FROM productos p
             JOIN marcas m         ON p.id_marca = m.id_marca
             JOIN categorias c     ON p.id_categoria = c.id_categoria
             JOIN producto_variante pv ON p.id_producto = pv.id_producto AND pv.estado = 'activo'
-            LEFT JOIN detalle_venta dv ON pv.id_variante = dv.id_variante
             WHERE p.estado = 'activo'
             GROUP BY p.id_producto
             ORDER BY vendidos DESC
@@ -263,14 +269,13 @@ function construirSystemPrompt(array $ctx): string {
     $sys .= "🏷️ **Marcas disponibles:** " . implode(', ', $ctx['marcas']) . "\n";
     $sys .= "📂 **Categorías:** " . implode(', ', $ctx['categorias']) . "\n\n";
 
-    // Filtros detectados
     $filtros_activos = array_filter([
-        'Marca'    => $filtros['marca_detectada'],
-        'Categoría'=> $filtros['cat_detectada'],
-        'Color'    => $filtros['color_detectado'],
-        'Talla'    => $filtros['talla_detectada'],
-        'Precio ≤' => $filtros['precio_max'] ? '$'.$filtros['precio_max'] : null,
-        'Precio ≥' => $filtros['precio_min'] ? '$'.$filtros['precio_min'] : null,
+        'Marca'     => $filtros['marca_detectada'],
+        'Categoría' => $filtros['cat_detectada'],
+        'Color'     => $filtros['color_detectado'],
+        'Talla'     => $filtros['talla_detectada'],
+        'Precio ≤'  => $filtros['precio_max'] ? '$' . $filtros['precio_max'] : null,
+        'Precio ≥'  => $filtros['precio_min'] ? '$' . $filtros['precio_min'] : null,
     ]);
     if (!empty($filtros_activos)) {
         $sys .= "🔍 **Filtros aplicados:** ";
@@ -278,7 +283,6 @@ function construirSystemPrompt(array $ctx): string {
         $sys .= "\n\n";
     }
 
-    // Inventario real
     if (!empty($ctx['productos'])) {
         $sys .= "📦 **INVENTARIO REAL (usa SOLO estos datos, no inventes precios ni productos):**\n";
         foreach ($ctx['productos'] as $p) {
@@ -299,7 +303,7 @@ function construirSystemPrompt(array $ctx): string {
     $sys .= "- Usa los precios y datos exactos del inventario. NUNCA inventes datos.\n";
     $sys .= "- Si hay pocos resultados, mencionalo y sugiere ampliar la búsqueda.\n";
     $sys .= "- Si el usuario pregunta algo fuera del catálogo (clima, recetas, etc.), responde solo sobre la tienda.\n";
-    $sys .= "- Formato: usa <br> para saltos de línea y <strong> para negritas (es HTML).\n";
+    $sys .= "- Formato: usa saltos de línea simples (\\n) y negritas con **texto**. NO uses HTML en tu respuesta.\n";
 
     return $sys;
 }
@@ -346,7 +350,7 @@ function llamarIA(string $pregunta, string $systemPrompt): array {
         return ['ok' => false, 'error' => "http_{$httpCode}", 'detail' => $resp];
     }
 
-    $data = json_decode($resp, true);
+    $data  = json_decode($resp, true);
     $texto = trim($data['choices'][0]['message']['content'] ?? '');
 
     if (empty($texto)) {
@@ -416,9 +420,9 @@ try {
 
     if ($iaResult['ok']) {
         echo json_encode([
-            'success'  => true,
-            'respuesta' => $iaResult['texto'],
-            'fuente'   => 'ia',
+            'success'   => true,
+            'respuesta' => markdownAHTML($iaResult['texto']),
+            'fuente'    => 'ia',
         ]);
         exit;
     }
@@ -426,15 +430,15 @@ try {
     // ── Paso 4: Fallback local si la IA falla ──
     error_log("[El Zapato Chatbot] IA no disponible ({$iaResult['error']}), usando fallback local.");
     echo json_encode([
-        'success'  => true,
+        'success'   => true,
         'respuesta' => fallbackLocal($ctx),
-        'fuente'   => 'local',
+        'fuente'    => 'local',
     ]);
 
 } catch (Throwable $e) {
     error_log("[El Zapato Chatbot] Excepción: " . $e->getMessage());
     echo json_encode([
-        'success'  => false,
+        'success'   => false,
         'respuesta' => '❌ Error interno. Por favor intenta de nuevo.',
     ]);
 }
