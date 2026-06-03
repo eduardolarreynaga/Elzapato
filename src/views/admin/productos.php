@@ -77,6 +77,7 @@ require __DIR__ . '/../layouts/admin-shell-start.php';
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
     .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
@@ -119,6 +120,17 @@ require __DIR__ . '/../layouts/admin-shell-start.php';
     .stock-cero { background-color: #772C24 !important; color: white !important; }
     .warning-text { color: #bc6e32; font-weight: bold; }
     .info-tooltip { cursor: help; border-bottom: 1px dashed #999; }
+    
+    /* Estilos para el botón CSV */
+    .btn-csv {
+        background: #4D3B2E;
+        color: white;
+        border: none;
+    }
+    .btn-csv:hover {
+        background: #3a2b21;
+        color: white;
+    }
 </style>
 
 <?php
@@ -153,6 +165,10 @@ require __DIR__ . '/../layouts/admin-header.php';
         <button class="btn-outline-primary" id="btnNuevoProducto" type="button">
             <i class="fas fa-plus"></i> Nuevo Producto
         </button>
+        <button class="btn-csv btn-outline-primary" id="btnCargarCSV" type="button">
+            <i class="fas fa-file-csv"></i> Cargar CSV (Múltiple)
+        </button>
+
         <div class="filters">
             <select class="filter-select" id="filterCategory">
                 <option value="">Categoría</option>
@@ -248,7 +264,7 @@ require __DIR__ . '/../layouts/admin-header.php';
                     <td style="padding-left: 15px;">
                         <strong><?= htmlspecialchars($p['nombre_producto']) ?></strong>
                         <br><small style="color:#AB886D; font-weight: bold;"><?= $v_sku ?></small>
-                    </td>
+                     </td>
                     <td><?= htmlspecialchars($p['nombre_marca']) ?></td>
                     <td><strong style="color: #4D3B2E;">$<?= number_format($v_precio, 2) ?></strong></td>
                     <td>
@@ -258,12 +274,12 @@ require __DIR__ . '/../layouts/admin-header.php';
                         <div class="progress-bg">
                             <div class="progress-bar <?= $bColor ?>" style="width: <?= $perc ?>%;"></div>
                         </div>
-                     </td>
+                      </td>
                     <td>
                         <span style="font-size:0.65rem; font-weight:bold; color:white; background:<?= ($v_estado == 'activo') ? '#AB886D' : '#772C24' ?>; padding:4px 10px; border-radius:20px; text-transform:uppercase;">
                             <?= $v_estado ?>
                         </span>
-                     </td>
+                      </td>
                     <td>
                         <div class="acciones-admin">
                             <button type="button" class="btn-icon small" onclick="viewProduct(this)" title="Ver Detalle">
@@ -276,11 +292,11 @@ require __DIR__ . '/../layouts/admin-header.php';
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
-                     </td>
-                 </tr>
+                      </td>
+                  </tr>
                 <?php endforeach; endforeach; endif; ?>
             </tbody>
-         </table>
+        </table>
     </div>
 </div>
 
@@ -439,6 +455,55 @@ require __DIR__ . '/../layouts/admin-header.php';
             <div class="modal-actions" style="margin-top:20px;">
                 <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
                 <button type="submit" class="btn-modal-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Carga CSV -->
+<div class="modal" id="csvModal" style="display: none; align-items:center; justify-content:center; background: rgba(0,0,0,0.7); position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999;">
+    <div class="modal-content" style="background:white; padding:30px; border-radius:15px; width:550px; max-width:94vw;">
+        <form id="csvForm" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="accion_csv" value="cargar">
+            <h3 style="color: #AB886D; border-bottom: 2px solid #f4f1ef; padding-bottom:10px; margin-bottom:20px;">
+                <i class="fas fa-file-csv"></i> Carga Masiva de Productos
+            </h3>
+            
+            <div class="form-group">
+                <label>Archivo CSV (*.csv)</label>
+                <div class="input-group">
+                    <span class="input-group-icon"><i class="fas fa-upload"></i></span>
+                    <input type="file" name="csv_file" id="csv_file" accept=".csv" required>
+                </div>
+                <small style="color:#666; display:block; margin-top:8px;">
+                    El archivo debe tener las columnas: nombre_producto, descripcion, id_marca, id_categoria, id_proveedor, talla, color, codigo_barras, precio_venta, stock
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label>Opciones de carga</label>
+                <div style="display: flex; gap: 15px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" name="sobrescribir_sku" value="1" checked>
+                        <span>Saltar SKUs duplicados</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" name="modo_prueba" value="1">
+                        <span>Modo prueba (solo validar)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="csvPreview" style="display: none; margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px; max-height: 200px; overflow-y: auto;">
+                <strong>Vista previa de datos:</strong>
+                <div id="csvPreviewContent" style="font-size: 12px; margin-top: 8px;"></div>
+            </div>
+            
+            <div class="modal-actions" style="margin-top:20px;">
+                <button type="button" class="btn-modal-cancel" onclick="closeCSVModal()">Cancelar</button>
+                <button type="submit" class="btn-modal-primary" id="btnProcesarCSV">
+                    <i class="fas fa-play"></i> Procesar
+                </button>
             </div>
         </form>
     </div>
@@ -819,6 +884,101 @@ document.getElementById('estado_switch').addEventListener('change', function() {
     this.setAttribute('data-manual-change', 'true');
 });
 
+// ===================== FUNCIONES PARA CSV =====================
+
+// Modal CSV
+const btnCargarCSV = document.getElementById('btnCargarCSV');
+const csvModal = document.getElementById('csvModal');
+const csvFile = document.getElementById('csv_file');
+
+function openCSVModal() {
+    csvModal.style.display = 'flex';
+}
+
+function closeCSVModal() {
+    csvModal.style.display = 'none';
+    document.getElementById('csvForm').reset();
+    document.getElementById('csvPreview').style.display = 'none';
+}
+
+btnCargarCSV?.addEventListener('click', openCSVModal);
+
+// Vista previa del CSV
+csvFile?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const previewDiv = document.getElementById('csvPreview');
+    const previewContent = document.getElementById('csvPreviewContent');
+    
+    Papa.parse(file, {
+        header: true,
+        preview: 5,
+        complete: function(results) {
+            if (results.data && results.data.length > 0) {
+                let html = '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
+                html += '<thead><tr>';
+                Object.keys(results.data[0]).forEach(key => {
+                    html += `<th style="border:1px solid #ddd; padding:4px;">${key}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                results.data.forEach(row => {
+                    html += '<tr>';
+                    Object.values(row).forEach(val => {
+                        html += `<td style="border:1px solid #ddd; padding:4px;">${val || '-'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></td>';
+                html += `<p style="margin-top:8px;"><strong>Total registros detectados:</strong> ${results.meta.rows} líneas</p>`;
+                previewContent.innerHTML = html;
+                previewDiv.style.display = 'block';
+            }
+        },
+        error: function(error) {
+            previewContent.innerHTML = '<span style="color:red;">Error al leer el archivo: ' + error.message + '</span>';
+            previewDiv.style.display = 'block';
+        }
+    });
+});
+
+// Botón descargar plantilla
+document.getElementById('btnDescargarPlantilla')?.addEventListener('click', function() {
+    const plantilla = "nombre_producto,descripcion,id_marca,id_categoria,id_proveedor,talla,color,codigo_barras,precio_venta,stock\n" +
+        "Nike Air Max 90,Zapatilla deportiva,1,1,1,39,Negro,1000001,89.99,15\n" +
+        "Adidas Superstar,Zapatilla casual,2,2,2,38,Blanco,1000002,79.99,20\n" +
+        "Puma Suede Classic,Zapatilla urbana,3,2,3,40,Azul,1000003,69.99,10\n" +
+        "Vans Old Skool,Sneaker skater,5,6,3,38,Negro,1000004,59.99,25\n" +
+        "Converse Chuck Taylor,Zapatilla de lona,4,6,2,40,Negro,1000005,54.99,30";
+    
+    const blob = new Blob([plantilla], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla_productos.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// Cerrar modales con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCSVModal();
+        closeViewModal();
+        closeModal();
+    }
+});
+
+// Cerrar al hacer clic fuera del modal
+window.onclick = function(event) {
+    if (event.target === csvModal) closeCSVModal();
+    if (event.target === document.getElementById('viewModal')) closeViewModal();
+    if (event.target === document.getElementById('productModal')) closeModal();
+}
+
 // Inicializar estadísticas
 document.addEventListener('DOMContentLoaded', function() {
     actualizarEstadisticas();
@@ -886,6 +1046,90 @@ document.addEventListener('DOMContentLoaded', function() {
         text: msjs['<?= $_GET['res'] ?>'] || 'Proceso completado', 
         icon: 'success', 
         confirmButtonColor: '#AB886D' 
+    });
+    </script>
+    <?php endif; ?>
+    <script>window.history.replaceState({}, document.title, "productos.php");</script>
+<?php endif; ?>
+
+<?php if(isset($_GET['res_csv'])): ?>
+    <?php 
+    $resultados = $_SESSION['csv_resultados'] ?? null;
+    unset($_SESSION['csv_resultados']);
+    ?>
+    <?php if($_GET['res_csv'] == 'completado' && $resultados): ?>
+    <script>
+    (function() {
+        var detallesHtml = '<div style="text-align:left; max-height:300px; overflow-y:auto;">';
+        <?php foreach($resultados['detalles'] as $detalle): ?>
+            detallesHtml += '<div style="font-size:12px; padding:4px 0;"><?= htmlspecialchars($detalle) ?></div>';
+        <?php endforeach; ?>
+        detallesHtml += '</div>';
+        
+        Swal.fire({
+            title: 'Carga Masiva Completada',
+            html: '<div style="text-align:center;">' +
+                '<p><strong>Total procesados:</strong> <?= $resultados['total'] ?></p>' +
+                '<p style="color:#2e7d32;"><strong>✓ Creados:</strong> <?= $resultados['creados'] ?></p>' +
+                '<p style="color:#bc6e32;"><strong>↻ Actualizados:</strong> <?= $resultados['actualizados'] ?></p>' +
+                '<p style="color:#772C24;"><strong>✗ Errores:</strong> <?= $resultados['errores'] ?></p>' +
+                '<?php if($resultados['skus_duplicados'] > 0): ?>' +
+                '<p><strong>⚠ SKUs duplicados omitidos:</strong> <?= $resultados['skus_duplicados'] ?></p>' +
+                '<?php endif; ?>' +
+                '<hr>' +
+                '<details>' +
+                '<summary style="cursor:pointer; color:#AB886D;">Ver detalles</summary>' +
+                detallesHtml +
+                '</details>' +
+                '</div>',
+            icon: 'success',
+            confirmButtonColor: '#AB886D',
+            width: '600px'
+        });
+    })();
+    </script>
+    <?php elseif($_GET['res_csv'] == 'prueba' && $resultados): ?>
+    <script>
+    (function() {
+        var detallesHtml = '<div style="text-align:left; max-height:300px; overflow-y:auto;">';
+        <?php foreach($resultados['detalles'] as $detalle): ?>
+            detallesHtml += '<div style="font-size:12px; padding:4px 0;"><?= htmlspecialchars($detalle) ?></div>';
+        <?php endforeach; ?>
+        detallesHtml += '</div>';
+        
+        Swal.fire({
+            title: '📋 Modo Prueba',
+            html: '<div style="text-align:center;">' +
+                '<p><strong>Archivo validado correctamente</strong></p>' +
+                '<p>Total registros a procesar: <?= $resultados['total'] ?></p>' +
+                '<p style="color:#bc6e32;"><strong>⚠ Sin cambios en la base de datos</strong></p>' +
+                '<hr>' +
+                '<details>' +
+                '<summary style="cursor:pointer; color:#AB886D;">Ver validaciones</summary>' +
+                detallesHtml +
+                '</details>' +
+                '</div>',
+            icon: 'info',
+            confirmButtonColor: '#AB886D',
+            width: '600px'
+        });
+    })();
+    </script>
+    <?php elseif($_GET['res_csv'] == 'error_archivo'): ?>
+    <script>
+    Swal.fire({ title: 'Error', text: 'No se pudo subir el archivo. Intenta nuevamente.', icon: 'error', confirmButtonColor: '#772C24' });
+    </script>
+    <?php elseif($_GET['res_csv'] == 'error_lectura'): ?>
+    <script>
+    Swal.fire({ title: 'Error', text: 'No se pudo leer el archivo CSV. Verifica el formato.', icon: 'error', confirmButtonColor: '#772C24' });
+    </script>
+    <?php elseif($_GET['res_csv'] == 'faltan_columnas'): ?>
+    <script>
+    Swal.fire({ 
+        title: 'Formato incorrecto', 
+        html: 'El archivo no tiene la columna requerida: <strong><?= htmlspecialchars($_GET['columna'] ?? '') ?></strong><br><br>Asegúrate de que el CSV tenga las columnas: nombre_producto, descripcion, id_marca, id_categoria, id_proveedor, talla, color, codigo_barras, precio_venta, stock',
+        icon: 'error', 
+        confirmButtonColor: '#772C24' 
     });
     </script>
     <?php endif; ?>
