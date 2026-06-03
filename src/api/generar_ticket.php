@@ -3,10 +3,8 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../model/conexion.php';
 ini_set('pcre.backtrack_limit', '5000000');
 
-// --- INICIO DE CAMBIO: Carga de configuración dinámica ---
 require_once __DIR__ . '/../config/auth.php';
 $nombreSistema = defined('SYSTEM_NAME') ? SYSTEM_NAME : 'EL ZAPATO';
-// --- FIN DE CAMBIO ---
 
 try {
     $pdo = Conexion::conectar();
@@ -21,7 +19,7 @@ if (!$id_venta) {
 }
 
 try {
-    // Consulta modificada para traer el nombre de la caja
+    // Consulta venta
     $queryVenta = "SELECT v.*, u.nombre_usuario, c.nombre as cliente_nombre, m.nombre_metodo, ca.nombre_caja 
                    FROM ventas v
                    INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
@@ -37,7 +35,8 @@ try {
         die('Venta no encontrada');
     }
 
-    $queryDetalle = "SELECT dv.*, p.nombre_producto, pv.talla, pv.color, dv.precio_unitario
+    // Consulta detalles (incluyendo porcentaje de descuento)
+    $queryDetalle = "SELECT dv.*, p.nombre_producto, pv.talla, pv.color, dv.precio_unitario, dv.cantidad, dv.subtotal, dv.porcentaje_descuento
                       FROM detalle_venta dv
                       INNER JOIN producto_variante pv ON dv.id_variante = pv.id_variante
                       INNER JOIN productos p ON pv.id_producto = p.id_producto
@@ -67,6 +66,23 @@ try {
         $mpdfTempDir = sys_get_temp_dir();
     }
 
+    // Calcular subtotal original (sin descuentos) y descuento total
+    $subtotalOriginal = 0;
+    $descuentoTotal = 0;
+    foreach ($productos as $item) {
+        $precio = floatval($item['precio_unitario']);
+        $cantidad = intval($item['cantidad']);
+        $subtotalOriginal += $precio * $cantidad;
+        
+        $porcentaje = floatval($item['porcentaje_descuento']);
+        if ($porcentaje > 0) {
+            $descuentoTotal += ($precio * $cantidad) * ($porcentaje / 100);
+        }
+    }
+    
+    $totalVenta = floatval($venta['total_venta']);
+    $cambio = floatval($venta['cambio']);
+
     $html = '
     <!DOCTYPE html>
     <html>
@@ -91,10 +107,12 @@ try {
             .products-table td { padding: 4px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
             .product-name { font-size: 8px; font-weight: bold; }
             .product-variant { font-size: 7px; color: #555; margin-top: 1px; }
+            .product-discount { font-size: 7px; color: #2a6b2a; margin-top: 1px; font-weight: bold; }
             .text-right { text-align: right; }
             .totals-section { margin: 8px 0; padding-top: 5px; border-top: 1px dashed #000; }
             .total-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 8px; }
             .total-row-grand { margin-top: 5px; padding-top: 5px; border-top: 1px solid #000; font-size: 10px; font-weight: bold; }
+            .discount-row { color: #2a6b2a; }
             .payment-section { margin: 8px 0; padding: 5px; text-align: center; border: 1px solid #000; }
             .footer { text-align: center; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #000; }
             .thanks { font-size: 10px; font-weight: bold; margin-bottom: 4px; }
@@ -109,9 +127,9 @@ try {
         $html .= '<div class="logo-container"><img src="' . htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8') . '" class="logo"></div>';
     }
     
-    $html .= '  <div class="store-name">' . $nombreSistema . '</div>
+    $html .= '  <div class="store-name">' . htmlspecialchars($nombreSistema) . '</div>
                 <div class="store-info">Ilobasco, Cabañas, El Salvador</div>
-                <div class="store-info">Tel: 2222-2222</div>
+                <div class="store-info">Tel: (503) 2378-1500</div>
             </div>
             
             <div class="info-section">
@@ -126,50 +144,78 @@ try {
             
             <table class="products-table">
                 <thead>
-                    <tr><th width="50%">PRODUCTO</th><th width="15%" class="text-right">CANT</th><th width="17%" class="text-right">P.UNIT</th><th width="18%" class="text-right">SUBT</th></tr>
+                    <tr><th width="45%">PRODUCTO</th><th width="12%" class="text-right">CANT</th><th width="18%" class="text-right">P.UNIT</th><th width="25%" class="text-right">SUBTOTAL</th></tr>
                 </thead>
                 <tbody>';
 
-    $subtotalGeneral = 0;
     foreach ($productos as $item) {
         $precioUnitario = floatval($item['precio_unitario']);
         $cantidad = intval($item['cantidad']);
-        $subtotal = $precioUnitario * $cantidad;
-        $subtotalGeneral += $subtotal;
+        $subtotalConDesc = floatval($item['subtotal']);
+        $porcentajeDesc = floatval($item['porcentaje_descuento']);
         
         $variantInfo = '';
         if ($item['talla'] || $item['color']) {
-            $variantInfo = '<div class="product-variant">' . ($item['talla'] ? 'T:'.$item['talla'] : '') . ($item['talla'] && $item['color'] ? ' | ' : '') . ($item['color'] ? 'C:'.$item['color'] : '') . '</div>';
+            $variantInfo = '<div class="product-variant">' . ($item['talla'] ? 'Talla: ' . $item['talla'] : '') . ($item['talla'] && $item['color'] ? ' | ' : '') . ($item['color'] ? 'Color: ' . $item['color'] : '') . '</div>';
+        }
+        
+        $discountInfo = '';
+        if ($porcentajeDesc > 0) {
+            $ahorro = ($precioUnitario * $cantidad) * ($porcentajeDesc / 100);
+            $discountInfo = '<div class="product-discount">✨ ' . $porcentajeDesc . '% DTO (Ahorro: $' . number_format($ahorro, 2) . ')</div>';
         }
         
         $html .= '<tr>
-                    <td><div class="product-name">' . htmlspecialchars(substr($item['nombre_producto'], 0, 20)) . '</div>' . $variantInfo . '</td>
+                    <td><div class="product-name">' . htmlspecialchars(substr($item['nombre_producto'], 0, 18)) . '</div>' . $variantInfo . $discountInfo . '</td>
                     <td class="text-right">' . $cantidad . '</td>
                     <td class="text-right">$' . number_format($precioUnitario, 2) . '</td>
-                    <td class="text-right">$' . number_format($subtotal, 2) . '</td>
-                </tr>';
+                    <td class="text-right">$' . number_format($subtotalConDesc, 2) . '</td>
+                 </tr>';
     }
 
-    $html .= '</tbody></table>
+    $html .= '</tbody>
+            </table>
             
             <div class="totals-section">
-                <div class="total-row"><span>SUBTOTAL</span><span>$' . number_format($subtotalGeneral, 2) . '</span></div>
-                <div class="total-row-grand"><span>TOTAL</span><span>$' . number_format($venta['total_venta'], 2) . '</span></div>
+                <div class="total-row"><span>SUBTOTAL</span><span>$' . number_format($subtotalOriginal, 2) . '</span></div>';
+    
+    if ($descuentoTotal > 0) {
+        $html .= '<div class="total-row discount-row"><span>DESCUENTO TOTAL</span><span>-$' . number_format($descuentoTotal, 2) . '</span></div>';
+    }
+    
+    $html .= '  <div class="total-row-grand"><span>TOTAL</span><span>$' . number_format($totalVenta, 2) . '</span></div>
             </div>
             
-            <div class="payment-section"><div><strong>PAGO:</strong> ' . htmlspecialchars($venta['nombre_metodo']) . '</div></div>
+            <div class="payment-section">
+                <div><strong>PAGO:</strong> ' . htmlspecialchars($venta['nombre_metodo']) . '</div>';
+    
+    if ($venta['nombre_metodo'] == 'Efectivo' && $cambio >= 0) {
+        $recibido = $totalVenta + $cambio;
+        $html .= '<div><strong>RECIBIDO:</strong> $' . number_format($recibido, 2) . '</div>';
+        $html .= '<div><strong>CAMBIO:</strong> $' . number_format($cambio, 2) . '</div>';
+    }
+    
+    $html .= '  </div>
+            
             <div class="barcode">' . str_pad($venta['id_venta'], 10, "0", STR_PAD_LEFT) . '</div>
             
             <div class="footer">
                 <div class="thanks">¡GRACIAS POR SU COMPRA!</div>
-                <div style="font-size: 8px;">Vuelva pronto - ' . $nombreSistema . '</div>
+                <div style="font-size: 8px;">Vuelva pronto - ' . htmlspecialchars($nombreSistema) . '</div>
             </div>
         </div>
     </body>
     </html>';
 
     $mpdf = new \Mpdf\Mpdf([
-        'mode' => 'utf-8', 'format' => [72, 150], 'margin_left' => 4, 'margin_right' => 4, 'margin_top' => 4, 'margin_bottom' => 4, 'default_font' => 'courier', 'tempDir' => $mpdfTempDir,
+        'mode' => 'utf-8',
+        'format' => [72, 150],
+        'margin_left' => 4,
+        'margin_right' => 4,
+        'margin_top' => 4,
+        'margin_bottom' => 4,
+        'default_font' => 'courier',
+        'tempDir' => $mpdfTempDir,
     ]);
 
     $mpdf->WriteHTML($html);
@@ -178,3 +224,4 @@ try {
 } catch (Exception $e) {
     die('Error al generar el ticket: ' . $e->getMessage());
 }
+?>

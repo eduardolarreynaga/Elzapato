@@ -5,6 +5,10 @@ let cajaActual = null;
 let descuentoFidelidad = 0;
 let nivelFidelidad = '';
 let clienteSeleccionado = null;
+let ventaSeleccionadaDevolucion = null;
+let productosDevolucionData = [];
+let paginaActualDevolucion = 1;
+let totalPaginasDevolucion = 1;
 
 function goMenuGeneralTransition() {
     var transition = document.getElementById('pageTransitionPos');
@@ -21,14 +25,29 @@ function goMenuGeneralTransition() {
     }, 420);
 }
 
-// ==================== NOTIFICACIONES ====================
+// ==================== NOTIFICACIONES MEJORADAS ====================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
     
     const toast = document.createElement('div');
     toast.className = 'toast show toast-' + tipo;
-    let icono = tipo === 'warning' ? 'fa-triangle-exclamation' : (tipo === 'success' ? 'fa-circle-check' : 'fa-circle-info');
+    let icono = '';
+    
+    switch(tipo) {
+        case 'success':
+            icono = 'fa-circle-check';
+            break;
+        case 'warning':
+            icono = 'fa-triangle-exclamation';
+            break;
+        case 'error':
+            icono = 'fa-circle-exclamation';
+            break;
+        default:
+            icono = 'fa-circle-info';
+    }
+    
     toast.innerHTML = '<i class="fa-solid ' + icono + '"></i> <span>' + mensaje + '</span>';
     container.appendChild(toast);
     
@@ -63,10 +82,21 @@ async function verificarEstadoCaja() {
                         <span class="value">$${parseFloat(data.monto_inicial).toFixed(2)}</span>
                     </div>
                     <div class="caja-dropdown-item">
+                        <span class="label">Ingresos por Ventas:</span>
+                        <span class="value">$${parseFloat(data.total_ingresos || 0).toFixed(2)}</span>
+                    </div>
+                    <div class="caja-dropdown-item">
+                        <span class="label">Devoluciones:</span>
+                        <span class="value" style="color: #ff9800;">-$${parseFloat(data.total_devoluciones || 0).toFixed(2)}</span>
+                    </div>
+                    <div class="caja-dropdown-item">
                         <span class="label">Saldo Actual:</span>
                         <span class="value caja-abierta">$${parseFloat(data.saldo_actual).toFixed(2)}</span>
                     </div>
                     <div class="caja-dropdown-footer">
+                        <button class="btn-refrescar-caja" onclick="refrescarEstadoCaja()" style="background: #AB886D; color: white;">
+                            <i class="fa-solid fa-rotate-right"></i> Refrescar
+                        </button>
                         <button class="btn-cerrar-caja" onclick="abrirModalCierreCaja()">
                             <i class="fa-solid fa-lock"></i> Cerrar Caja
                         </button>
@@ -102,6 +132,12 @@ async function verificarEstadoCaja() {
 function toggleCajaDropdown() {
     var dropdown = document.getElementById('cajaDropdown');
     dropdown.classList.toggle('active');
+}
+
+async function refrescarEstadoCaja() {
+    mostrarNotificacion('Actualizando estado de caja...', 'info');
+    await verificarEstadoCaja();
+    mostrarNotificacion('Estado de caja actualizado', 'success');
 }
 
 async function confirmarAbrirCaja() {
@@ -172,8 +208,8 @@ async function confirmarCerrarCaja() {
             mensaje += `📊 Número de Ventas: ${data.stats?.total_ventas || 0}\n`;
             mensaje += `💵 Ingresos por Ventas: $${(data.stats?.total_ingresos || 0).toFixed(2)}\n`;
             mensaje += `🔄 Vuelto Entregado: $${(data.stats?.total_vuelto || 0).toFixed(2)}\n`;
+            mensaje += `📦 Devoluciones: $${(data.stats?.total_devoluciones || 0).toFixed(2)}\n`;
             mensaje += `💰 Saldo Esperado: $${data.saldo_esperado.toFixed(2)}\n`;
-            mensaje += `📌 La caja ha sido cerrada automáticamente con el saldo calculado.\n`;
             
             alert(mensaje);
             mostrarNotificacion('Caja cerrada exitosamente', 'success');
@@ -335,17 +371,37 @@ async function verDetalleVenta(idVenta, event) {
 
 function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, dineroRecibido = null, descuentosData = []) {
     var subtotalVenta = 0;
-    
     for (var i = 0; i < detalles.length; i++) {
         var precioUnitario = parseFloat(detalles[i].precio_unitario);
         var cantidad = parseInt(detalles[i].cantidad);
-        var subtotalOriginal = precioUnitario * cantidad;
-        subtotalVenta += subtotalOriginal;
+        subtotalVenta += precioUnitario * cantidad;
     }
     
     var totalDescuentos = 0;
+    var descuentosPorProducto = {};
+    
     for (var j = 0; j < descuentosData.length; j++) {
         totalDescuentos += descuentosData[j].ahorroTotal;
+        descuentosPorProducto[descuentosData[j].nombre] = {
+            ahorro: descuentosData[j].ahorroTotal,
+            porcentaje: descuentosData[j].porcentaje
+        };
+    }
+    
+    if (totalDescuentos === 0 && detalles.length > 0) {
+        for (var k = 0; k < detalles.length; k++) {
+            var item = detalles[k];
+            var porcentaje = parseFloat(item.porcentaje_descuento) || 0;
+            if (porcentaje > 0) {
+                var subtotalOriginalItem = parseFloat(item.precio_unitario) * parseInt(item.cantidad);
+                var ahorro = subtotalOriginalItem * (porcentaje / 100);
+                totalDescuentos += ahorro;
+                descuentosPorProducto[item.nombre_producto] = {
+                    ahorro: ahorro,
+                    porcentaje: porcentaje
+                };
+            }
+        }
     }
     
     var totalVenta = subtotalVenta - totalDescuentos;
@@ -369,146 +425,125 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
                 <i class="fa-solid fa-receipt"></i> Venta #${idVenta}
             </div>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-regular fa-calendar" style="color: var(--primary-dark); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">FECHA</div>
-                        <div style="font-weight: 500;">${fechaMostrar}</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-regular fa-clock" style="color: var(--primary-dark); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">HORA</div>
-                        <div style="font-weight: 500;">${horaMostrar}</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-user" style="color: var(--primary-dark); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">VENDEDOR</div>
-                        <div style="font-weight: 500;">${usuarioMostrar}</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-regular fa-credit-card" style="color: var(--primary-dark); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">MÉTODO DE PAGO</div>
-                        <div style="font-weight: 500;">${metodoPagoMostrar}</div>
-                    </div>
-                </div>`;
-    
-    if (totalDescuentos > 0) {
-        infoBoxHTML += `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-tag" style="color: var(--success); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">DESCUENTO TOTAL</div>
-                        <div style="font-weight: 500; color: var(--success);">-$${totalDescuentos.toFixed(2)}</div>
-                    </div>
-                </div>`;
-    }
+                <div><i class="fa-regular fa-calendar"></i> <strong>Fecha:</strong><br>${fechaMostrar}</div>
+                <div><i class="fa-regular fa-clock"></i> <strong>Hora:</strong><br>${horaMostrar}</div>
+                <div><i class="fa-solid fa-user"></i> <strong>Vendedor:</strong><br>${usuarioMostrar}</div>
+                <div><i class="fa-regular fa-credit-card"></i> <strong>Pago:</strong><br>${metodoPagoMostrar}</div>
+    `;
     
     if (dineroRecibido !== null && cambio !== null) {
         infoBoxHTML += `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-money-bill" style="color: var(--primary-dark); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">DINERO RECIBIDO</div>
-                        <div style="font-weight: 500;">$${parseFloat(dineroRecibido).toFixed(2)}</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-coins" style="color: var(--success); width: 20px;"></i>
-                    <div>
-                        <div style="font-size: 0.7rem; color: #888;">CAMBIO/VUELTO</div>
-                        <div style="font-weight: 500; color: var(--success);">$${parseFloat(cambio).toFixed(2)}</div>
-                    </div>
-                </div>`;
+                <div><i class="fa-solid fa-money-bill"></i> <strong>Recibido:</strong><br>$${parseFloat(dineroRecibido).toFixed(2)}</div>
+                <div><i class="fa-solid fa-coins"></i> <strong>Cambio:</strong><br>$${parseFloat(cambio).toFixed(2)}</div>
+        `;
     }
     
     infoBoxHTML += `</div></div>`;
     
-    var tablaHTML = '<table style="width:100%; border-collapse: collapse; margin-bottom: 15px;">';
-    tablaHTML += '<thead><tr style="background: var(--primary-light); border-bottom: 2px solid var(--primary-dark);">';
+    var tablaHTML = '<div style="margin: 15px 0 10px 0;"><strong><i class="fa-solid fa-boxes"></i> Productos Vendidos:</strong></div>';
+    tablaHTML += '<div style="overflow-x: auto;">';
+    tablaHTML += '<table style="width:100%; border-collapse: collapse; font-size: 0.75rem;">';
+    tablaHTML += '<thead>';
+    tablaHTML += '<tr style="background: var(--primary-light); border-bottom: 2px solid var(--primary-dark);">';
     tablaHTML += '<th style="padding: 10px; text-align: left;">Cant.</th>';
     tablaHTML += '<th style="padding: 10px; text-align: left;">Producto</th>';
-    tablaHTML += '<th style="padding: 10px; text-align: right;">Precio Unit.</th>';
-    tablaHTML += '<th style="padding: 10px; text-align: right;">Descuento</th>';
+    tablaHTML += '<th style="padding: 10px; text-align: right;">Precio</th>';
+    tablaHTML += '<th style="padding: 10px; text-align: center;">Dto.%</th>';
     tablaHTML += '<th style="padding: 10px; text-align: right;">Subtotal</th>';
-    tablaHTML += '</table></thead><tbody>';
+    tablaHTML += '</tr>';
+    tablaHTML += '</thead>';
+    tablaHTML += '<tbody>';
     
     for (var i = 0; i < detalles.length; i++) {
         var item = detalles[i];
-        var precioUnitario = parseFloat(item.precio_unitario).toFixed(2);
+        var precioUnitario = parseFloat(item.precio_unitario);
         var cantidad = parseInt(item.cantidad);
-        var subtotalOriginal = (precioUnitario * cantidad).toFixed(2);
-        var estiloFila = (i % 2 === 0) ? 'background: #fafafa;' : '';
+        var subtotalOriginal = precioUnitario * cantidad;
         
         var descuentoItem = 0;
         var descuentoPorcentaje = 0;
-        for (var j = 0; j < descuentosData.length; j++) {
-            if (descuentosData[j].nombre === item.nombre_producto) {
-                descuentoItem = descuentosData[j].ahorroTotal;
-                descuentoPorcentaje = descuentosData[j].porcentaje;
+        
+        var nombreProducto = item.nombre_producto || '';
+        for (var nombre in descuentosPorProducto) {
+            if (nombreProducto.toLowerCase().includes(nombre.toLowerCase()) || 
+                nombre.toLowerCase().includes(nombreProducto.toLowerCase())) {
+                descuentoItem = descuentosPorProducto[nombre].ahorro;
+                descuentoPorcentaje = descuentosPorProducto[nombre].porcentaje;
                 break;
             }
         }
         
+        if (descuentoPorcentaje === 0 && item.porcentaje_descuento) {
+            descuentoPorcentaje = parseFloat(item.porcentaje_descuento);
+            descuentoItem = subtotalOriginal * (descuentoPorcentaje / 100);
+        }
+        
+        var subtotalConDescuento = subtotalOriginal - descuentoItem;
+        var estiloFila = (i % 2 === 0) ? 'background: #fafafa;' : '';
+        
         var descuentoHTML = '';
-        if (descuentoItem > 0) {
-            descuentoHTML = '<span style="color: var(--success);">-$' + descuentoItem.toFixed(2) + '</span>';
-            if (descuentoPorcentaje > 0) {
-                descuentoHTML += '<br><small style="color: #888;">(' + descuentoPorcentaje + '%)</small>';
-            }
+        if (descuentoPorcentaje > 0) {
+            descuentoHTML = `<span style="color: var(--success); font-weight: bold;">${descuentoPorcentaje}%</span><br><small style="color: #888;">-$${descuentoItem.toFixed(2)}</small>`;
         } else {
             descuentoHTML = '—';
         }
         
-        var subtotalConDescuento = (parseFloat(subtotalOriginal) - descuentoItem).toFixed(2);
-        
-        tablaHTML += '<tr style="border-bottom: 1px solid #eee; ' + estiloFila + '">';
-        tablaHTML += '<td style="padding: 10px; text-align: left;">' + item.cantidad + '</td>';
-        tablaHTML += '<td style="padding: 10px; text-align: left;"><strong>' + item.nombre_producto + '</strong>';
+        tablaHTML += `<tr style="border-bottom: 1px solid #eee; ${estiloFila}">`;
+        tablaHTML += `<td style="padding: 10px; text-align: left;"><strong>${cantidad}</strong></td>`;
+        tablaHTML += `<td style="padding: 10px; text-align: left;">`;
+        tablaHTML += `<strong>${nombreProducto}</strong>`;
         if (item.talla) {
-            tablaHTML += '<br><small style="color: #888;">Talla: ' + item.talla + '</small>';
+            tablaHTML += `<br><small style="color: #888;">Talla: ${item.talla}</small>`;
         }
         if (item.color) {
-            tablaHTML += '<br><small style="color: #888;">Color: ' + item.color + '</small>';
+            tablaHTML += `<br><small style="color: #888;">Color: ${item.color}</small>`;
         }
-        tablaHTML += '</td>';
-        tablaHTML += '<td style="padding: 10px; text-align: right;">$' + precioUnitario + '</td>';
-        tablaHTML += '<td style="padding: 10px; text-align: right;">' + descuentoHTML + '</td>';
-        tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold;">$' + subtotalConDescuento + '</td>';
-        tablaHTML += '</tr>';
+        tablaHTML += `</td>`;
+        tablaHTML += `<td style="padding: 10px; text-align: right;">$${precioUnitario.toFixed(2)}</td>`;
+        tablaHTML += `<td style="padding: 10px; text-align: center;">${descuentoHTML}</td>`;
+        tablaHTML += `<td style="padding: 10px; text-align: right; font-weight: bold;">$${subtotalConDescuento.toFixed(2)}</td>`;
+        tablaHTML += `</tr>`;
     }
     
-    tablaHTML += '</tbody><tfoot>';
-    tablaHTML += '<tr style="border-top: 1px solid #ddd;">';
-    tablaHTML += '<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold;">SUBTOTAL:</td>';
-    tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold;">$' + subtotalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr>';
+    tablaHTML += '</tbody>';
+    tablaHTML += '<tfoot>';
+    
+    tablaHTML += `<tr style="border-top: 1px solid #ddd;">`;
+    tablaHTML += `<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold;">SUBTOTAL:</td>`;
+    tablaHTML += `<td style="padding: 10px; text-align: right; font-weight: bold;">$${subtotalVenta.toFixed(2)}</td>`;
+    tablaHTML += `</tr>`;
     
     if (totalDescuentos > 0) {
-        tablaHTML += '<tr style="background: #fff3e0;">';
-        tablaHTML += '<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">DESCUENTO TOTAL:</td>';
-        tablaHTML += '<td style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">-$' + totalDescuentos.toFixed(2) + '</td>';
-        tablaHTML += '</tr>';
+        tablaHTML += `<tr style="background: #fff3e0;">`;
+        tablaHTML += `<td colspan="4" style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">DESCUENTOS:</td>`;
+        tablaHTML += `<td style="padding: 10px; text-align: right; font-weight: bold; color: var(--success);">-$${totalDescuentos.toFixed(2)}</td>`;
+        tablaHTML += `</tr>`;
+        
+        for (var nombre in descuentosPorProducto) {
+            if (descuentosPorProducto[nombre].porcentaje > 0) {
+                tablaHTML += `<tr style="background: #fff8f0;">`;
+                tablaHTML += `<td colspan="4" style="padding: 5px 10px; text-align: right; font-size: 0.7rem; color: #888;">↳ ${nombre} (${descuentosPorProducto[nombre].porcentaje}%):</td>`;
+                tablaHTML += `<td style="padding: 5px 10px; text-align: right; font-size: 0.7rem; color: #888;">-$${descuentosPorProducto[nombre].ahorro.toFixed(2)}</td>`;
+                tablaHTML += `</tr>`;
+            }
+        }
     }
     
-    tablaHTML += '<tr style="border-top: 2px solid var(--primary-dark); background: var(--primary-light);">';
-    tablaHTML += '<td colspan="4" style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1rem;">TOTAL A PAGAR:</td>';
-    tablaHTML += '<td style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1.2rem; color: var(--nocolor);">$' + totalVenta.toFixed(2) + '</td>';
-    tablaHTML += '</tr></tfoot></tr>';
+    tablaHTML += `<tr style="border-top: 2px solid var(--primary-dark); background: var(--primary-light);">`;
+    tablaHTML += `<td colspan="4" style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1rem;">TOTAL A PAGAR:</td>`;
+    tablaHTML += `<td style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 1.2rem; color: var(--nocolor);">$${totalVenta.toFixed(2)}</td>`;
+    tablaHTML += `<tr>`;
+    
+    tablaHTML += '</tfoot>';
+    tablaHTML += '</table>';
+    tablaHTML += '</div>';
     
     var botonesHTML = '<div style="display: flex; gap: 10px; margin-top: 20px;">';
-    botonesHTML += '<button class="btn-action btn-discount" onclick="cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-check"></i> Cerrar</button>';
-    botonesHTML += '<button class="btn-action btn-sell" onclick="imprimirTicketVenta(' + idVenta + ', event); cerrarModal(\'modalVentaDetalle\')" style="flex: 1;"><i class="fa-solid fa-print"></i> Imprimir Ticket</button>';
+    botonesHTML += '<button class="btn-action btn-discount" onclick="cerrarModal(\'modalVentaDetalle\')" style="flex: 1; background: #e0e0e0; color: #333;"><i class="fa-solid fa-check"></i> Cerrar</button>';
+    botonesHTML += '<button class="btn-action btn-sell" onclick="imprimirTicketVenta(' + idVenta + ', event); setTimeout(function(){ cerrarModal(\'modalVentaDetalle\'); }, 500);" style="flex: 1;"><i class="fa-solid fa-print"></i> Imprimir Ticket</button>';
     botonesHTML += '</div>';
     
-    var detallesHTML = infoBoxHTML;
-    detallesHTML += '<div style="margin-bottom: 15px;"><strong><i class="fa-solid fa-boxes"></i> Productos Vendidos:</strong></div>';
-    detallesHTML += tablaHTML + botonesHTML;
+    var detallesHTML = infoBoxHTML + tablaHTML + botonesHTML;
     
     var modalVentaDetalle = document.getElementById('modalVentaDetalle');
     
@@ -516,7 +551,7 @@ function mostrarModalDetalleVenta(idVenta, detalles, infoVenta, cambio = null, d
         modalVentaDetalle = document.createElement('div');
         modalVentaDetalle.id = 'modalVentaDetalle';
         modalVentaDetalle.className = 'modal';
-        modalVentaDetalle.innerHTML = '<div class="modal-content" style="width: 850px; max-width: 95%; max-height: 80vh; overflow-y: auto;">' +
+        modalVentaDetalle.innerHTML = '<div class="modal-content" style="width: 900px; max-width: 95%; max-height: 85vh; overflow-y: auto;">' +
             '<span class="close-modal" onclick="cerrarModal(\'modalVentaDetalle\')">&times;</span>' +
             '<h3 style="color: var(--primary-dark); margin-bottom: 15px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px;">' +
             '<i class="fa-solid fa-circle-info"></i> Detalle Completo de Venta</h3>' +
@@ -571,6 +606,14 @@ function cerrarModal(id) {
     
     modal.classList.remove('active');
     setTimeout(function() { modal.style.display = 'none'; }, 300);
+}
+
+function cerrarModalDevolucion(id) {
+    var modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(function() { modal.style.display = 'none'; }, 300);
+    }
 }
 
 function abrirModalDetalle(id, nombre, precio, stock, color, talla) {
@@ -784,7 +827,7 @@ function actualizarTablaResumen() {
         subtotalGlobal += p.subtotal;
         tVenta.innerHTML += '<tr>' +
             '<td class="col-cant">' + p.cantidad + '</td>' +
-            '<td class="col-prod">' + p.nombre + '<tr>' +
+            '<td class="col-prod">' + p.nombre + '</td>' +
             '<td class="col-subt">$' + p.subtotal.toFixed(2) + '</td>' +
             '</tr>';
     }
@@ -793,61 +836,35 @@ function actualizarTablaResumen() {
         tVenta.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">No hay productos seleccionados<\/td><\/tr>';
     }
 
-    // Calcular descuentos de productos
     var descuentosExistentes = 0;
-    var filasDescuentos = tDesc.querySelectorAll('tr:not([data-tipo="fidelidad"])');
-    for (var j = 0; j < filasDescuentos.length; j++) {
-        var fila = filasDescuentos[j];
-        var texto = fila.querySelector('.col-price-desc')?.innerText || '';
-        var monto = parseFloat(texto.replace('-$', '').replace(',', '')) || 0;
-        descuentosExistentes += monto;
+    tDesc.innerHTML = '';
+    
+    for (var j = 0; j < descuentosAplicados.length; j++) {
+        var d = descuentosAplicados[j];
+        descuentosExistentes += d.ahorroTotal;
+        tDesc.innerHTML += '<tr>' +
+            '<td class="col-prod-desc">' + d.nombre + ' (' + d.porcentaje + '%)</td>' +
+            '<td class="col-icon-desc">' + d.cantAplicada + '</td>' +
+            '<td class="col-price-desc">-$' + d.ahorroTotal.toFixed(2) + '</td>' +
+            '</tr>';
     }
     
-    // Calcular descuento por fidelidad
     var descuentoFidelidadMonto = 0;
     if (descuentoFidelidad > 0 && clienteSeleccionado) {
         descuentoFidelidadMonto = subtotalGlobal * (descuentoFidelidad / 100);
+        tDesc.innerHTML += '<tr data-tipo="fidelidad">' +
+            '<td class="col-prod-desc">FIDELIDAD (' + descuentoFidelidad + '%)</td>' +
+            '<td class="col-icon-desc">-</td>' +
+            '<td class="col-price-desc">-$' + descuentoFidelidadMonto.toFixed(2) + '</td>' +
+            '</tr>';
+    }
+    
+    if (descuentosExistentes === 0 && (!clienteSeleccionado || descuentoFidelidad === 0)) {
+        tDesc.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">Sin descuentos aplicados<\/td><\/tr>';
     }
     
     descuentoGlobal = descuentosExistentes + descuentoFidelidadMonto;
     
-    // Actualizar o crear la fila de fidelidad
-    let filaFidelidad = tDesc.querySelector('tr[data-tipo="fidelidad"]');
-    if (descuentoFidelidad > 0 && clienteSeleccionado) {
-        if (filaFidelidad) {
-            filaFidelidad.innerHTML = `
-                <td class="col-prod-desc">FIDELIDAD (${descuentoFidelidad}%)</td>
-                <td class="col-icon-desc">-</td>
-                <td class="col-price-desc">-$${descuentoFidelidadMonto.toFixed(2)}</td>
-            `;
-        } else {
-            const nuevaFila = document.createElement('tr');
-            nuevaFila.setAttribute('data-tipo', 'fidelidad');
-            nuevaFila.innerHTML = `
-                <td class="col-prod-desc">FIDELIDAD (${descuentoFidelidad}%)</td>
-                <td class="col-icon-desc">-</td>
-                <td class="col-price-desc">-$${descuentoFidelidadMonto.toFixed(2)}</td>
-            `;
-            if (tDesc.firstChild) {
-                tDesc.insertBefore(nuevaFila, tDesc.firstChild);
-            } else {
-                tDesc.appendChild(nuevaFila);
-            }
-        }
-    } else if (filaFidelidad) {
-        filaFidelidad.remove();
-    }
-
-    // Si no hay descuentos en la tabla, mostrar mensaje
-    const otrasFilas = tDesc.querySelectorAll('tr:not([data-tipo="fidelidad"])');
-    if (descuentosExistentes === 0 && (!clienteSeleccionado || descuentoFidelidad === 0)) {
-        if (tDesc.querySelector('.empty-row') === null && tDesc.children.length === 0) {
-            tDesc.innerHTML = '<tr class="empty-row"><td colspan="3" style="text-align: center; color: #999;">Sin descuentos aplicados<\/td><\/tr>';
-        }
-    } else if (tDesc.querySelector('.empty-row')) {
-        tDesc.querySelector('.empty-row').remove();
-    }
-
     var subTotalEl = document.getElementById('subTotal');
     var descuentoMontoEl = document.getElementById('descuentoMonto');
     var totalDisplayEl = document.getElementById('totalDisplay');
@@ -931,6 +948,49 @@ function confirmarDescuento() {
     actualizarTablaResumen();
 }
 
+// ==================== FUNCIÓN ACTUALIZAR TOTAL CON FIDELIDAD ====================
+function actualizarTotalConDescuentoFidelidad() {
+    const subtotalSpan = document.getElementById('modalSubtotal');
+    if (!subtotalSpan) return;
+    
+    let subtotalTexto = subtotalSpan.innerText;
+    let subtotal = parseFloat(subtotalTexto.replace('$', ''));
+    
+    const totalSpan = document.getElementById('modalTotalPago');
+    if (!totalSpan) return;
+    
+    let descuentoGlobal = 0;
+    for (let i = 0; i < descuentosAplicados.length; i++) {
+        descuentoGlobal += descuentosAplicados[i].ahorroTotal;
+    }
+    
+    let subtotalConDescuentos = subtotal - descuentoGlobal;
+    
+    let descuentoFidelidadMonto = 0;
+    if (descuentoFidelidad > 0 && clienteSeleccionado) {
+        descuentoFidelidadMonto = subtotalConDescuentos * (descuentoFidelidad / 100);
+        
+        const descuentoInfo = document.getElementById('descuentoAplicadoInfo');
+        if (descuentoInfo) {
+            descuentoInfo.innerHTML = `✨ Descuento fidelidad (${descuentoFidelidad}%): -$${descuentoFidelidadMonto.toFixed(2)}`;
+        }
+    }
+    
+    const totalFinal = subtotalConDescuentos - descuentoFidelidadMonto;
+    totalSpan.innerText = '$' + totalFinal.toFixed(2);
+    
+    const totalDisplay = document.getElementById('totalDisplay');
+    if (totalDisplay) {
+        totalDisplay.innerText = '$' + totalFinal.toFixed(2);
+    }
+    
+    const descuentoMontoEl = document.getElementById('descuentoMonto');
+    if (descuentoMontoEl) {
+        const descuentoTotal = descuentoGlobal + descuentoFidelidadMonto;
+        descuentoMontoEl.innerText = '-$' + descuentoTotal.toFixed(2);
+    }
+}
+
 // ==================== VENTAS ====================
 function realizarVenta() {
     if (carrito.length === 0) {
@@ -938,26 +998,34 @@ function realizarVenta() {
         return;
     }
     
-    var subtotalGlobal = 0;
-    for (var i = 0; i < carrito.length; i++) {
+    let subtotalGlobal = 0;
+    for (let i = 0; i < carrito.length; i++) {
         subtotalGlobal += carrito[i].subtotal;
     }
     
-    var descuentoGlobal = 0;
-    var descuentosHTML = '';
-    for (var j = 0; j < descuentosAplicados.length; j++) {
-        var d = descuentosAplicados[j];
+    let descuentoGlobal = 0;
+    let descuentosHTML = '';
+    for (let j = 0; j < descuentosAplicados.length; j++) {
+        let d = descuentosAplicados[j];
         descuentoGlobal += d.ahorroTotal;
         descuentosHTML += '<div>' + d.nombre + ': -$' + d.ahorroTotal.toFixed(2) + ' (' + d.porcentaje + '%)</div>';
     }
     
-    var total = subtotalGlobal - descuentoGlobal;
+    let subtotalConDescuentos = subtotalGlobal - descuentoGlobal;
+    
+    let descuentoFidelidadMonto = 0;
+    if (descuentoFidelidad > 0 && clienteSeleccionado) {
+        descuentoFidelidadMonto = subtotalConDescuentos * (descuentoFidelidad / 100);
+        descuentosHTML += '<div style="color: #28a745; font-weight: bold;">🏆 FIDELIDAD (' + descuentoFidelidad + '%): -$' + descuentoFidelidadMonto.toFixed(2) + '</div>';
+    }
+    
+    let total = subtotalConDescuentos - descuentoFidelidadMonto;
     
     document.getElementById('modalSubtotal').innerText = '$' + subtotalGlobal.toFixed(2);
     
-    if (descuentoGlobal > 0) {
+    if (descuentoGlobal > 0 || descuentoFidelidadMonto > 0) {
         document.getElementById('descuentosResumenContainer').style.display = 'block';
-        document.getElementById('descuentosResumen').innerHTML = '<div style="color: var(--success);">-$' + descuentoGlobal.toFixed(2) + '</div>' + descuentosHTML;
+        document.getElementById('descuentosResumen').innerHTML = '<div style="color: var(--success); font-weight: bold;">DESCUENTOS APLICADOS:</div>' + descuentosHTML;
     } else {
         document.getElementById('descuentosResumenContainer').style.display = 'none';
     }
@@ -969,15 +1037,17 @@ function realizarVenta() {
     
     toggleCamposPorMetodoPago();
     
-    var modal = document.getElementById('modalPago');
+    let modal = document.getElementById('modalPago');
     modal.style.display = 'flex';
     setTimeout(function() { modal.classList.add('active'); }, 10);
     
-    var metodoPagoSelect = document.getElementById('metodoPago');
-    var dineroInput = document.getElementById('dineroRecibido');
+    let metodoPagoSelect = document.getElementById('metodoPago');
+    let dineroInput = document.getElementById('dineroRecibido');
+    
     dineroInput.oninput = function() {
         calcularCambio(total);
     };
+    
     metodoPagoSelect.onchange = function() {
         toggleCamposPorMetodoPago();
         if (document.getElementById('metodoPago').value === '1') {
@@ -1002,39 +1072,36 @@ function calcularCambio(total) {
 }
 
 async function confirmarPago() {
-    // Verificar si la caja está abierta
-    var respCaja = await fetch('/ElZapato/src/api/caja_api.php?action=verificar_estado');
-    var dataCaja = await respCaja.json();
+    let respCaja = await fetch('/ElZapato/src/api/caja_api.php?action=verificar_estado');
+    let dataCaja = await respCaja.json();
     
     if (!dataCaja.success || !dataCaja.abierta) {
         mostrarNotificacion('Debe abrir la caja antes de realizar ventas', 'warning');
         return;
     }
     
-    var totalTexto = document.getElementById('modalTotalPago').innerText;
-    var total = parseFloat(totalTexto.replace('$', ''));
-    var metodoPago = document.getElementById('metodoPago').value;
-    var esTarjeta = metodoPago === '2';
-    var dineroRecibido = esTarjeta ? total : (parseFloat(document.getElementById('dineroRecibido').value) || 0);
-    var metodoPagoTexto = document.getElementById('metodoPago').options[document.getElementById('metodoPago').selectedIndex].text;
+    let totalTexto = document.getElementById('modalTotalPago').innerText;
+    let total = parseFloat(totalTexto.replace('$', ''));
+    let metodoPago = document.getElementById('metodoPago').value;
+    let esTarjeta = metodoPago === '2';
+    let dineroRecibido = esTarjeta ? total : (parseFloat(document.getElementById('dineroRecibido').value) || 0);
+    let metodoPagoTexto = document.getElementById('metodoPago').options[document.getElementById('metodoPago').selectedIndex].text;
     
     if (!esTarjeta && dineroRecibido < total) {
         mostrarNotificacion('El dinero recibido es insuficiente', 'warning');
         return;
     }
     
-    mostrarNotificacion('Verificando stock disponible...', 'info');
-    
-    for (var i = 0; i < carrito.length; i++) {
-        var productoCarrito = carrito[i];
-        var card = document.querySelector('.product-card[data-id="' + productoCarrito.id + '"]');
+    for (let i = 0; i < carrito.length; i++) {
+        let productoCarrito = carrito[i];
+        let card = document.querySelector('.product-card[data-id="' + productoCarrito.id + '"]');
         
         if (!card) {
             mostrarNotificacion('Error: Producto no encontrado en la vista', 'warning');
             return;
         }
         
-        var stockActual = parseInt(card.dataset.stock);
+        let stockActual = parseInt(card.dataset.stock);
         
         if (stockActual <= 0) {
             mostrarNotificacion('El producto ' + productoCarrito.nombre + ' está agotado', 'warning');
@@ -1047,12 +1114,12 @@ async function confirmarPago() {
         }
     }
     
-    var cambio = esTarjeta ? 0 : (dineroRecibido - total);
+    let cambio = esTarjeta ? 0 : (dineroRecibido - total);
     
     mostrarNotificacion('Procesando venta...', 'info');
     
-    var productosParaGuardar = [];
-    for (var i = 0; i < carrito.length; i++) {
+    let productosParaGuardar = [];
+    for (let i = 0; i < carrito.length; i++) {
         productosParaGuardar.push({
             id: carrito[i].id,
             nombre: carrito[i].nombre,
@@ -1061,18 +1128,21 @@ async function confirmarPago() {
         });
     }
     
-    var ventaData = {
+    let todosLosDescuentos = [...descuentosAplicados];
+    
+    let ventaData = {
         productos: productosParaGuardar,
         total: total,
         metodo_pago: parseInt(metodoPago),
         cambio: cambio,
         dinero_recibido: dineroRecibido,
-        descuentos: descuentosAplicados,
-        id_cliente: clienteSeleccionado ? clienteSeleccionado.id_cliente : null
+        descuentos: todosLosDescuentos,
+        id_cliente: clienteSeleccionado ? clienteSeleccionado.id_cliente : null,
+        descuento_fidelidad: descuentoFidelidad
     };
     
     try {
-        var response = await fetch('/ElZapato/src/api/guardar_venta.php', {
+        let response = await fetch('/ElZapato/src/api/guardar_venta.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1080,39 +1150,49 @@ async function confirmarPago() {
             body: JSON.stringify(ventaData)
         });
         
-        var result = await response.json();
+        let result = await response.json();
         
         if (result.success) {
             mostrarNotificacion('Venta #' + result.id_venta + ' realizada con éxito.', 'success');
-            mostrarNotificacion('Imprimiendo ticket...', 'info');
             
             sessionStorage.setItem('ventaData_' + result.id_venta, JSON.stringify({
                 cambio: cambio,
                 dineroRecibido: dineroRecibido,
                 metodoPago: metodoPagoTexto,
                 total: total,
-                descuentos: descuentosAplicados
+                descuentos: descuentosAplicados,
+                descuento_fidelidad: descuentoFidelidad
             }));
-            
-            actualizarStocksLocales();
             
             carrito = [];
             descuentosAplicados = [];
+            clienteSeleccionado = null;
+            descuentoFidelidad = 0;
+            nivelFidelidad = '';
             actualizarTablaResumen();
             
-            var checkboxes = document.querySelectorAll('.product-card input[type="checkbox"]');
-            for (var i = 0; i < checkboxes.length; i++) {
+            let checkboxes = document.querySelectorAll('.product-card input[type="checkbox"]');
+            for (let i = 0; i < checkboxes.length; i++) {
                 checkboxes[i].checked = false;
             }
             
-            var inputs = document.querySelectorAll('.qty-input');
-            for (var j = 0; j < inputs.length; j++) {
+            let inputs = document.querySelectorAll('.qty-input');
+            for (let j = 0; j < inputs.length; j++) {
                 inputs[j].value = 0;
+            }
+            
+            let container = document.getElementById('descuentoFidelidadContainer');
+            if (container) {
+                container.style.display = 'none';
             }
             
             cerrarModal('modalPago');
             await cargarUltimasVentas();
             verificarEstadoCaja();
+            
+            setTimeout(function() {
+                location.reload();
+            }, 1500);
             
         } else {
             mostrarNotificacion('Error: ' + (result.error || 'No se pudo guardar la venta'), 'warning');
@@ -1120,14 +1200,8 @@ async function confirmarPago() {
         
     } catch (error) {
         console.error('Error al guardar venta:', error);
-        mostrarNotificacion('Error al procesar la venta', 'warning');
+        mostrarNotificacion('Error al procesar la venta: ' + error.message, 'warning');
     }
-}
-
-function actualizarStocksLocales() {
-    setTimeout(function() {
-        location.reload();
-    }, 1300);
 }
 
 function toggleCamposPorMetodoPago() {
@@ -1155,6 +1229,440 @@ function toggleCamposPorMetodoPago() {
             dineroRecibido.disabled = false;
         }
     }
+}
+
+// ==================== DEVOLUCIONES ====================
+function abrirModalDevoluciones() {
+    paginaActualDevolucion = 1;
+    cargarVentasParaDevolucion();
+    var modal = document.getElementById('modalSeleccionVentaDevolucion');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(function() { modal.classList.add('active'); }, 10);
+    }
+}
+
+async function cargarVentasParaDevolucion() {
+    var container = document.getElementById('listaVentasDevolucion');
+    if (!container) return;
+    
+    var buscar = document.getElementById('buscarVentaDevolucion')?.value || '';
+    
+    try {
+        container.innerHTML = '<div class="loading-text"><i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...</div>';
+        
+        var url = '/ElZapato/src/api/obtener_ventas_devolucion.php?pagina=' + paginaActualDevolucion + '&limite=5';
+        if (buscar) {
+            url += '&buscar=' + encodeURIComponent(buscar);
+        }
+        
+        var resp = await fetch(url);
+        var data = await resp.json();
+        
+        if (data.error) {
+            container.innerHTML = '<div class="loading-text">Error: ' + data.error + '</div>';
+            return;
+        }
+        
+        if (!data.ventas || data.ventas.length === 0) {
+            container.innerHTML = '<div class="loading-text">No hay ventas disponibles para devolución</div>';
+            return;
+        }
+        
+        totalPaginasDevolucion = data.total_paginas;
+        
+        var html = '';
+        for (var i = 0; i < data.ventas.length; i++) {
+            var venta = data.ventas[i];
+            var fecha = new Date(venta.fecha_venta);
+            var fechaFormateada = fecha.toLocaleString('es-MX');
+            
+            html += `
+                <div class="dropdown-item" style="margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <div style="font-weight: bold; color: var(--primary-dark);">Venta #${venta.id_venta}</div>
+                            <div style="font-size: 0.7rem; color: #888;">${fechaFormateada}</div>
+                            <div style="font-size: 0.7rem;">Usuario: ${venta.usuario}</div>
+                            <div style="font-size: 0.8rem; font-weight: bold;">Total: $${parseFloat(venta.total_venta).toFixed(2)}</div>
+                            <div style="font-size: 0.7rem;">Método: ${venta.metodo_pago || 'Efectivo'}</div>
+                        </div>
+                        <button class="btn-devolver-venta" onclick="seleccionarVentaParaDevolucion(${venta.id_venta})">
+                            <i class="fa-solid fa-undo-alt"></i> Seleccionar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+        actualizarPaginacionDevolucion();
+        
+    } catch (error) {
+        console.error('Error al cargar ventas:', error);
+        container.innerHTML = '<div class="loading-text">Error al cargar las ventas</div>';
+    }
+}
+
+function actualizarPaginacionDevolucion() {
+    var paginacionDiv = document.getElementById('paginacionVentasDevolucion');
+    if (!paginacionDiv) return;
+    
+    if (totalPaginasDevolucion <= 1) {
+        paginacionDiv.innerHTML = '';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 1; i <= totalPaginasDevolucion; i++) {
+        html += `<button class="btn-qty" onclick="irPaginaDevolucion(${i})" style="padding: 5px 10px; ${i === paginaActualDevolucion ? 'background: var(--primary-dark);' : ''}">${i}</button>`;
+    }
+    paginacionDiv.innerHTML = html;
+}
+
+function irPaginaDevolucion(pagina) {
+    paginaActualDevolucion = pagina;
+    cargarVentasParaDevolucion();
+}
+
+async function seleccionarVentaParaDevolucion(idVenta) {
+    cerrarModalDevolucion('modalSeleccionVentaDevolucion');
+    
+    mostrarNotificacion('Cargando productos de la venta...', 'info');
+    
+    try {
+        var resp = await fetch('/ElZapato/src/api/obtener_detalle_venta_devolucion.php?id=' + idVenta);
+        var data = await resp.json();
+        
+        if (data.error) {
+            mostrarNotificacion(data.error, 'warning');
+            return;
+        }
+        
+        if (!data.detalles || data.detalles.length === 0) {
+            mostrarNotificacion('No se encontraron productos en esta venta', 'warning');
+            return;
+        }
+        
+        ventaSeleccionadaDevolucion = idVenta;
+        productosDevolucionData = data.detalles.map(function(d) {
+            return {
+                id_detalle: d.id_detalle_venta,
+                id_variante: d.id_variante,
+                nombre: d.nombre_producto,
+                talla: d.talla,
+                color: d.color,
+                cantidad_original: d.cantidad_original,
+                cantidad_maxima: d.cantidad_maxima,
+                cantidad_a_devolver: 0,
+                precio_unitario: parseFloat(d.precio_unitario)
+            };
+        });
+        
+        mostrarModalProductosDevolucion();
+        
+    } catch (error) {
+        console.error('Error al cargar detalles:', error);
+        mostrarNotificacion('Error al cargar los productos', 'warning');
+    }
+}
+
+function mostrarModalProductosDevolucion() {
+    var container = document.getElementById('listaProductosDevolucion');
+    var ventaInfo = document.getElementById('ventaSeleccionadaInfo');
+    
+    if (!container) return;
+    
+    if (ventaInfo) {
+        ventaInfo.innerHTML = 'Venta #' + ventaSeleccionadaDevolucion;
+    }
+    
+    var html = '';
+    for (var i = 0; i < productosDevolucionData.length; i++) {
+        var p = productosDevolucionData[i];
+        
+        html += `
+            <div class="producto-devolucion-item" id="item_${i}">
+                <div class="producto-devolucion-header">
+                    <input type="checkbox" class="producto-devolucion-checkbox" id="chk_${i}" onchange="toggleProductoDevolucion(${i})">
+                    <div class="producto-devolucion-info">
+                        <div class="producto-devolucion-nombre">${p.nombre}</div>
+                        <div class="producto-devolucion-detalle">
+                            <span>Talla: ${p.talla || 'N/A'}</span>
+                            <span>Color: ${p.color || 'N/A'}</span>
+                        </div>
+                        <div class="producto-devolucion-cantidad">
+                            Vendido: ${p.cantidad_original} unidades | Precio: $${p.precio_unitario.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+                <div class="cantidad-devolucion-control" id="control_${i}" style="display: none;">
+                    <label><i class="fa-solid fa-arrow-left"></i> Cantidad a devolver:</label>
+                    <input type="range" class="cantidad-range" id="range_${i}" min="0" max="${p.cantidad_maxima}" value="0" step="1" onchange="actualizarCantidadDevolucion(${i})">
+                    <input type="number" class="cantidad-value" id="value_${i}" min="0" max="${p.cantidad_maxima}" value="0" step="1" onchange="actualizarRangeDevolucion(${i})">
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+    actualizarTotalDevolucion();
+    
+    var modal = document.getElementById('modalSeleccionProductosDevolucion');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(function() { modal.classList.add('active'); }, 10);
+    }
+}
+
+function toggleProductoDevolucion(index) {
+    var checkbox = document.getElementById('chk_' + index);
+    var control = document.getElementById('control_' + index);
+    
+    if (checkbox.checked) {
+        control.style.display = 'flex';
+        if (productosDevolucionData[index].cantidad_a_devolver === 0) {
+            productosDevolucionData[index].cantidad_a_devolver = productosDevolucionData[index].cantidad_maxima;
+            actualizarControlesDevolucion(index);
+        }
+    } else {
+        control.style.display = 'none';
+        productosDevolucionData[index].cantidad_a_devolver = 0;
+        var rangeInput = document.getElementById('range_' + index);
+        var valueInput = document.getElementById('value_' + index);
+        if (rangeInput) rangeInput.value = 0;
+        if (valueInput) valueInput.value = 0;
+    }
+    
+    actualizarTotalDevolucion();
+}
+
+function actualizarCantidadDevolucion(index) {
+    var rangeInput = document.getElementById('range_' + index);
+    var valueInput = document.getElementById('value_' + index);
+    var cantidad = parseInt(rangeInput.value);
+    
+    valueInput.value = cantidad;
+    productosDevolucionData[index].cantidad_a_devolver = cantidad;
+    
+    actualizarTotalDevolucion();
+}
+
+function actualizarRangeDevolucion(index) {
+    var valueInput = document.getElementById('value_' + index);
+    var rangeInput = document.getElementById('range_' + index);
+    var cantidad = parseInt(valueInput.value);
+    var maximo = productosDevolucionData[index].cantidad_maxima;
+    
+    if (isNaN(cantidad)) cantidad = 0;
+    if (cantidad < 0) cantidad = 0;
+    if (cantidad > maximo) cantidad = maximo;
+    
+    valueInput.value = cantidad;
+    rangeInput.value = cantidad;
+    productosDevolucionData[index].cantidad_a_devolver = cantidad;
+    
+    actualizarTotalDevolucion();
+}
+
+function actualizarControlesDevolucion(index) {
+    var rangeInput = document.getElementById('range_' + index);
+    var valueInput = document.getElementById('value_' + index);
+    var cantidad = productosDevolucionData[index].cantidad_a_devolver;
+    
+    if (rangeInput) rangeInput.value = cantidad;
+    if (valueInput) valueInput.value = cantidad;
+}
+
+function actualizarTotalDevolucion() {
+    var total = 0;
+    for (var i = 0; i < productosDevolucionData.length; i++) {
+        var p = productosDevolucionData[i];
+        var checkbox = document.getElementById('chk_' + i);
+        if (checkbox && checkbox.checked) {
+            total += p.cantidad_a_devolver * p.precio_unitario;
+        }
+    }
+    
+    var totalSpan = document.getElementById('totalDevolucion');
+    if (totalSpan) {
+        totalSpan.innerText = '$' + total.toFixed(2);
+    }
+}
+
+// MODAL DE CONFIRMACIÓN PERSONALIZADO
+function mostrarModalConfirmacionDevolucion(productosADevolver, totalDevuelto, callback) {
+    let modalConfirm = document.getElementById('modalConfirmacionDevolucion');
+    
+    if (!modalConfirm) {
+        modalConfirm = document.createElement('div');
+        modalConfirm.id = 'modalConfirmacionDevolucion';
+        modalConfirm.className = 'modal-confirmacion';
+        modalConfirm.innerHTML = `
+            <div class="modal-confirmacion-content">
+                <div class="modal-confirmacion-header">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <h3>Confirmar Devolución</h3>
+                </div>
+                <div class="modal-confirmacion-body">
+                    <p>¿Está seguro de procesar esta devolución?</p>
+                    <div id="resumenDevolucionModal" class="resumen-devolucion"></div>
+                    <p style="margin-top: 15px; font-size: 0.85rem; color: #888;">
+                        <i class="fa-solid fa-info-circle"></i> Se reincorporará el stock y se ajustará el total de la venta.
+                    </p>
+                </div>
+                <div class="modal-confirmacion-footer">
+                    <button class="btn-cancelar" id="btnCancelarDevolucion">
+                        <i class="fa-solid fa-times"></i> Cancelar
+                    </button>
+                    <button class="btn-confirmar" id="btnConfirmarDevolucion">
+                        <i class="fa-solid fa-check"></i> Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalConfirm);
+    }
+    
+    // Actualizar resumen
+    const resumenDiv = document.getElementById('resumenDevolucionModal');
+    let resumenHTML = '<div class="resumen-devolucion-title">Productos a devolver:</div>';
+    
+    for (let i = 0; i < productosADevolver.length; i++) {
+        const prod = productosADevolver[i];
+        resumenHTML += `
+            <div class="resumen-devolucion-item">
+                <strong>${prod.nombre}</strong>
+                <span>Cantidad: ${prod.cantidad} unidades | Total: $${prod.total.toFixed(2)}</span>
+            </div>
+        `;
+    }
+    
+    resumenHTML += `
+        <div class="resumen-devolucion-total">
+            Total a devolver: $${totalDevuelto.toFixed(2)}
+        </div>
+    `;
+    resumenDiv.innerHTML = resumenHTML;
+    
+    modalConfirm.style.display = 'flex';
+    setTimeout(() => modalConfirm.classList.add('active'), 10);
+    
+    const btnConfirmar = document.getElementById('btnConfirmarDevolucion');
+    const btnCancelar = document.getElementById('btnCancelarDevolucion');
+    
+    const cleanup = () => {
+        btnConfirmar.removeEventListener('click', handleConfirm);
+        btnCancelar.removeEventListener('click', handleCancel);
+        modalConfirm.classList.remove('active');
+        setTimeout(() => { modalConfirm.style.display = 'none'; }, 300);
+    };
+    
+    const handleConfirm = () => {
+        cleanup();
+        callback(true);
+    };
+    
+    const handleCancel = () => {
+        cleanup();
+        callback(false);
+    };
+    
+    btnConfirmar.addEventListener('click', handleConfirm);
+    btnCancelar.addEventListener('click', handleCancel);
+    
+    modalConfirm.onclick = (e) => {
+        if (e.target === modalConfirm) {
+            cleanup();
+            callback(false);
+        }
+    };
+}
+
+async function confirmarDevolucion() {
+    var productosADevolver = [];
+    var tieneProductos = false;
+    var totalDevuelto = 0;
+    
+    for (var i = 0; i < productosDevolucionData.length; i++) {
+        var p = productosDevolucionData[i];
+        var checkbox = document.getElementById('chk_' + i);
+        
+        if (checkbox && checkbox.checked && p.cantidad_a_devolver > 0) {
+            tieneProductos = true;
+            var totalProducto = p.cantidad_a_devolver * p.precio_unitario;
+            totalDevuelto += totalProducto;
+            productosADevolver.push({
+                id_detalle: p.id_detalle,
+                id_variante: p.id_variante,
+                cantidad: p.cantidad_a_devolver,
+                nombre: p.nombre,
+                total: totalProducto
+            });
+        }
+    }
+    
+    if (!tieneProductos) {
+        mostrarNotificacion('Seleccione al menos un producto para devolver', 'warning');
+        return;
+    }
+    
+    mostrarModalConfirmacionDevolucion(productosADevolver, totalDevuelto, async (confirmado) => {
+        if (!confirmado) {
+            mostrarNotificacion('Devolución cancelada', 'info');
+            return;
+        }
+        
+        mostrarNotificacion('Procesando devolución...', 'info');
+        
+        try {
+            var resp = await fetch('/ElZapato/src/api/procesar_devolucion.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_venta: ventaSeleccionadaDevolucion,
+                    productos: productosADevolver.map(p => ({
+                        id_detalle: p.id_detalle,
+                        id_variante: p.id_variante,
+                        cantidad: p.cantidad,
+                        nombre: p.nombre
+                    }))
+                })
+            });
+            
+            var data = await resp.json();
+            
+            if (data.success) {
+                mostrarNotificacion('Devolución procesada correctamente', 'success');
+                
+                var resumen = '✅ DEVOLUCIÓN REALIZADA\n\n';
+                for (var j = 0; j < data.productos_devueltos.length; j++) {
+                    var prod = data.productos_devueltos[j];
+                    resumen += `📦 ${prod.nombre}\n   ${prod.cantidad} unidades → $${parseFloat(prod.total).toFixed(2)}\n\n`;
+                }
+                resumen += `💰 TOTAL DEVUELTO: $${parseFloat(data.total_devuelto).toFixed(2)}`;
+                alert(resumen);
+                
+                cerrarModalDevolucion('modalSeleccionProductosDevolucion');
+                
+                // REFRESCAR ESTADO DE CAJA DESPUÉS DE LA DEVOLUCIÓN
+                await verificarEstadoCaja();
+                
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+                
+            } else {
+                mostrarNotificacion('Error: ' + (data.error || 'No se pudo procesar la devolución'), 'warning');
+            }
+            
+        } catch (error) {
+            console.error('Error al procesar devolución:', error);
+            mostrarNotificacion('Error al procesar la devolución: ' + error.message, 'warning');
+        }
+    });
 }
 
 // ==================== VALIDACIONES DE BÚSQUEDA DE CLIENTE ====================
@@ -1526,22 +2034,13 @@ function mostrarDescuentoFidelidadEnResumen() {
     let container = document.getElementById('descuentoFidelidadContainer');
     
     const modalPago = document.getElementById('modalPago');
-    if (!modalPago) {
-        console.error('Modal de pago no encontrado');
-        return;
-    }
+    if (!modalPago) return;
     
     const modalContent = modalPago.querySelector('.modal-content');
-    if (!modalContent) {
-        console.error('Modal content no encontrado');
-        return;
-    }
+    if (!modalContent) return;
     
     const modalBody = modalContent.querySelector('.modal-body');
-    if (!modalBody) {
-        console.error('Modal body no encontrado');
-        return;
-    }
+    if (!modalBody) return;
     
     if (!container) {
         const html = `
@@ -1582,11 +2081,6 @@ function quitarDescuentoFidelidad() {
     descuentoFidelidad = 0;
     nivelFidelidad = '';
     
-    const filaFidelidad = document.querySelector('#listaDescuentos tr[data-tipo="fidelidad"]');
-    if (filaFidelidad) {
-        filaFidelidad.remove();
-    }
-    
     const container = document.getElementById('descuentoFidelidadContainer');
     if (container) {
         container.style.display = 'none';
@@ -1609,36 +2103,6 @@ function quitarDescuentoFidelidad() {
     mostrarNotificacion('Descuento por fidelidad eliminado', 'info');
 }
 
-function actualizarTotalConDescuentoFidelidad() {
-    const subtotalSpan = document.getElementById('modalSubtotal');
-    if (!subtotalSpan) return;
-    
-    const subtotalTexto = subtotalSpan.innerText;
-    let subtotal = parseFloat(subtotalTexto.replace('$', ''));
-    
-    const totalSpan = document.getElementById('modalTotalPago');
-    if (!totalSpan) return;
-    
-    let descuentoGlobal = 0;
-    for (var i = 0; i < descuentosAplicados.length; i++) {
-        descuentoGlobal += descuentosAplicados[i].ahorroTotal;
-    }
-    
-    if (descuentoFidelidad > 0 && clienteSeleccionado) {
-        const descuentoFidelidadMonto = subtotal * (descuentoFidelidad / 100);
-        const nuevoTotal = subtotal - descuentoGlobal - descuentoFidelidadMonto;
-        
-        const descuentoInfo = document.getElementById('descuentoAplicadoInfo');
-        if (descuentoInfo) {
-            descuentoInfo.innerHTML = `Descuento fidelidad ${descuentoFidelidad}%: -$${descuentoFidelidadMonto.toFixed(2)}`;
-        }
-        
-        totalSpan.innerText = '$' + nuevoTotal.toFixed(2);
-    } else {
-        totalSpan.innerText = '$' + (subtotal - descuentoGlobal).toFixed(2);
-    }
-}
-
 // ==================== FILTROS ====================
 document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('productSearch');
@@ -1647,6 +2111,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     cargarUltimasVentas();
     verificarEstadoCaja();
+    
+    var buscarInput = document.getElementById('buscarVentaDevolucion');
+    if (buscarInput) {
+        buscarInput.addEventListener('input', function() {
+            paginaActualDevolucion = 1;
+            cargarVentasParaDevolucion();
+        });
+    }
     
     function filtrarProductos() {
         var searchTerm = searchInput.value.toLowerCase();
@@ -1683,356 +2155,5 @@ document.addEventListener('DOMContentLoaded', function() {
     if (categoryFilter) categoryFilter.addEventListener('change', filtrarProductos);
     if (brandFilter) brandFilter.addEventListener('change', filtrarProductos);
     
-    var buscarInput = document.getElementById('buscarVentaDevolucion');
-    if (buscarInput) {
-        buscarInput.addEventListener('input', function() {
-            paginaActualDevolucion = 1;
-            cargarVentasParaDevolucion();
-        });
-    }
-    
     console.log('POS JS inicializado correctamente');
 });
-
-// ==================== DEVOLUCIONES ====================
-let ventaSeleccionadaDevolucion = null;
-let productosDevolucionData = [];
-let paginaActualDevolucion = 1;
-let totalPaginasDevolucion = 1;
-
-function abrirModalDevoluciones() {
-    paginaActualDevolucion = 1;
-    cargarVentasParaDevolucion();
-    var modal = document.getElementById('modalSeleccionVentaDevolucion');
-    if (modal) {
-        modal.style.display = 'flex';
-        setTimeout(function() { modal.classList.add('active'); }, 10);
-    }
-}
-
-function cerrarModalDevolucion(id) {
-    var modal = document.getElementById(id);
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(function() { modal.style.display = 'none'; }, 300);
-    }
-}
-
-async function cargarVentasParaDevolucion() {
-    var container = document.getElementById('listaVentasDevolucion');
-    if (!container) return;
-    
-    var buscar = document.getElementById('buscarVentaDevolucion')?.value || '';
-    
-    try {
-        container.innerHTML = '<div class="loading-text"><i class="fa-solid fa-spinner fa-pulse"></i> Cargando ventas...</div>';
-        
-        var url = '/ElZapato/src/api/obtener_ventas_devolucion.php?pagina=' + paginaActualDevolucion + '&limite=5';
-        if (buscar) {
-            url += '&buscar=' + encodeURIComponent(buscar);
-        }
-        
-        var resp = await fetch(url);
-        var data = await resp.json();
-        
-        if (data.error) {
-            container.innerHTML = '<div class="loading-text">Error: ' + data.error + '</div>';
-            return;
-        }
-        
-        if (!data.ventas || data.ventas.length === 0) {
-            container.innerHTML = '<div class="loading-text">No hay ventas disponibles para devolución</div>';
-            return;
-        }
-        
-        totalPaginasDevolucion = data.total_paginas;
-        
-        var html = '';
-        for (var i = 0; i < data.ventas.length; i++) {
-            var venta = data.ventas[i];
-            var fecha = new Date(venta.fecha_venta);
-            var fechaFormateada = fecha.toLocaleString('es-MX');
-            
-            html += `
-                <div class="dropdown-item" style="margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div>
-                            <div style="font-weight: bold; color: var(--primary-dark);">Venta #${venta.id_venta}</div>
-                            <div style="font-size: 0.7rem; color: #888;">${fechaFormateada}</div>
-                            <div style="font-size: 0.7rem;">Usuario: ${venta.usuario}</div>
-                            <div style="font-size: 0.8rem; font-weight: bold;">Total: $${parseFloat(venta.total_venta).toFixed(2)}</div>
-                            <div style="font-size: 0.7rem;">Método: ${venta.metodo_pago || 'Efectivo'}</div>
-                        </div>
-                        <button class="btn-devolver-venta" onclick="seleccionarVentaParaDevolucion(${venta.id_venta})">
-                            <i class="fa-solid fa-undo-alt"></i> Seleccionar
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        container.innerHTML = html;
-        actualizarPaginacionDevolucion();
-        
-    } catch (error) {
-        console.error('Error al cargar ventas:', error);
-        container.innerHTML = '<div class="loading-text">Error al cargar las ventas</div>';
-    }
-}
-
-function actualizarPaginacionDevolucion() {
-    var paginacionDiv = document.getElementById('paginacionVentasDevolucion');
-    if (!paginacionDiv) return;
-    
-    if (totalPaginasDevolucion <= 1) {
-        paginacionDiv.innerHTML = '';
-        return;
-    }
-    
-    var html = '';
-    for (var i = 1; i <= totalPaginasDevolucion; i++) {
-        html += `<button class="btn-qty" onclick="irPaginaDevolucion(${i})" style="padding: 5px 10px; ${i === paginaActualDevolucion ? 'background: var(--primary-dark);' : ''}">${i}</button>`;
-    }
-    paginacionDiv.innerHTML = html;
-}
-
-function irPaginaDevolucion(pagina) {
-    paginaActualDevolucion = pagina;
-    cargarVentasParaDevolucion();
-}
-
-async function seleccionarVentaParaDevolucion(idVenta) {
-    cerrarModalDevolucion('modalSeleccionVentaDevolucion');
-    
-    mostrarNotificacion('Cargando productos de la venta...', 'info');
-    
-    try {
-        var resp = await fetch('/ElZapato/src/api/obtener_detalle_venta_devolucion.php?id=' + idVenta);
-        var data = await resp.json();
-        
-        if (data.error) {
-            mostrarNotificacion(data.error, 'warning');
-            return;
-        }
-        
-        if (!data.detalles || data.detalles.length === 0) {
-            mostrarNotificacion('No se encontraron productos en esta venta', 'warning');
-            return;
-        }
-        
-        ventaSeleccionadaDevolucion = idVenta;
-        productosDevolucionData = data.detalles.map(function(d) {
-            return {
-                id_detalle: d.id_detalle_venta,
-                id_variante: d.id_variante,
-                nombre: d.nombre_producto,
-                talla: d.talla,
-                color: d.color,
-                cantidad_original: d.cantidad_original,
-                cantidad_maxima: d.cantidad_maxima,
-                cantidad_a_devolver: 0,
-                precio_unitario: parseFloat(d.precio_unitario)
-            };
-        });
-        
-        mostrarModalProductosDevolucion();
-        
-    } catch (error) {
-        console.error('Error al cargar detalles:', error);
-        mostrarNotificacion('Error al cargar los productos', 'warning');
-    }
-}
-
-function mostrarModalProductosDevolucion() {
-    var container = document.getElementById('listaProductosDevolucion');
-    var ventaInfo = document.getElementById('ventaSeleccionadaInfo');
-    
-    if (!container) return;
-    
-    if (ventaInfo) {
-        ventaInfo.innerHTML = 'Venta #' + ventaSeleccionadaDevolucion;
-    }
-    
-    var html = '';
-    for (var i = 0; i < productosDevolucionData.length; i++) {
-        var p = productosDevolucionData[i];
-        
-        html += `
-            <div class="producto-devolucion-item" id="item_${i}">
-                <div class="producto-devolucion-header">
-                    <input type="checkbox" class="producto-devolucion-checkbox" id="chk_${i}" onchange="toggleProductoDevolucion(${i})">
-                    <div class="producto-devolucion-info">
-                        <div class="producto-devolucion-nombre">${p.nombre}</div>
-                        <div class="producto-devolucion-detalle">
-                            <span>Talla: ${p.talla || 'N/A'}</span>
-                            <span>Color: ${p.color || 'N/A'}</span>
-                        </div>
-                        <div class="producto-devolucion-cantidad">
-                            Vendido: ${p.cantidad_original} unidades | Precio: $${p.precio_unitario.toFixed(2)}
-                        </div>
-                    </div>
-                </div>
-                <div class="cantidad-devolucion-control" id="control_${i}" style="display: none;">
-                    <label><i class="fa-solid fa-arrow-left"></i> Cantidad a devolver:</label>
-                    <input type="range" class="cantidad-range" id="range_${i}" min="0" max="${p.cantidad_maxima}" value="0" step="1" onchange="actualizarCantidadDevolucion(${i})">
-                    <input type="number" class="cantidad-value" id="value_${i}" min="0" max="${p.cantidad_maxima}" value="0" step="1" onchange="actualizarRangeDevolucion(${i})">
-                </div>
-            </div>
-        `;
-    }
-    
-    container.innerHTML = html;
-    actualizarTotalDevolucion();
-    
-    var modal = document.getElementById('modalSeleccionProductosDevolucion');
-    if (modal) {
-        modal.style.display = 'flex';
-        setTimeout(function() { modal.classList.add('active'); }, 10);
-    }
-}
-
-function toggleProductoDevolucion(index) {
-    var checkbox = document.getElementById('chk_' + index);
-    var control = document.getElementById('control_' + index);
-    
-    if (checkbox.checked) {
-        control.style.display = 'flex';
-        if (productosDevolucionData[index].cantidad_a_devolver === 0) {
-            productosDevolucionData[index].cantidad_a_devolver = productosDevolucionData[index].cantidad_maxima;
-            actualizarControlesDevolucion(index);
-        }
-    } else {
-        control.style.display = 'none';
-        productosDevolucionData[index].cantidad_a_devolver = 0;
-        var rangeInput = document.getElementById('range_' + index);
-        var valueInput = document.getElementById('value_' + index);
-        if (rangeInput) rangeInput.value = 0;
-        if (valueInput) valueInput.value = 0;
-    }
-    
-    actualizarTotalDevolucion();
-}
-
-function actualizarCantidadDevolucion(index) {
-    var rangeInput = document.getElementById('range_' + index);
-    var valueInput = document.getElementById('value_' + index);
-    var cantidad = parseInt(rangeInput.value);
-    
-    valueInput.value = cantidad;
-    productosDevolucionData[index].cantidad_a_devolver = cantidad;
-    
-    actualizarTotalDevolucion();
-}
-
-function actualizarRangeDevolucion(index) {
-    var valueInput = document.getElementById('value_' + index);
-    var rangeInput = document.getElementById('range_' + index);
-    var cantidad = parseInt(valueInput.value);
-    var maximo = productosDevolucionData[index].cantidad_maxima;
-    
-    if (isNaN(cantidad)) cantidad = 0;
-    if (cantidad < 0) cantidad = 0;
-    if (cantidad > maximo) cantidad = maximo;
-    
-    valueInput.value = cantidad;
-    rangeInput.value = cantidad;
-    productosDevolucionData[index].cantidad_a_devolver = cantidad;
-    
-    actualizarTotalDevolucion();
-}
-
-function actualizarControlesDevolucion(index) {
-    var rangeInput = document.getElementById('range_' + index);
-    var valueInput = document.getElementById('value_' + index);
-    var cantidad = productosDevolucionData[index].cantidad_a_devolver;
-    
-    if (rangeInput) rangeInput.value = cantidad;
-    if (valueInput) valueInput.value = cantidad;
-}
-
-function actualizarTotalDevolucion() {
-    var total = 0;
-    for (var i = 0; i < productosDevolucionData.length; i++) {
-        var p = productosDevolucionData[i];
-        var checkbox = document.getElementById('chk_' + i);
-        if (checkbox && checkbox.checked) {
-            total += p.cantidad_a_devolver * p.precio_unitario;
-        }
-    }
-    
-    var totalSpan = document.getElementById('totalDevolucion');
-    if (totalSpan) {
-        totalSpan.innerText = '$' + total.toFixed(2);
-    }
-}
-
-async function confirmarDevolucion() {
-    var productosADevolver = [];
-    var tieneProductos = false;
-    
-    for (var i = 0; i < productosDevolucionData.length; i++) {
-        var p = productosDevolucionData[i];
-        var checkbox = document.getElementById('chk_' + i);
-        
-        if (checkbox && checkbox.checked && p.cantidad_a_devolver > 0) {
-            tieneProductos = true;
-            productosADevolver.push({
-                id_detalle: p.id_detalle,
-                id_variante: p.id_variante,
-                cantidad: p.cantidad_a_devolver,
-                nombre: p.nombre
-            });
-        }
-    }
-    
-    if (!tieneProductos) {
-        mostrarNotificacion('Seleccione al menos un producto para devolver', 'warning');
-        return;
-    }
-    
-    var confirmacion = confirm('¿Está seguro de procesar esta devolución?\nSe reincorporará el stock y se ajustará el total de la venta.');
-    
-    if (!confirmacion) return;
-    
-    mostrarNotificacion('Procesando devolución...', 'info');
-    
-    try {
-        var resp = await fetch('/ElZapato/src/api/procesar_devolucion.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id_venta: ventaSeleccionadaDevolucion,
-                productos: productosADevolver
-            })
-        });
-        
-        var data = await resp.json();
-        
-        if (data.success) {
-            mostrarNotificacion('Devolución procesada correctamente', 'success');
-            
-            var resumen = 'Devolución realizada:\n';
-            for (var j = 0; j < data.productos_devueltos.length; j++) {
-                var prod = data.productos_devueltos[j];
-                resumen += '\n• ' + prod.nombre + ': ' + prod.cantidad + ' unidades ($' + prod.total.toFixed(2) + ')';
-            }
-            resumen += '\n\nTotal devuelto: $' + data.total_devuelto.toFixed(2);
-            alert(resumen);
-            
-            cerrarModalDevolucion('modalSeleccionProductosDevolucion');
-            
-            setTimeout(function() {
-                location.reload();
-            }, 1500);
-            
-        } else {
-            mostrarNotificacion('Error: ' + (data.error || 'No se pudo procesar la devolución'), 'warning');
-        }
-        
-    } catch (error) {
-        console.error('Error al procesar devolución:', error);
-        mostrarNotificacion('Error al procesar la devolución', 'warning');
-    }
-}

@@ -7,7 +7,7 @@
     --primary-dark: #AB886D;
     --nocolor: #772c24;
     --bg-body: #f4f6f9;
-    --success: #AB886D;
+    --success: #28a745;
     --white: #ffffff;
     --text-dark: #1a1a1a;
 }
@@ -56,12 +56,8 @@ body {
 }
 
 @keyframes spinLoader {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* =========================================
@@ -111,7 +107,7 @@ body {
     color: var(--primary-soft); 
 }
 
-/* Estilos para el dropdown de caja */
+/* Dropdown de caja */
 .caja-dropdown {
     display: none;
     position: absolute;
@@ -337,23 +333,6 @@ body {
     background: var(--primary-dark);
     color: white;
     transform: scale(1.05);
-}
-
-.dropdown-footer {
-    padding: 10px;
-    text-align: center;
-    border-top: 1px solid #eee;
-}
-
-.loading-text {
-    padding: 20px;
-    text-align: center;
-    color: #888;
-    font-size: 0.85rem;
-}
-
-.loading-text i {
-    margin-right: 5px;
 }
 
 /* =========================================
@@ -947,34 +926,8 @@ input:disabled + .slider {
     pointer-events: none;
 }
 
-.product-card.agotado::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-        transparent 45%, 
-        rgba(119, 44, 36, 0.15) 45%, 
-        rgba(119, 44, 36, 0.15) 55%, 
-        transparent 55%);
-    pointer-events: none;
-    z-index: 5;
-}
-
-.product-card.agotado .product-img {
-    filter: grayscale(0.5);
-}
-
-.product-card.agotado .switch-top,
-.product-card.agotado .footer-controls {
-    opacity: 0.5;
-    pointer-events: none;
-}
-
 /* =========================================
-   MODALES
+   MODALES GENERALES
    ========================================= */
 .modal { 
     display: none; 
@@ -1068,81 +1021,493 @@ input:disabled + .slider {
 }
 
 /* =========================================
-   TOASTS
+   MODAL DE PAGO
+   ========================================= */
+#modalPago .modal-content {
+    width: 480px;
+    max-width: 95%;
+    padding: 20px;
+}
+
+#modalPago .modal-body {
+    margin-bottom: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+#modalPago .form-group {
+    margin-bottom: 18px;
+}
+
+#modalPago .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: var(--text-dark);
+}
+
+#modalSubtotal, #modalTotalPago {
+    font-size: 1.5rem !important;
+    font-weight: 900;
+    text-align: right;
+    background: var(--primary-light);
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-top: 5px;
+}
+
+#modalTotalPago {
+    font-size: 2rem !important;
+    color: var(--nocolor);
+}
+
+#descuentosResumenContainer {
+    background: #fff8f0;
+    padding: 12px;
+    border-radius: 10px;
+    margin: 10px 0;
+    border-left: 4px solid var(--success);
+}
+
+#descuentosResumen {
+    font-size: 0.85rem;
+    color: var(--success);
+}
+
+#efectivoFieldsContainer {
+    background: var(--primary-light);
+    padding: 15px;
+    border-radius: 12px;
+    margin: 15px 0;
+}
+
+#dineroRecibido {
+    font-size: 1.2rem;
+    text-align: right;
+    font-weight: bold;
+    padding: 12px;
+}
+
+#cambioDisplay {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+#modalPago .modal-footer {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--primary-light);
+}
+
+#modalPago .modal-footer button {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#modalPago .modal-footer .btn-sell {
+    background: var(--primary-dark);
+    color: white;
+}
+
+#modalPago .modal-footer .btn-sell:hover {
+    background: #8e6e56;
+    transform: translateY(-2px);
+}
+
+#modalPago .modal-footer .btn-discount {
+    background: #e0e0e0;
+    color: var(--text-dark);
+}
+
+#modalPago .modal-footer .btn-discount:hover {
+    background: #d0d0d0;
+    transform: translateY(-2px);
+}
+
+#descuentoFidelidadContainer {
+    background: #e8f5e9;
+    border-left: 4px solid var(--success);
+    padding: 12px;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+/* =========================================
+   MODAL DE DETALLE DE VENTA
+   ========================================= */
+#modalVentaDetalle .modal-content {
+    width: 900px;
+    max-width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+#modalVentaDetalle table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+#modalVentaDetalle th {
+    background: var(--primary-light);
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid var(--primary-dark);
+    font-weight: bold;
+}
+
+#modalVentaDetalle td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+#modalVentaDetalle tr:hover {
+    background: #fafafa;
+}
+
+/* =========================================
+   TOASTS - NOTIFICACIONES MEJORADAS
    ========================================= */
 #toast-container { 
     position: fixed; 
-    top: 75px; 
+    top: 80px; 
     right: 20px; 
-    z-index: 9999; 
+    z-index: 10000; 
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .toast { 
-    background: #1a1a1a; 
-    color: white; 
-    padding: 12px 18px; 
-    border-radius: 8px; 
-    margin-bottom: 10px; 
+    background: white; 
+    color: #333; 
+    padding: 14px 20px; 
+    border-radius: 12px; 
+    margin-bottom: 0;
     display: flex; 
     align-items: center; 
-    gap: 10px; 
+    gap: 12px; 
     border-left: 5px solid var(--primary-dark); 
     transform: translateX(120%); 
-    transition: 0.4s; 
-    font-size: 0.8rem; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+    font-size: 0.85rem; 
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    min-width: 280px;
+    max-width: 350px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .toast.show { 
     transform: translateX(0); 
 }
 
+.toast i {
+    font-size: 1.2rem;
+}
+
 .toast-success {
-    border-left-color: var(--success);
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fff4 100%);
+}
+
+.toast-success i {
+    color: #28a745;
 }
 
 .toast-warning {
-    border-left-color: #f39c12;
+    border-left-color: #ff9800;
+    background: linear-gradient(135deg, #ffffff 0%, #fff8e1 100%);
+}
+
+.toast-warning i {
+    color: #ff9800;
 }
 
 .toast-error {
     border-left-color: var(--nocolor);
+    background: linear-gradient(135deg, #ffffff 0%, #fff0f0 100%);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { 
-    width: 5px; 
-}
-
-::-webkit-scrollbar-track {
-    background: var(--primary-light);
-}
-
-::-webkit-scrollbar-thumb { 
-    background: var(--primary-dark); 
-    border-radius: 10px; 
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #8e6e56;
-}
-
-@keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(-10px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+.toast-error i {
+    color: var(--nocolor);
 }
 
 /* =========================================
-   VALIDACIONES PARA MODALES DE CLIENTES
+   MODAL DE CONFIRMACIÓN DE DEVOLUCIÓN
    ========================================= */
+.modal-confirmacion {
+    display: none;
+    position: fixed;
+    z-index: 10001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
 
-/* Estilos para inputs con validación */
+.modal-confirmacion.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-confirmacion-content {
+    background: white;
+    border-radius: 24px;
+    width: 420px;
+    max-width: 90%;
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+.modal-confirmacion.active .modal-confirmacion-content {
+    transform: scale(1);
+}
+
+.modal-confirmacion-header {
+    background: linear-gradient(135deg, var(--nocolor) 0%, #9a3a30 100%);
+    color: white;
+    padding: 24px 20px;
+    text-align: center;
+}
+
+.modal-confirmacion-header i {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.modal-confirmacion-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.modal-confirmacion-body {
+    padding: 25px;
+    text-align: center;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.modal-confirmacion-body p {
+    margin: 0 0 15px 0;
+}
+
+.resumen-devolucion {
+    background: var(--primary-light);
+    border-radius: 16px;
+    padding: 15px;
+    margin-top: 15px;
+    text-align: left;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.resumen-devolucion-title {
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.resumen-devolucion-item {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-size: 0.85rem;
+}
+
+.resumen-devolucion-item:last-child {
+    border-bottom: none;
+}
+
+.resumen-devolucion-item strong {
+    color: var(--nocolor);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.resumen-devolucion-total {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid var(--primary-dark);
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--nocolor);
+    text-align: right;
+}
+
+.modal-confirmacion-footer {
+    padding: 15px 20px;
+    display: flex;
+    gap: 15px;
+    border-top: 1px solid #eee;
+}
+
+.modal-confirmacion-footer button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-confirmacion-footer .btn-confirmar {
+    background: var(--nocolor);
+    color: white;
+}
+
+.modal-confirmacion-footer .btn-confirmar:hover {
+    background: #5a1c16;
+    transform: translateY(-2px);
+}
+
+.modal-confirmacion-footer .btn-cancelar {
+    background: #e0e0e0;
+    color: #555;
+}
+
+.modal-confirmacion-footer .btn-cancelar:hover {
+    background: #ccc;
+    transform: translateY(-2px);
+}
+
+/* =========================================
+   DEVOLUCIONES
+   ========================================= */
+.btn-devolver-venta {
+    background: var(--primary-dark);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.7rem;
+}
+
+.btn-devolver-venta:hover {
+    background: var(--nocolor);
+    transform: scale(1.05);
+}
+
+.producto-devolucion-item {
+    background: var(--white);
+    border: 1px solid var(--primary-soft);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 12px;
+}
+
+.producto-devolucion-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.producto-devolucion-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.producto-devolucion-info {
+    flex: 1;
+}
+
+.producto-devolucion-nombre {
+    font-weight: bold;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+}
+
+.producto-devolucion-detalle {
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 4px;
+    display: flex;
+    gap: 10px;
+}
+
+.producto-devolucion-cantidad {
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.cantidad-devolucion-control {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.cantidad-devolucion-control label {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--primary-dark);
+}
+
+.cantidad-range {
+    flex: 1;
+    min-width: 150px;
+    height: 4px;
+    border-radius: 5px;
+    background: var(--primary-soft);
+}
+
+.cantidad-value {
+    width: 60px;
+    padding: 4px;
+    border: 1px solid var(--primary-soft);
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.7rem;
+}
+
+/* =========================================
+   VALIDACIONES
+   ========================================= */
 .input-telefono {
     border: 2px solid #28a745;
     box-shadow: 0 0 5px rgba(40,167,69,0.3);
@@ -1169,92 +1534,43 @@ input:disabled + .slider {
     display: block;
 }
 
-.validez-exito {
-    color: #28a745;
+/* Scrollbar */
+::-webkit-scrollbar { 
+    width: 5px; 
 }
 
-.validez-error {
-    color: #dc3545;
-}
-
-/* Estilos para dropdown de resultados */
-.dropdown-item {
-    transition: background 0.2s;
-    border-radius: 8px !important;
-}
-
-.dropdown-item:hover {
-    background: var(--primary-light) !important;
-}
-
-/* Ajustes para modales de cliente */
-#modalBuscarCliente .modal-content,
-#modalRegistrarCliente .modal-content {
-    width: 450px;
-}
-
-#modalBuscarCliente .btn-action,
-#modalRegistrarCliente .btn-action {
-    width: 100%;
-    margin-top: 10px;
-}
-
-#modalBuscarCliente .input-modal:disabled,
-#modalRegistrarCliente .btn-action:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-#resultadoBusqueda {
-    margin-top: 20px;
-}
-
-#listaResultados {
-    max-height: 200px;
-    overflow-y: auto;
+::-webkit-scrollbar-track {
     background: var(--primary-light);
-    border-radius: 8px;
-    margin-top: 5px;
+}
+
+::-webkit-scrollbar-thumb { 
+    background: var(--primary-dark); 
+    border-radius: 10px; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #8e6e56;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
-    .products-grid { 
-        grid-template-columns: repeat(4, 1fr); 
-    }
+    .products-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 992px) {
-    .main-layout { 
-        grid-template-columns: 300px 1fr; 
-    }
-    .products-grid { 
-        grid-template-columns: repeat(3, 1fr); 
-    }
+    .main-layout { grid-template-columns: 300px 1fr; }
+    .products-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 768px) {
-    .main-layout { 
-        grid-template-columns: 1fr; 
-    }
-    .sidebar-resumen { 
-        display: none; 
-    }
-    .products-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-    }
-    .filter-bar { 
-        flex-direction: column; 
-        height: auto; 
-        padding: 10px; 
-        gap: 10px;
-    }
-    .select-group {
-        width: 100%;
-    }
-    #modalBuscarCliente .modal-content,
-    #modalRegistrarCliente .modal-content {
-        width: 90%;
-        margin: 30px auto;
-    }
+    .main-layout { grid-template-columns: 1fr; }
+    .sidebar-resumen { display: none; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+    .filter-bar { flex-direction: column; height: auto; padding: 10px; gap: 10px; }
+    .select-group { width: 100%; }
 }

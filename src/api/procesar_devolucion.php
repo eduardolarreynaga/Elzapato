@@ -36,10 +36,27 @@ try {
     
     $totalDevuelto = 0;
     $productosDevueltos = [];
+    $idUsuario = $_SESSION['id_usuario'];
+    
+    // Obtener el id_apertura de caja actual del usuario
+    $stmtApertura = $conexion->prepare("
+        SELECT id_apertura FROM caja_aperturas 
+        WHERE id_usuario = :id_usuario AND estado = 'abierta'
+        FOR UPDATE
+    ");
+    $stmtApertura->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+    $stmtApertura->execute();
+    $apertura = $stmtApertura->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$apertura) {
+        throw new Exception('No hay una caja abierta para realizar la devolución');
+    }
+    
+    $idApertura = $apertura['id_apertura'];
     
     // Verificar que la venta existe y está completada
     $stmtVenta = $conexion->prepare("
-        SELECT id_venta, total_venta, estado 
+        SELECT id_venta, total_venta, estado, id_usuario as vendedor_original
         FROM ventas 
         WHERE id_venta = :id_venta 
         AND (estado = 'completada' OR estado IS NULL)
@@ -63,7 +80,7 @@ try {
         
         // Verificar que la cantidad a devolver no excede la cantidad original
         $stmtDetalle = $conexion->prepare("
-            SELECT cantidad, precio_unitario, id_variante 
+            SELECT cantidad, precio_unitario, id_variante, subtotal
             FROM detalle_venta 
             WHERE id_detalle_venta = :id_detalle AND id_venta = :id_venta
             FOR UPDATE
@@ -81,6 +98,9 @@ try {
             throw new Exception('La cantidad a devolver excede la cantidad vendida');
         }
         
+        // Calcular total a devolver para este producto
+        $totalProductoDevuelto = $detalle['precio_unitario'] * $cantidadDevolver;
+        
         // Registrar en tabla de devoluciones
         $stmtDevolucion = $conexion->prepare("
             INSERT INTO devoluciones_venta (
@@ -91,7 +111,8 @@ try {
                 precio_unitario,
                 total_devuelto,
                 fecha_devolucion,
-                id_usuario
+                id_usuario,
+                motivo
             ) VALUES (
                 :id_venta, 
                 :id_detalle, 
@@ -100,11 +121,12 @@ try {
                 :precio_unitario,
                 :total_devuelto,
                 NOW(),
-                :id_usuario
+                :id_usuario,
+                :motivo
             )
         ");
         
-        $totalProductoDevuelto = $detalle['precio_unitario'] * $cantidadDevolver;
+        $motivo = 'Devolución de ' . $cantidadDevolver . ' unidades de ' . $producto['nombre'];
         
         $stmtDevolucion->bindParam(':id_venta', $idVenta, PDO::PARAM_INT);
         $stmtDevolucion->bindParam(':id_detalle', $idDetalleVenta, PDO::PARAM_INT);
@@ -112,7 +134,8 @@ try {
         $stmtDevolucion->bindParam(':cantidad', $cantidadDevolver, PDO::PARAM_INT);
         $stmtDevolucion->bindParam(':precio_unitario', $detalle['precio_unitario']);
         $stmtDevolucion->bindParam(':total_devuelto', $totalProductoDevuelto);
-        $stmtDevolucion->bindParam(':id_usuario', $_SESSION['id_usuario'], PDO::PARAM_INT);
+        $stmtDevolucion->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmtDevolucion->bindParam(':motivo', $motivo);
         $stmtDevolucion->execute();
         
         // Actualizar cantidad en detalle_venta
@@ -139,10 +162,11 @@ try {
             $stmtDeleteDetalle->execute();
         }
         
-        // Actualizar stock en producto_variante
+        // Actualizar stock en producto_variante (SUMAR lo devuelto)
         $stmtStock = $conexion->prepare("
             UPDATE producto_variante 
-            SET stock = stock + :cantidad 
+            SET stock = stock + :cantidad,
+                estado = 'activo'
             WHERE id_variante = :id_variante
         ");
         $stmtStock->bindParam(':cantidad', $cantidadDevolver, PDO::PARAM_INT);
@@ -153,11 +177,11 @@ try {
         $productosDevueltos[] = [
             'nombre' => $producto['nombre'],
             'cantidad' => $cantidadDevolver,
-            'total' => $totalProductoDevuelto
+            'total' => (float)$totalProductoDevuelto
         ];
     }
     
-    // Actualizar total de la venta
+    // Actualizar total de la venta (RESTAR lo devuelto)
     $stmtUpdateVenta = $conexion->prepare("
         UPDATE ventas 
         SET total_venta = total_venta - :total_devuelto
@@ -167,7 +191,48 @@ try {
     $stmtUpdateVenta->bindParam(':id_venta', $idVenta, PDO::PARAM_INT);
     $stmtUpdateVenta->execute();
     
-    // Si la venta queda en 0, anularla
+    // ==================== ACTUALIZAR CAJA ====================
+    // 1. Restar el monto devuelto del saldo de la caja
+    $stmtUpdateCajaSaldo = $conexion->prepare("
+        UPDATE caja_aperturas 
+        SET total_vuelto = total_vuelto + :total_devuelto,
+            total_ingresos = total_ingresos - :total_devuelto
+        WHERE id_apertura = :id_apertura
+    ");
+    $stmtUpdateCajaSaldo->bindParam(':total_devuelto', $totalDevuelto);
+    $stmtUpdateCajaSaldo->bindParam(':id_apertura', $idApertura);
+    $stmtUpdateCajaSaldo->execute();
+    
+    // 2. Registrar movimiento de egreso en caja_movimientos
+    $stmtMovimiento = $conexion->prepare("
+        INSERT INTO caja_movimientos (
+            id_apertura, 
+            id_usuario, 
+            tipo_movimiento, 
+            concepto, 
+            monto, 
+            id_venta,
+            fecha_movimiento
+        ) VALUES (
+            :id_apertura,
+            :id_usuario,
+            'devolucion',
+            :concepto,
+            :monto,
+            :id_venta,
+            NOW()
+        )
+    ");
+    
+    $concepto = 'Devolución de venta #' . $idVenta . ' - Total: $' . number_format($totalDevuelto, 2);
+    $stmtMovimiento->bindParam(':id_apertura', $idApertura);
+    $stmtMovimiento->bindParam(':id_usuario', $idUsuario);
+    $stmtMovimiento->bindParam(':concepto', $concepto);
+    $stmtMovimiento->bindParam(':monto', $totalDevuelto);
+    $stmtMovimiento->bindParam(':id_venta', $idVenta);
+    $stmtMovimiento->execute();
+    
+    // Si la venta queda en 0 o negativa, anularla
     $stmtCheckTotal = $conexion->prepare("
         SELECT total_venta FROM ventas WHERE id_venta = :id_venta
     ");
@@ -188,7 +253,7 @@ try {
     echo json_encode([
         'success' => true,
         'mensaje' => 'Devolución procesada correctamente',
-        'total_devuelto' => $totalDevuelto,
+        'total_devuelto' => (float)$totalDevuelto,
         'productos_devueltos' => $productosDevueltos
     ]);
     

@@ -21,12 +21,27 @@ switch ($action) {
         $monto_asignado = $cajaUsuario->getMontoAsignado($id_usuario);
         
         if ($apertura) {
-            $saldo = $cajaUsuario->getSaldoActual($id_usuario);
+            // Obtener total de devoluciones del turno actual
+            $stmtDev = $db->prepare("
+                SELECT COALESCE(SUM(dv.total_devuelto), 0) as total_devoluciones 
+                FROM devoluciones_venta dv
+                INNER JOIN ventas v ON dv.id_venta = v.id_venta
+                WHERE v.id_usuario = ? AND dv.fecha_devolucion >= ?
+            ");
+            $stmtDev->execute([$id_usuario, $apertura['fecha_apertura']]);
+            $devoluciones = $stmtDev->fetch(PDO::FETCH_ASSOC);
+            
+            // Saldo real = monto_inicial + total_ingresos - total_vuelto - devoluciones
+            $saldoReal = $apertura['monto_inicial'] + $apertura['total_ingresos'] - $apertura['total_vuelto'] - ($devoluciones['total_devoluciones'] ?? 0);
+            
             echo json_encode([
                 'success' => true,
                 'abierta' => true,
                 'monto_inicial' => $apertura['monto_inicial'],
-                'saldo_actual' => $saldo,
+                'saldo_actual' => $saldoReal,
+                'total_ingresos' => $apertura['total_ingresos'],
+                'total_vuelto' => $apertura['total_vuelto'],
+                'total_devoluciones' => $devoluciones['total_devoluciones'],
                 'monto_asignado' => $monto_asignado,
                 'fecha_apertura' => $apertura['fecha_apertura']
             ]);
@@ -56,12 +71,25 @@ switch ($action) {
         $apertura = $cajaUsuario->tieneCajaAbierta($id_usuario);
         if ($apertura) {
             $stats = $cajaUsuario->getEstadisticasTurno($apertura['id_apertura']);
-            $saldo_actual = $cajaUsuario->getSaldoActual($id_usuario);
+            
+            // Obtener devoluciones
+            $stmtDev = $db->prepare("
+                SELECT COALESCE(SUM(dv.total_devuelto), 0) as total_devoluciones 
+                FROM devoluciones_venta dv
+                INNER JOIN ventas v ON dv.id_venta = v.id_venta
+                WHERE v.id_usuario = ? AND dv.fecha_devolucion >= ?
+            ");
+            $stmtDev->execute([$id_usuario, $apertura['fecha_apertura']]);
+            $devoluciones = $stmtDev->fetch(PDO::FETCH_ASSOC);
+            
+            $saldo_actual = $apertura['monto_inicial'] + $stats['total_ingresos'] - $stats['total_vuelto'] - ($devoluciones['total_devoluciones'] ?? 0);
+            
             echo json_encode([
                 'success' => true, 
                 'total_ventas' => $stats['total_ventas'],
                 'total_ingresos' => $stats['total_ingresos'],
                 'total_vuelto' => $stats['total_vuelto'],
+                'total_devoluciones' => $devoluciones['total_devoluciones'],
                 'monto_inicial' => $apertura['monto_inicial'],
                 'saldo_esperado' => $saldo_actual
             ]);
@@ -71,7 +99,6 @@ switch ($action) {
         break;
         
     case 'cerrar_caja':
-        // ELIMINAMOS el monto_cierre manual, se calcula automático
         $result = $cajaUsuario->cerrarCaja($id_usuario);
         echo json_encode($result);
         break;
